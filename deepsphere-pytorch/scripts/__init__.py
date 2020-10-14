@@ -1,2 +1,0 @@
-"""DeepSphere Base Documentation doc
-"""
