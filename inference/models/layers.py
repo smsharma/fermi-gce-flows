@@ -64,8 +64,8 @@ class SphericalGraphCNN(nn.Module):
             layer = SphericalChebBNPool(in_ch, out_ch, self.laps[i], self.pooling_class.pooling, self.kernel_size)
             self.cnn_layers.append(layer)
 
-        self.fc1 = nn.Linear(256, 2048)
-        self.fc2 = nn.Linear(2048, 512)
+        self.fc1 = nn.Linear(256, 512)
+        # self.fc2 = nn.Linear(2048, 512)
 
     def forward(self, x):
         """Forward Pass.
@@ -82,6 +82,6 @@ class SphericalGraphCNN(nn.Module):
             x = layer(x)
 
         x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
+        # x = F.relu(self.fc2(x))
 
-        return x#[:, 0, :]
+        return x[:, 0, :]

@@ -99,7 +99,7 @@ class DrawSources:
 
         the_map = np.zeros(hp.nside2npix(nside))
 
-        for ips in tqdm(range(self.n_draw)):
+        for ips in tqdm(range(self.n_draw), disable=True):
             th = self.th_ary[ips]
             ph = self.ph_ary[ips]
             num_phot = self.counts_sample[ips]
@@ -117,7 +117,7 @@ class DrawSources:
 
 
 class SimulateMap:
-    def __init__(self, temps, norms, S_arys=None, dNdS_arys=None, ps_temps=None, psf_r=None, nside=128):
+    def __init__(self, temps, norms, S_arys=None, dNdS_arys=None, ps_temps=None, psf_r=None, nside=128, n_exp=None):
 
         self.temps = temps
         self.norms = norms
@@ -126,6 +126,10 @@ class SimulateMap:
         self.dNdS_arys = dNdS_arys
         self.ps_temps = ps_temps
         self.psf_r = psf_r
+        self.n_exp = n_exp
+
+        if self.n_exp is None:
+            self.n_exp = len(self.ps_temps) * [None]
 
         # ud_grade templates
         for i_temp in range(len(self.temps)):
@@ -144,7 +148,7 @@ class SimulateMap:
 
         if self.S_arys is not None:
             for i_ps in range(len(self.ps_temps)):
-                ds = DrawSources(self.S_arys[i_ps], self.dNdS_arys[i_ps])
+                ds = DrawSources(self.S_arys[i_ps], self.dNdS_arys[i_ps], n_exp=self.n_exp[i_ps])
                 self.ps_map = ds.create_ps_map(self.ps_temps[i_ps], self.psf_r)
                 gamma_map += self.ps_map.astype(np.int64)
 

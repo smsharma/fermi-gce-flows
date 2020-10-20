@@ -8,7 +8,7 @@ from pygsp.graphs.nngraphs.spherehealpix import SphereHealpix
 from scipy import sparse
 from scipy.sparse import coo_matrix
 
-from models.samplings import (
+from inference.models.samplings import (
     # equiangular_bandwidth,
     # equiangular_dimension_unpack,
     healpix_resolution_calculator,
