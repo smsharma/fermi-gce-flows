@@ -31,7 +31,7 @@ def cheb_conv(laplacian, inputs, weight):
     x0 = inputs.permute(1, 2, 0).contiguous()  # V x Fin x B
     x0 = x0.view([V, Fin * B])  # V x Fin*B
     inputs = x0.unsqueeze(0)  # 1 x V x Fin*B
-
+    
     if K > 0:
         x1 = torch.sparse.mm(laplacian, x0)  # V x Fin*B
         inputs = torch.cat((inputs, x1.unsqueeze(0)), 0)  # 2 x V x Fin*B

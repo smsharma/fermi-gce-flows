@@ -25,7 +25,6 @@ class SphericalGraphCNN(nn.Module):
         self.pooling_class = Healpix(mode="max")
 
         self.laps = get_healpix_laplacians(nside_list=nside_list, laplacian_type=laplacian_type, indexes_list=indexes_list)
-
         self.cnn_layers = []
 
         for i, (in_ch, out_ch) in enumerate([(1, 32), (32, 64), (64, 128), (128, 256), (256, 256), (256, 256), (256, 256)]):
@@ -46,7 +45,7 @@ class SphericalGraphCNN(nn.Module):
             :obj:`torch.Tensor`: output
         """
         x = x.view(-1, 16384, 1)
-
+        
         for layer in self.cnn_layers:
             x = layer(x)
 
