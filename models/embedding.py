@@ -32,8 +32,8 @@ class SphericalGraphCNN(nn.Module):
             setattr(self, "layer_{}".format(i), layer)
             self.cnn_layers.append(layer)
 
-        self.fc1 = nn.Linear(256, 512)
-        self.fc2 = nn.Linear(512, 64)
+        self.fc1 = nn.Linear(256, 2048)
+        self.fc2 = nn.Linear(2048, 512)
 
     def forward(self, x):
         """Forward Pass.
