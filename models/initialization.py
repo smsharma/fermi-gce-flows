@@ -90,14 +90,5 @@ def init_dataset_temp(parser, indices, transform_image, transform_labels):
         transform_sample = transforms.Compose([transforms.Lambda(lambda item: torch.stack(item, dim=1).reshape(item[0].size(0), -1))])
     else:
         raise Exception("Invalid temporality type.")
-    dataset = ARTCTemporaldataset(
-        path=path_to_data,
-        download=download,
-        sequence_length=parser.sequence_length,
-        prediction_shift=parser.prediction_shift,
-        indices=indices,
-        transform_image=transform_image,
-        transform_labels=transform_labels,
-        transform_sample=transform_sample,
-    )
+    dataset = ARTCTemporaldataset(path=path_to_data, download=download, sequence_length=parser.sequence_length, prediction_shift=parser.prediction_shift, indices=indices, transform_image=transform_image, transform_labels=transform_labels, transform_sample=transform_sample,)
     return dataset

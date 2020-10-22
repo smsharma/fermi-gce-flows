@@ -54,6 +54,7 @@ def prepare_laplacian(laplacian):
     laplacian = scipy_csr_to_sparse_tensor(laplacian)
     return laplacian
 
+
 def get_healpix_laplacians(nside_list, laplacian_type, indexes_list=None):
     """Get the healpix laplacian list for a certain depth.
     Args:

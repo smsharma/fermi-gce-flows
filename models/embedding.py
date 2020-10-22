@@ -7,6 +7,7 @@ from models.healpix_pool_unpool import Healpix
 from models.laplacians import get_healpix_laplacians
 from models.layers import SphericalChebBNPool
 
+
 class SphericalGraphCNN(nn.Module):
     """Spherical GCNN Autoencoder.
     """
@@ -22,11 +23,11 @@ class SphericalGraphCNN(nn.Module):
         super().__init__()
         self.kernel_size = kernel_size
         self.pooling_class = Healpix(mode="max")
-        
+
         self.laps = get_healpix_laplacians(nside_list=nside_list, laplacian_type=laplacian_type, indexes_list=indexes_list)
 
         self.cnn_layers = []
-        
+
         for i, (in_ch, out_ch) in enumerate([(1, 32), (32, 64), (64, 128), (128, 256), (256, 256), (256, 256), (256, 256)]):
             layer = SphericalChebBNPool(in_ch, out_ch, self.laps[i], self.pooling_class.pooling, self.kernel_size)
             self.cnn_layers.append(layer)

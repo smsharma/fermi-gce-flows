@@ -6,6 +6,7 @@ from models.chebyshev import SphericalChebConv
 from models.healpix_pool_unpool import Healpix
 from models.laplacians import get_healpix_laplacians
 
+
 class SphericalChebBNPool(nn.Module):
     """Building Block with a pooling/unpooling, a calling the SphericalChebBN block.
     """
