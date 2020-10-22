@@ -1,11 +1,13 @@
 #! /usr/bin/env python
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import torch
 import numpy as np
 from simulations.simulate_ps import SimulateMap
 from utils import create_mask as cm
 import healpy as hp
+
+import torch
+
 
 import sys, os
 import argparse
