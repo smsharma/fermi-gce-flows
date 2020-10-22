@@ -30,6 +30,7 @@ class SphericalGraphCNN(nn.Module):
 
         for i, (in_ch, out_ch) in enumerate([(1, 32), (32, 64), (64, 128), (128, 256), (256, 256), (256, 256), (256, 256)]):
             layer = SphericalChebBNPool(in_ch, out_ch, self.laps[i], self.pooling_class.pooling, self.kernel_size)
+            setattr(self, "layer_{}".format(i), layer)
             self.cnn_layers.append(layer)
 
         self.fc1 = nn.Linear(256, 512)
