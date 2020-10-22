@@ -7,6 +7,8 @@ import math
 import torch
 from torch import nn
 
+# pylint: disable=W0223
+
 
 def cheb_conv(laplacian, inputs, weight):
     """Chebyshev convolution.

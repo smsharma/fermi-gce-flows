@@ -1,10 +1,9 @@
-import torch
 from torch import nn
 import torch.nn.functional as F
 
 from models.chebyshev import SphericalChebConv
-from models.healpix_pool_unpool import Healpix
-from models.laplacians import get_healpix_laplacians
+
+# pylint: disable=W0223
 
 
 class SphericalChebBNPool(nn.Module):

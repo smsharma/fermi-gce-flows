@@ -1,11 +1,11 @@
-import torch
 from torch import nn
 import torch.nn.functional as F
 
-from models.chebyshev import SphericalChebConv
 from models.healpix_pool_unpool import Healpix
 from models.laplacians import get_healpix_laplacians
 from models.layers import SphericalChebBNPool
+
+# pylint: disable=W0223
 
 
 class SphericalGraphCNN(nn.Module):
@@ -45,7 +45,7 @@ class SphericalGraphCNN(nn.Module):
             :obj:`torch.Tensor`: output
         """
         x = x.view(-1, 16384, 1)
-        
+
         for layer in self.cnn_layers:
             x = layer(x)
 

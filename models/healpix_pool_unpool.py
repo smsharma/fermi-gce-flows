@@ -20,6 +20,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 # pylint: disable=W0221
+# pylint: disable=W0223
 
 
 class HealpixMaxPool(nn.MaxPool1d):

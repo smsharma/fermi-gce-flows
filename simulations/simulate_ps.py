@@ -1,6 +1,5 @@
-import sys
-
-sys.path.append("../")
+""" Simulation module
+"""
 
 import numpy as np
 import healpy as hp
@@ -95,13 +94,13 @@ class DrawSources:
         nside = hp.npix2nside(len(temp))
 
         # Draw coordinates according to template
-        self.th_ary, self.ph_ary = self.get_coords(temp, self.n_draw)
+        th_ary, ph_ary = self.get_coords(temp, self.n_draw)
 
         the_map = np.zeros(hp.nside2npix(nside))
 
         for ips in tqdm(range(self.n_draw), disable=True):
-            th = self.th_ary[ips]
-            ph = self.ph_ary[ips]
+            th = th_ary[ips]
+            ph = ph_ary[ips]
             num_phot = self.counts_sample[ips]
             phm = ph + np.pi / 2.0
             rotx = np.matrix([[1, 0, 0], [0, np.cos(th), -np.sin(th)], [0, np.sin(th), np.cos(th)]])
@@ -139,18 +138,18 @@ class SimulateMap:
             self.ps_temps[i_temp] = hp.ud_grade(self.ps_temps[i_temp], nside_out=self.nside, power=-2)
 
     def create_map(self):
-        self.mu_map = np.zeros(hp.nside2npix(self.nside))
+        mu_map = np.zeros(hp.nside2npix(self.nside))
 
         for i_temp in range(len(self.temps)):
-            self.mu_map += self.norms[i_temp] * self.temps[i_temp]
+            mu_map += self.norms[i_temp] * self.temps[i_temp]
 
-        gamma_map = np.random.poisson(self.mu_map)
+        gamma_map = np.random.poisson(mu_map)
 
         if self.S_arys is not None:
             for i_ps in range(len(self.ps_temps)):
                 ds = DrawSources(self.S_arys[i_ps], self.dNdS_arys[i_ps], n_exp=self.n_exp[i_ps])
-                self.ps_map = ds.create_ps_map(self.ps_temps[i_ps], self.psf_r)
-                gamma_map += self.ps_map.astype(np.int64)
+                ps_map = ds.create_ps_map(self.ps_temps[i_ps], self.psf_r)
+                gamma_map += ps_map.astype(np.int64)
 
         return gamma_map.astype(np.int32)
 

@@ -2,11 +2,13 @@
 """
 
 import numpy as np
-import healpy as hp
-import torch
-from pygsp.graphs.nngraphs.spherehealpix import SphereHealpix
 from scipy import sparse
 from scipy.sparse import coo_matrix
+import torch
+
+from pygsp.graphs.nngraphs.spherehealpix import SphereHealpix
+
+# pylint: disable=W0223
 
 
 def scipy_csr_to_sparse_tensor(csr_mat):
