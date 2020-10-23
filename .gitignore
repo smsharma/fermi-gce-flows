@@ -23,8 +23,6 @@
 *.DS_Store
 .DS_Store
 auto
-firas-perturbations.pdf
-perturbations-formalism.pdf
 
 # Large files
 
@@ -154,3 +152,6 @@ venv.bak/
 *.pt
 
 sbi-logs
+psf_dir
+
+*.tfevents*

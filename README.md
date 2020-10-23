@@ -1,5 +1,9 @@
-# sbi-fermi
+# Simulation-inference for the Galactic Center Excess
 
 ## TODO
 
-- Modify SBI to print epochs
+- Update to newer GPU-supported version of SBI, document dependencies
+- Add saving and loading model state dicts
+- Streamline inference, write separate script to decouple from nb
+- Write analysis class
+- Generalize simulation script, somewhat clunky atm
