@@ -9,6 +9,6 @@
 # #SBATCH --gres=gpu:1
 
 conda activate
-cd /scratch/sm8383/sbi-fermi/
+cd /home/sm8383/sbi-fermi/
 
-python -u simulate.py -n 10000 --name train_${SLURM_ARRAY_TASK_ID} --dir /scratch/sm8383/sbi-fermi/
+python -u simulate.py -n 1000 --name train_${SLURM_ARRAY_TASK_ID} --dir /scratch/sm8383/sbi-fermi/
