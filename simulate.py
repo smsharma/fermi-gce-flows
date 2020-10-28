@@ -22,29 +22,33 @@ from tqdm import *
 from simulations.wrapper import simulator
 
 from utils.psf_correction import PSFCorrection
-from utils.utils import make_dirs
 from models.psf import KingPSF
 
 
-def simulate_train(n=10000):
+def simulate_train(n=10000, r_outer=25, nside_max=128, psf="king"):
 
-    hp_mask_nside1 = cm.make_mask_total(nside=1, band_mask=True, band_mask_range=0, mask_ring=True, inner=0, outer=25)
+    hp_mask_nside1 = cm.make_mask_total(nside=1, band_mask=True, band_mask_range=0, mask_ring=True, inner=0, outer=r_outer)
 
     indexes_list = []
     masks_list = []
 
-    nside_list = [128, 64, 32, 16, 8, 4, 2]
+    assert (nside_max & (nside_max - 1) == 0) and nside_max != 0, "Invalid nside"
+
+    nside_list = [int(nside_max / (2 ** i)) for i in np.arange(hp.nside2order(nside_max))]
 
     for nside in nside_list:
         hp_mask = hp.ud_grade(hp_mask_nside1, nside)
         masks_list.append(hp_mask)
         indexes_list.append(np.arange(hp.nside2npix(nside))[~hp_mask])
 
-    kp = KingPSF()
     temp_gce = np.load("data/fermi_data/template_gce.npy")
 
-    pc_inst = PSFCorrection(delay_compute=True)
-    pc_inst.psf_r_func = lambda r: kp.psf_fermi_r(r)
+    if psf == "king":
+
+        kp = KingPSF()
+
+    else:
+        raise NotImplementedError
 
     logger.info("Generating training data with %s images", n)
 
@@ -52,9 +56,12 @@ def simulate_train(n=10000):
 
     thetas = prior.sample((n,))
 
-    # Samples from numerator
-    logger.info("Generating %s images", n)
-    x = [simulator(theta.detach().numpy(), masks_list[0], temp_gce, pc_inst.psf_r_func) for theta in tqdm(thetas)]
+    # Generate images
+
+    logger.info("Generating %s maps", n)
+
+    x = [simulator(theta.detach().numpy(), masks_list[0], temp_gce, kp.psf_fermi_r) for theta in tqdm(thetas)]
+    
     results = {}
     results["theta"] = thetas
     results["x"] = x
