@@ -9,11 +9,6 @@ sys.path.append("./")
 import logging
 import argparse
 import numpy as np
-import torch
-
-from sbi import utils
-from sbi import inference
-from sbi.inference.base import infer
 
 import healpy as hp
 from utils.utils import load_and_check
@@ -22,6 +17,12 @@ from simulations.wrapper import simulator
 from utils.psf_correction import PSFCorrection
 from models.psf import KingPSF
 from utils import create_mask as cm
+
+import torch
+
+from sbi import utils
+from sbi import inference
+from sbi.inference.base import infer
 
 
 def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, device=None):
@@ -67,13 +68,19 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
     # setup the inference procedure with the SNPE-C procedure
     inference_inst = inference.SNPE(simulator_wrapper, prior, density_estimator=neural_classifier, show_progress_bars=True, show_round_summary=True, logging_level="INFO", sample_with_mcmc=False, mcmc_method="slice_np", device=device)
 
-    x_filename = ("{}/samples/x_{}.npy".format(data_dir, sample_name),)
-    theta_filename = ("{}/samples/theta_{}.npy".format(data_dir, sample_name),)
-
-    x = np.load(x_filename)
-    theta = np.load(theta_filename)
+    x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)[:50000]
+    theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)[:50000]
+    
+    x = torch.Tensor(np.load(x_filename))
+    theta = torch.Tensor(np.load(theta_filename))
+    
+    theta[:, 0] = torch.log10(theta[:, 0])
+    
+    print("Providing presimulated...")
 
     inference_inst.provide_presimulated(theta, x[:, 0, :])
+
+    print("Training...")
 
     # run the inference procedure on one round and 10000 simulated data points
     posterior = inference_inst(num_simulations=0, training_batch_size=64, max_num_epochs=200)
