@@ -70,12 +70,12 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
 
     x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)[:50000]
     theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)[:50000]
-    
+
     x = torch.Tensor(np.load(x_filename))
     theta = torch.Tensor(np.load(theta_filename))
-    
+
     theta[:, 0] = torch.log10(theta[:, 0])
-    
+
     print("Providing presimulated...")
 
     inference_inst.provide_presimulated(theta, x[:, 0, :])
@@ -83,7 +83,7 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
     print("Training...")
 
     # run the inference procedure on one round and 10000 simulated data points
-    posterior = inference_inst(num_simulations=0, training_batch_size=64, max_num_epochs=200)
+    posterior = inference_inst(num_simulations=0, training_batch_size=64, max_num_epochs=50)
 
     torch.save(posterior, "{}/models/{}".format(data_dir, model_filename))
 

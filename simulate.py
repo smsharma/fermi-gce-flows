@@ -1,31 +1,25 @@
-#! /usr/bin/env python
 from __future__ import absolute_import, division, print_function, unicode_literals
-
-import numpy as np
-from simulations.simulate_ps import SimulateMap
-from utils import create_mask as cm
-import healpy as hp
-
-import torch
-
-
 import sys, os
 import argparse
 import logging
 
+import numpy as np
+import healpy as hp
+from tqdm.auto import tqdm
+import torch
+
 logger = logging.getLogger(__name__)
 sys.path.append("./")
+sys.path.append("../")
+sys.path.append("../sbi/")
 
 from sbi import utils
-from tqdm import *
-
 from simulations.wrapper import simulator
-
-from utils.psf_correction import PSFCorrection
+from utils import create_mask as cm
 from models.psf import KingPSF
 
 
-def simulate_train(n=10000, r_outer=25, nside_max=128, psf="king"):
+def simulate(n=10000, r_outer=25, nside_max=128, psf="king"):
 
     hp_mask_nside1 = cm.make_mask_total(nside=1, band_mask=True, band_mask_range=0, mask_ring=True, inner=0, outer=r_outer)
 
@@ -44,7 +38,6 @@ def simulate_train(n=10000, r_outer=25, nside_max=128, psf="king"):
     temp_gce = np.load("data/fermi_data/template_gce.npy")
 
     if psf == "king":
-
         kp = KingPSF()
 
     else:
@@ -52,16 +45,14 @@ def simulate_train(n=10000, r_outer=25, nside_max=128, psf="king"):
 
     logger.info("Generating training data with %s images", n)
 
-    prior = utils.BoxUniform(low=torch.tensor([0.5, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.tensor([3.0, 20.0, 1.9, 1.9, 50.0, 4.99]))
-
+    prior = utils.BoxUniform(low=torch.tensor([0.5, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.tensor([3.0, 20.0, 1.99, 1.99, 50.0, 4.99]))
     thetas = prior.sample((n,))
 
     # Generate images
-
     logger.info("Generating %s maps", n)
 
     x = [simulator(theta.detach().numpy(), masks_list[0], temp_gce, kp.psf_fermi_r) for theta in tqdm(thetas)]
-    
+
     results = {}
     results["theta"] = thetas
     results["x"] = x
@@ -84,17 +75,14 @@ def save(data_dir, name, data):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Main high-level script that starts the strong lensing simulations")
+
+    parser = argparse.ArgumentParser(description="Main high-level script that starts the GCE simulations")
 
     parser.add_argument(
         "-n", type=int, default=10000, help="Number of samples to generate. Default is 10k.",
     )
-
     parser.add_argument("--name", type=str, default=None, help='Sample name, like "train" or "test".')
-
-    parser.add_argument(
-        "--dir", type=str, default=".", help="Base directory. Results will be saved in the data/samples subfolder.",
-    )
+    parser.add_argument("--dir", type=str, default=".", help="Base directory. Results will be saved in the data/samples subfolder.")
     parser.add_argument("--debug", action="store_true", help="Prints debug output.")
 
     return parser.parse_args()
@@ -109,7 +97,7 @@ if __name__ == "__main__":
     logger.info("Hi!")
 
     name = "train" if args.name is None else args.name
-    results = simulate_train(args.n)
+    results = simulate(args.n)
     save(args.dir, name, results)
 
     logger.info("All done! Have a nice day!")
