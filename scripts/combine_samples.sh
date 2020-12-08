@@ -14,4 +14,4 @@ singularity exec --nv \
             --overlay /scratch/sm8383/sbi-fermi-overlay.ext3:ro \
             /scratch/work/public/singularity/cuda11.0-cudnn8-devel-ubuntu18.04.sif \
             bash -c "source /ext3/env.sh; conda activate sbi-fermi; cd /scratch/sm8383/sbi-fermi/; \
-            ./combine_samples.py --regex train 'train_\d+; --dir /scratch/sm8383/sbi-fermi/"
+            ./combine_samples.py --regex train 'train_\d+'; --dir /scratch/sm8383/sbi-fermi/"
