@@ -4,8 +4,8 @@
 #SBATCH --output=combine.log
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=150GB
-#SBATCH --time=10:00:00
+#SBATCH --mem=100GB
+#SBATCH --time=00:59:00
 # #SBATCH --gres=gpu:1
 
 module purge
