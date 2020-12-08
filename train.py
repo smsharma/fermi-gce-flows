@@ -17,8 +17,6 @@ from utils import create_mask as cm
 import torch
 
 from sbi import utils
-from sbi import inference
-from sbi.inference.base import infer
 from sbi.inference import SNPE
 
 
@@ -73,8 +71,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description="High-level script for the training of the neural likelihood ratio estimators")
 
     # Main options
-    parser.add_argument("sample", type=str, help='Sample name, like "train".')
-    parser.add_argument("name", type=str, help="Model name. Defaults to the name of the method.")
+    parser.add_argument("--sample", type=str, help='Sample name, like "train".')
+    parser.add_argument("--name", type=str, help="Model name. Defaults to the name of the method.")
     parser.add_argument(
         "--dir", type=str, default=".", help="Directory. Training data will be loaded from the data/samples subfolder, the model saved in the " "data/models subfolder.",
     )
