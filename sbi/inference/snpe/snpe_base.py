@@ -76,7 +76,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         # Extra SNPE-specific fields summary_writer.
         self._summary.update({"rejection_sampling_acceptance_rates": []})  # type:ignore
 
-    def train(self, x, theta, prior, training_batch_size: int = 50, learning_rate: float = 5e-4, validation_fraction: float = 0.1, stop_after_epochs: int = 20, max_num_epochs: Optional[int] = None, clip_max_norm: Optional[float] = 5.0, calibration_kernel: Optional[Callable] = None, exclude_invalid_x: bool = True, discard_prior_samples: bool = False, retrain_from_scratch_each_round: bool = False, show_train_summary: bool = False,) -> DirectPosterior:
+    def train(self, x, theta, proposal, training_batch_size: int = 50, learning_rate: float = 5e-4, validation_fraction: float = 0.1, stop_after_epochs: int = 20, max_num_epochs: Optional[int] = None, clip_max_norm: Optional[float] = 5.0, calibration_kernel: Optional[Callable] = None, exclude_invalid_x: bool = True, discard_prior_samples: bool = False, retrain_from_scratch_each_round: bool = False, show_train_summary: bool = False,) -> DirectPosterior:
         r"""
         Return density estimator that approximates the distribution $p(\theta|x)$.
 
@@ -130,34 +130,6 @@ class PosteriorEstimator(NeuralInference, ABC):
         self._neural_net = self._build_neural_net(torch.Tensor(theta), torch.Tensor(x))
         test_posterior_net_for_multi_d_x(self._neural_net, torch.Tensor(theta), torch.Tensor(x))
         self._x_shape = x_shape_from_simulation(torch.Tensor(x))
-
-        # Starting index for the training set (1 = discard round-0 samples).
-        start_idx = int(discard_prior_samples and self._round > 0)
-
-        # For non-atomic loss, we can not reuse samples from prev. rounds as of now.
-        if self.use_non_atomic_loss:
-            start_idx = self._round
-
-        # theta, x, prior_masks = self.get_simulations(start_idx, exclude_invalid_x)
-
-        # Set the proposal to the last proposal that was passed by the user. For
-        # atomic SNPE, it does not matter what the proposal is. For non-atomic
-        # SNPE, we only use the latest data that was passed, i.e. the one from the
-        # last proposal.
-        proposal = prior
-
-        # # Select random neural net and validation splits from (theta, x) pairs.
-        # num_total_examples = len(theta)
-        # permuted_indices = torch.randperm(num_total_examples)
-        # num_training_examples = int((1 - validation_fraction) * num_total_examples)
-        # num_validation_examples = num_total_examples - num_training_examples
-        # train_indices, val_indices = (
-        #     permuted_indices[:num_training_examples],
-        #     permuted_indices[num_training_examples:],
-        # )
-
-        # # Dataset is shared for training and validation loaders.
-        # dataset = data.TensorDataset(theta, x, prior_masks,)
 
         train_loader, val_loader, num_validation_examples = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
 
