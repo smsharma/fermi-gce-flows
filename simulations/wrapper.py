@@ -11,7 +11,7 @@ def simulator(theta, mask, temp_ps, psf_r_func):
     good_map = False
 
     while not good_map:
-        s_ary = np.logspace(-2, 2, 100)
+        s_ary = np.logspace(-1, 2, 100)
         theta[0] = 10 ** theta[0]
         dnds_ary = dnds(s_ary, theta)
         sm = SimulateMap([], [], [s_ary], [dnds_ary], [temp_ps], psf_r_func, n_exp=[theta[0]])
