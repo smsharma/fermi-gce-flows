@@ -11,11 +11,7 @@ import argparse
 import numpy as np
 
 import healpy as hp
-from utils.utils import load_and_check
 from models.embedding import SphericalGraphCNN
-from simulations.wrapper import simulator
-from utils.psf_correction import PSFCorrection
-from models.psf import KingPSF
 from utils import create_mask as cm
 
 import torch
@@ -23,6 +19,7 @@ import torch
 from sbi import utils
 from sbi import inference
 from sbi.inference.base import infer
+from sbi.inference import SNPE
 
 
 def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, device=None):
@@ -50,42 +47,26 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
         masks_list.append(hp_mask)
         indexes_list.append(np.arange(hp.nside2npix(nside))[~hp_mask])
 
-    temp_gce = np.load("data/fermi_data/template_gce.npy")
-    kp = KingPSF()
-
+    # Embedding net
     sg_embed = SphericalGraphCNN(nside_list, indexes_list)
 
-    simulator_model = lambda theta: simulator(theta.detach().numpy(), masks_list[0], temp_gce, kp.psf_fermi_r)
+    # Priors hard-coded for now.
+    prior = utils.BoxUniform(low=torch.tensor([0.5, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.tensor([3.0, 20.0, 1.99, 1.99, 50.0, 4.99]))
 
-    prior = utils.BoxUniform(low=torch.tensor([0.5, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.tensor([3.0, 20.0, 1.9, 1.9, 50.0, 4.99]))
-
-    # make a SBI-wrapper on the simulator object for compatibility
-    simulator_wrapper, prior = inference.prepare_for_sbi(simulator_model, prior)
+    # Embedding net
+    sg_embed = SphericalGraphCNN(nside_list, indexes_list)
 
     # instantiate the neural density estimator
     neural_classifier = utils.posterior_nn(model="maf", embedding_net=sg_embed, hidden_features=50, num_transforms=4,)
 
     # setup the inference procedure with the SNPE-C procedure
-    inference_inst = inference.SNPE(simulator_wrapper, prior, density_estimator=neural_classifier, show_progress_bars=True, show_round_summary=True, logging_level="INFO", sample_with_mcmc=False, mcmc_method="slice_np", device=device)
+    inference_inst = SNPE(prior=prior, density_estimator=neural_classifier, show_progress_bars=True, show_round_summary=True, logging_level="INFO", sample_with_mcmc=False, mcmc_method="slice_np", device=device.type)
 
     x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
     theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)
 
-    x = torch.Tensor(np.load(x_filename))
-    theta = torch.Tensor(np.load(theta_filename))
-
-    theta[:, 0] = torch.log10(theta[:, 0])
-
-    print("Providing presimulated...")
-
-    inference_inst.provide_presimulated(theta, x[:, 0, :])
-
-    print("Training...")
-
-    # run the inference procedure on one round and 10000 simulated data points
-    posterior = inference_inst(num_simulations=0, training_batch_size=64, max_num_epochs=50)
-
-    torch.save(posterior, "{}/models/{}".format(data_dir, model_filename))
+    density_estimator = inference_inst.train(x=x_filename, theta=theta_filename, proposal=prior, training_batch_size=64, max_num_epochs=100)
+    torch.save(density_estimator, "{}/models/{}".format(data_dir, model_filename))
 
 
 def parse_args():

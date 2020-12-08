@@ -133,21 +133,6 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         train_loader, val_loader, num_validation_examples = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
 
-        # # Create neural net and validation loaders using a subset sampler.
-        # train_loader = data.DataLoader(
-        #     dataset,
-        #     batch_size=min(training_batch_size, num_training_examples),
-        #     drop_last=True,
-        #     sampler=SubsetRandomSampler(train_indices),
-        # )
-        # val_loader = data.DataLoader(
-        #     dataset,
-        #     batch_size=min(training_batch_size, num_validation_examples),
-        #     shuffle=False,
-        #     drop_last=True,
-        #     sampler=SubsetRandomSampler(val_indices),
-        # )
-
         self._neural_net.to(self._device)
         optimizer = optim.Adam(list(self._neural_net.parameters()), lr=learning_rate,)
 
