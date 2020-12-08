@@ -143,22 +143,12 @@ class PosteriorEstimator(NeuralInference, ABC):
             self._neural_net.train()
             for batch in train_loader:
                 optimizer.zero_grad()
-                # theta_batch, x_batch, masks_batch = (
                 theta_batch, x_batch = (
                     batch[0].to(self._device),
                     batch[1].to(self._device),
-                    # batch[2].to(self._device),
                 )
 
-                batch_loss = torch.mean(
-                    self._loss(
-                        # theta_batch, x_batch, masks_batch, proposal, calibration_kernel,
-                        theta_batch,
-                        x_batch,
-                        proposal,
-                        calibration_kernel,
-                    )
-                )
+                batch_loss = torch.mean(self._loss(theta_batch, x_batch, proposal, calibration_kernel,))
                 batch_loss.backward()
                 if clip_max_norm is not None:
                     clip_grad_norm_(
@@ -177,20 +167,9 @@ class PosteriorEstimator(NeuralInference, ABC):
                         batch[0].to(self._device),
                         batch[1].to(self._device),
                     )
-                    # theta_batch, x_batch, masks_batch = (
-                    #     batch[0].to(self._device),
-                    #     batch[1].to(self._device),
-                    #     batch[2].to(self._device),
-                    # )
 
                     # Take negative loss here to get validation log_prob.
-                    batch_log_prob = -self._loss(
-                        # theta_batch, x_batch, masks_batch, proposal, calibration_kernel,
-                        theta_batch,
-                        x_batch,
-                        proposal,
-                        calibration_kernel,
-                    )
+                    batch_log_prob = -self._loss(theta_batch, x_batch, proposal, calibration_kernel,)
                     log_prob_sum += batch_log_prob.sum().item()
 
             self._val_log_prob = log_prob_sum / num_validation_examples
@@ -273,14 +252,7 @@ class PosteriorEstimator(NeuralInference, ABC):
     def _log_prob_proposal_posterior(self, theta: Tensor, x: Tensor, masks: Tensor, proposal: Optional[Any]) -> Tensor:
         raise NotImplementedError
 
-    def _loss(
-        self,
-        theta: Tensor,
-        x: Tensor,
-        # masks: Tensor,
-        proposal: Optional[Any],
-        calibration_kernel: Callable,
-    ) -> Tensor:
+    def _loss(self, theta: Tensor, x: Tensor, proposal: Optional[Any], calibration_kernel: Callable,) -> Tensor:
         """Return loss with proposal correction (`round_>0`) or without it (`round_=0`).
 
         The loss is the negative log prob. Irrespective of the round or SNPE method
@@ -290,11 +262,8 @@ class PosteriorEstimator(NeuralInference, ABC):
             Calibration kernel-weighted negative log prob.
         """
 
-        # if self._round == 0:
-        # Use posterior log prob (without proposal correction) for first round.
+        # Use posterior log prob
         log_prob = self._neural_net.log_prob(theta, x)
-        # else:
-        #     log_prob = self._log_prob_proposal_posterior(theta, x, masks, proposal)
 
         return -(calibration_kernel(x) * log_prob)
 

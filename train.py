@@ -31,6 +31,7 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
     logging.info("Creating estimator")
     logging.info("")
 
+    # Get mask of central pixel for nside=1
     hp_mask_nside1 = cm.make_mask_total(nside=1, band_mask=True, band_mask_range=0, mask_ring=True, inner=0, outer=r_outer)
 
     indexes_list = []
@@ -54,17 +55,17 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
     # Embedding net
     sg_embed = SphericalGraphCNN(nside_list, indexes_list)
 
-    # instantiate the neural density estimator
+    # Instantiate the neural density estimator
     neural_classifier = utils.posterior_nn(model="maf", embedding_net=sg_embed, hidden_features=50, num_transforms=4,)
 
-    # setup the inference procedure with the SNPE-C procedure
-    inference_inst = SNPE(prior=prior, density_estimator=neural_classifier, show_progress_bars=True, show_round_summary=True, logging_level="INFO", sample_with_mcmc=False, mcmc_method="slice_np", device=device.type)
+    # Setup the inference procedure with the SNPE-C procedure
+    inference_inst = SNPE(prior=prior, density_estimator=neural_classifier, show_progress_bars=True, logging_level="INFO", device=device.type)
 
     x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
     theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)
 
     density_estimator = inference_inst.train(x=x_filename, theta=theta_filename, proposal=prior, training_batch_size=64, max_num_epochs=100)
-    torch.save(density_estimator, "{}/models/{}".format(data_dir, model_filename))
+    torch.save(density_estimator, "{}/models/{}.pt".format(data_dir, model_filename))
 
 
 def parse_args():
