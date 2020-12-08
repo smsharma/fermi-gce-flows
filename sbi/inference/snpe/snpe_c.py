@@ -26,14 +26,7 @@ from sbi.utils import (
 
 class SNPE_C(PosteriorEstimator):
     def __init__(
-        self,
-        prior,
-        density_estimator: Union[str, Callable] = "maf",
-        device: str = "cpu",
-        logging_level: Union[int, str] = "WARNING",
-        summary_writer: Optional[TensorboardSummaryWriter] = None,
-        show_progress_bars: bool = True,
-        **unused_args,
+        self, prior, density_estimator: Union[str, Callable] = "maf", device: str = "cpu", logging_level: Union[int, str] = "WARNING", summary_writer: Optional[TensorboardSummaryWriter] = None, show_progress_bars: bool = True, **unused_args,
     ):
         r"""SNPE-C / APT [1].
 
@@ -89,24 +82,7 @@ class SNPE_C(PosteriorEstimator):
         kwargs = del_entries(locals(), entries=("self", "__class__", "unused_args"))
         super().__init__(**kwargs, **unused_args)
 
-    def train(
-        self,
-        x,
-        theta,
-        num_atoms: int = 10,
-        training_batch_size: int = 50,
-        learning_rate: float = 5e-4,
-        validation_fraction: float = 0.1,
-        stop_after_epochs: int = 20,
-        max_num_epochs: Optional[int] = None,
-        clip_max_norm: Optional[float] = 5.0,
-        calibration_kernel: Optional[Callable] = None,
-        exclude_invalid_x: bool = True,
-        discard_prior_samples: bool = False,
-        use_combined_loss: bool = False,
-        retrain_from_scratch_each_round: bool = False,
-        show_train_summary: bool = False,
-    ) -> DirectPosterior:
+    def train(self, x, theta, num_atoms: int = 10, training_batch_size: int = 50, learning_rate: float = 5e-4, validation_fraction: float = 0.1, stop_after_epochs: int = 20, max_num_epochs: Optional[int] = None, clip_max_norm: Optional[float] = 5.0, calibration_kernel: Optional[Callable] = None, exclude_invalid_x: bool = True, discard_prior_samples: bool = False, use_combined_loss: bool = False, retrain_from_scratch_each_round: bool = False, show_train_summary: bool = False,) -> DirectPosterior:
         r"""
         Return density estimator that approximates the distribution $p(\theta|x)$.
 
@@ -148,10 +124,10 @@ class SNPE_C(PosteriorEstimator):
         # to pass arguments between functions, and that's implicit state management.
         self._num_atoms = num_atoms
         self._use_combined_loss = use_combined_loss
-        kwargs = del_entries(
-            locals(), entries=("self", "__class__", "num_atoms", "use_combined_loss")
-        )
+        kwargs = del_entries(locals(), entries=("self", "__class__", "num_atoms", "use_combined_loss"))
 
+        # Hard-coded single round
+        self._data_round_index.append(0)
         self._round = max(self._data_round_index)
         return super().train(**kwargs)
 
@@ -173,10 +149,7 @@ class SNPE_C(PosteriorEstimator):
         self._set_maybe_z_scored_prior()
 
         if isinstance(self._maybe_z_scored_prior, MultivariateNormal):
-            self.prec_m_prod_prior = torch.mv(
-                self._maybe_z_scored_prior.precision_matrix,
-                self._maybe_z_scored_prior.loc,
-            )
+            self.prec_m_prod_prior = torch.mv(self._maybe_z_scored_prior.precision_matrix, self._maybe_z_scored_prior.loc,)
 
     def _set_maybe_z_scored_prior(self) -> None:
         r"""
@@ -219,20 +192,14 @@ class SNPE_C(PosteriorEstimator):
             almost_one_std = torch.sqrt(self._prior.variance) / estim_prior_std
 
             if isinstance(self._prior, MultivariateNormal):
-                self._maybe_z_scored_prior = MultivariateNormal(
-                    almost_zero_mean, torch.diag(almost_one_std),
-                )
+                self._maybe_z_scored_prior = MultivariateNormal(almost_zero_mean, torch.diag(almost_one_std),)
             else:
                 range_ = torch.sqrt(almost_one_std * 3.0)
-                self._maybe_z_scored_prior = utils.BoxUniform(
-                    almost_zero_mean - range_, almost_zero_mean + range_
-                )
+                self._maybe_z_scored_prior = utils.BoxUniform(almost_zero_mean - range_, almost_zero_mean + range_)
         else:
             self._maybe_z_scored_prior = self._prior
 
-    def _log_prob_proposal_posterior(
-        self, theta: Tensor, x: Tensor, masks: Tensor, proposal: Optional[Any]
-    ) -> Tensor:
+    def _log_prob_proposal_posterior(self, theta: Tensor, x: Tensor, masks: Tensor, proposal: Optional[Any]) -> Tensor:
         """
         Return the log-probability of the proposal posterior.
 
@@ -255,9 +222,7 @@ class SNPE_C(PosteriorEstimator):
         else:
             return self._log_prob_proposal_posterior_atomic(theta, x, masks)
 
-    def _log_prob_proposal_posterior_atomic(
-        self, theta: Tensor, x: Tensor, masks: Tensor
-    ):
+    def _log_prob_proposal_posterior_atomic(self, theta: Tensor, x: Tensor, masks: Tensor):
         """
         Return log probability of the proposal posterior for atomic proposals.
 
@@ -281,9 +246,7 @@ class SNPE_C(PosteriorEstimator):
 
         batch_size = theta.shape[0]
 
-        num_atoms = clamp_and_warn(
-            "num_atoms", self._num_atoms, min_val=2, max_val=batch_size
-        )
+        num_atoms = clamp_and_warn("num_atoms", self._num_atoms, min_val=2, max_val=batch_size)
 
         # Each set of parameter atoms is evaluated using the same x,
         # so we repeat rows of the data x, e.g. [1, 2] -> [1, 1, 2, 2]
@@ -299,9 +262,7 @@ class SNPE_C(PosteriorEstimator):
 
         # We can now create our sets of atoms from the contrasting parameter sets
         # we have generated.
-        atomic_theta = torch.cat((theta[:, None, :], contrasting_theta), dim=1).reshape(
-            batch_size * num_atoms, -1
-        )
+        atomic_theta = torch.cat((theta[:, None, :], contrasting_theta), dim=1).reshape(batch_size * num_atoms, -1)
 
         # Evaluate large batch giving (batch_size * num_atoms) log prob posterior evals.
         log_prob_posterior = self._neural_net.log_prob(atomic_theta, repeated_x)
@@ -317,24 +278,18 @@ class SNPE_C(PosteriorEstimator):
         unnormalized_log_prob = log_prob_posterior - log_prob_prior
 
         # Normalize proposal posterior across discrete set of atoms.
-        log_prob_proposal_posterior = unnormalized_log_prob[:, 0] - torch.logsumexp(
-            unnormalized_log_prob, dim=-1
-        )
+        log_prob_proposal_posterior = unnormalized_log_prob[:, 0] - torch.logsumexp(unnormalized_log_prob, dim=-1)
         self._assert_all_finite(log_prob_proposal_posterior, "proposal posterior eval")
 
         # XXX This evaluates the posterior on _all_ prior samples
         if self._use_combined_loss:
             log_prob_posterior_non_atomic = self._neural_net.log_prob(theta, x)
             masks = masks.reshape(-1)
-            log_prob_proposal_posterior = (
-                masks * log_prob_posterior_non_atomic + log_prob_proposal_posterior
-            )
+            log_prob_proposal_posterior = masks * log_prob_posterior_non_atomic + log_prob_proposal_posterior
 
         return log_prob_proposal_posterior
 
-    def _log_prob_proposal_posterior_mog(
-        self, theta: Tensor, x: Tensor, proposal: DirectPosterior,
-    ) -> Tensor:
+    def _log_prob_proposal_posterior_mog(self, theta: Tensor, x: Tensor, proposal: DirectPosterior,) -> Tensor:
         """
         Return log-probability of the proposal posterior for MoG proposal.
 
@@ -380,9 +335,7 @@ class SNPE_C(PosteriorEstimator):
         theta = self._maybe_z_score_theta(theta)
 
         # Compute the MoG parameters of the proposal posterior.
-        logits_pp, m_pp, prec_pp, cov_pp = self._automatic_posterior_transformation(
-            norm_logits_p, m_p, prec_p, norm_logits_d, m_d, prec_d,
-        )
+        logits_pp, m_pp, prec_pp, cov_pp = self._automatic_posterior_transformation(norm_logits_p, m_p, prec_p, norm_logits_d, m_d, prec_d,)
 
         # Compute the log_prob of theta under the product.
         log_prob_proposal_posterior = _mog_log_prob(theta, logits_pp, m_pp, prec_pp,)
@@ -391,13 +344,7 @@ class SNPE_C(PosteriorEstimator):
         return log_prob_proposal_posterior
 
     def _automatic_posterior_transformation(
-        self,
-        logits_p: Tensor,
-        means_p: Tensor,
-        precisions_p: Tensor,
-        logits_d: Tensor,
-        means_d: Tensor,
-        precisions_d: Tensor,
+        self, logits_p: Tensor, means_p: Tensor, precisions_p: Tensor, logits_d: Tensor, means_d: Tensor, precisions_d: Tensor,
     ):
         r"""
         Returns the MoG parameters of the proposal posterior.
@@ -434,25 +381,11 @@ class SNPE_C(PosteriorEstimator):
             density estimator has K terms).
         """
 
-        precisions_pp, covariances_pp = self._precisions_proposal_posterior(
-            precisions_p, precisions_d
-        )
+        precisions_pp, covariances_pp = self._precisions_proposal_posterior(precisions_p, precisions_d)
 
-        means_pp = self._means_proposal_posterior(
-            covariances_pp, means_p, precisions_p, means_d, precisions_d,
-        )
+        means_pp = self._means_proposal_posterior(covariances_pp, means_p, precisions_p, means_d, precisions_d,)
 
-        logits_pp = self._logits_proposal_posterior(
-            means_pp,
-            precisions_pp,
-            covariances_pp,
-            logits_p,
-            means_p,
-            precisions_p,
-            logits_d,
-            means_d,
-            precisions_d,
-        )
+        logits_pp = self._logits_proposal_posterior(means_pp, precisions_pp, covariances_pp, logits_p, means_p, precisions_p, logits_d, means_d, precisions_d,)
 
         return logits_pp, means_pp, precisions_pp, covariances_pp
 
@@ -484,12 +417,7 @@ class SNPE_C(PosteriorEstimator):
         return precisions_pp, covariances_pp
 
     def _means_proposal_posterior(
-        self,
-        covariances_pp: Tensor,
-        means_p: Tensor,
-        precisions_p: Tensor,
-        means_d: Tensor,
-        precisions_d: Tensor,
+        self, covariances_pp: Tensor, means_p: Tensor, precisions_p: Tensor, means_d: Tensor, precisions_d: Tensor,
     ):
         """
         Return the means of the proposal posterior.
@@ -528,15 +456,7 @@ class SNPE_C(PosteriorEstimator):
 
     @staticmethod
     def _logits_proposal_posterior(
-        means_pp: Tensor,
-        precisions_pp: Tensor,
-        covariances_pp: Tensor,
-        logits_p: Tensor,
-        means_p: Tensor,
-        precisions_p: Tensor,
-        logits_d: Tensor,
-        means_d: Tensor,
-        precisions_d: Tensor,
+        means_pp: Tensor, precisions_pp: Tensor, covariances_pp: Tensor, logits_p: Tensor, means_p: Tensor, precisions_p: Tensor, logits_d: Tensor, means_d: Tensor, precisions_d: Tensor,
     ):
         """
         Return the component weights (i.e. logits) of the proposal posterior.
@@ -570,15 +490,10 @@ class SNPE_C(PosteriorEstimator):
 
         # Repeat the proposal and density estimator terms such that there are LK terms.
         # Same trick as has been used above.
-        logdet_covariances_p_rep = logdet_covariances_p.repeat_interleave(
-            num_comps_d, dim=1
-        )
+        logdet_covariances_p_rep = logdet_covariances_p.repeat_interleave(num_comps_d, dim=1)
         logdet_covariances_d_rep = logdet_covariances_d.repeat(1, num_comps_p)
 
-        log_sqrt_det_ratio = 0.5 * (
-            logdet_covariances_pp
-            - (logdet_covariances_p_rep + logdet_covariances_d_rep)
-        )
+        log_sqrt_det_ratio = 0.5 * (logdet_covariances_pp - (logdet_covariances_p_rep + logdet_covariances_d_rep))
 
         # Compute for proposal, density estimator, and proposal posterior:
         # mu_i.T * P_i * mu_i
@@ -604,9 +519,7 @@ class SNPE_C(PosteriorEstimator):
         return theta
 
 
-def _mog_log_prob(
-    theta: Tensor, logits_pp: Tensor, means_pp: Tensor, precisions_pp: Tensor,
-) -> Tensor:
+def _mog_log_prob(theta: Tensor, logits_pp: Tensor, means_pp: Tensor, precisions_pp: Tensor,) -> Tensor:
     r"""
     Returns the log-probability of parameter sets $\theta$ under a mixture of Gaussians.
 

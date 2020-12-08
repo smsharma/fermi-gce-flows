@@ -6,7 +6,7 @@ from models.scd import dnds
 
 def simulator(theta, mask, temp_ps, psf_r_func):
     the_map = np.zeros(np.sum(~mask))
-    while np.sum(the_map) == 0:
+    while (np.sum(the_map) == 0) or np.sum(np.isnan(the_map)) or np.sum(np.isinf(the_map)):
         s_ary = np.logspace(-2, 2, 100)
         theta[0] = 10 ** theta[0]
         dnds_ary = dnds(s_ary, theta)

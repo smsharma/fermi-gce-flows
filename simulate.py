@@ -11,7 +11,6 @@ import torch
 logger = logging.getLogger(__name__)
 sys.path.append("./")
 sys.path.append("../")
-sys.path.append("../sbi/")
 
 from sbi import utils
 from simulations.wrapper import simulator
@@ -19,40 +18,34 @@ from utils import create_mask as cm
 from models.psf import KingPSF
 
 
-def simulate(n=10000, r_outer=25, nside_max=128, psf="king"):
+def simulate(n=10000, r_outer=25, nside=128, psf="king"):
+    """ High-level simulation script
+    """
 
+    # Get mask of central pixel for nside=1
     hp_mask_nside1 = cm.make_mask_total(nside=1, band_mask=True, band_mask_range=0, mask_ring=True, inner=0, outer=r_outer)
 
-    indexes_list = []
-    masks_list = []
-
-    assert (nside_max & (nside_max - 1) == 0) and nside_max != 0, "Invalid nside"
-
-    nside_list = [int(nside_max / (2 ** i)) for i in np.arange(hp.nside2order(nside_max))]
-
-    for nside in nside_list:
-        hp_mask = hp.ud_grade(hp_mask_nside1, nside)
-        masks_list.append(hp_mask)
-        indexes_list.append(np.arange(hp.nside2npix(nside))[~hp_mask])
+    # Get mask corresponding to nside=128
+    mask_sim = hp.ud_grade(hp_mask_nside1, nside)
 
     temp_gce = np.load("data/fermi_data/template_gce.npy")
 
+    # King PSF hard-coded for now
     if psf == "king":
         kp = KingPSF()
-
     else:
         raise NotImplementedError
 
     logger.info("Generating training data with %s images", n)
 
+    # Generate simulation parameter points. Priors hard-coded for now.
     prior = utils.BoxUniform(low=torch.tensor([0.5, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.tensor([3.0, 20.0, 1.99, 1.99, 50.0, 4.99]))
     thetas = prior.sample((n,))
 
-    # Generate images
-    logger.info("Generating %s maps", n)
+    # Generate maps
+    x = [simulator(theta.detach().numpy(), mask_sim, temp_gce, kp.psf_fermi_r) for theta in tqdm(thetas)]
 
-    x = [simulator(theta.detach().numpy(), masks_list[0], temp_gce, kp.psf_fermi_r) for theta in tqdm(thetas)]
-
+    # Store and return
     results = {}
     results["theta"] = thetas
     results["x"] = x
@@ -61,6 +54,9 @@ def simulate(n=10000, r_outer=25, nside_max=128, psf="king"):
 
 
 def save(data_dir, name, data):
+    """ Save simulated data to file
+    """
+
     logger.info("Saving results with name %s", name)
 
     if not os.path.exists(data_dir):
@@ -75,6 +71,8 @@ def save(data_dir, name, data):
 
 
 def parse_args():
+    """ Parse command line arguments
+    """
 
     parser = argparse.ArgumentParser(description="Main high-level script that starts the GCE simulations")
 
@@ -89,6 +87,7 @@ def parse_args():
 
 
 if __name__ == "__main__":
+
     args = parse_args()
 
     logging.basicConfig(

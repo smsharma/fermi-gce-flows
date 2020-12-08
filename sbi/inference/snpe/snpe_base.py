@@ -36,16 +36,7 @@ from sbi.utils.sbiutils import mask_sims_from_prior
 
 
 class PosteriorEstimator(NeuralInference, ABC):
-    def __init__(
-        self,
-        prior,
-        density_estimator: Union[str, Callable] = "maf",
-        device: str = "cpu",
-        logging_level: Union[int, str] = "WARNING",
-        summary_writer: Optional[SummaryWriter] = None,
-        show_progress_bars: bool = True,
-        **unused_args
-    ):
+    def __init__(self, prior, density_estimator: Union[str, Callable] = "maf", device: str = "cpu", logging_level: Union[int, str] = "WARNING", summary_writer: Optional[SummaryWriter] = None, show_progress_bars: bool = True, **unused_args):
         """Base class for Sequential Neural Posterior Estimation methods.
 
         Args:
@@ -65,12 +56,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         """
 
         super().__init__(
-            prior=prior,
-            device=device,
-            logging_level=logging_level,
-            summary_writer=summary_writer,
-            show_progress_bars=show_progress_bars,
-            **unused_args,
+            prior=prior, device=device, logging_level=logging_level, summary_writer=summary_writer, show_progress_bars=show_progress_bars, **unused_args,
         )
 
         # As detailed in the docstring, `density_estimator` is either a string or
@@ -90,57 +76,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         # Extra SNPE-specific fields summary_writer.
         self._summary.update({"rejection_sampling_acceptance_rates": []})  # type:ignore
 
-    def append_simulations(
-        self, theta: Tensor, x: Tensor, proposal: Optional[Any] = None,
-    ) -> "PosteriorEstimator":
-        r"""
-        Store parameters and simulation outputs to use them for later training.
-
-        Data are stored as entries in lists for each type of variable (parameter/data).
-
-        Stores $\theta$, $x$, prior_masks (indicating if simulations are coming from the
-        prior or not) and an index indicating which round the batch of simulations came
-        from.
-
-        Args:
-            theta: Parameter sets.
-            x: Simulation outputs.
-            proposal: The distribution that the parameters $\theta$ were sampled from.
-                Pass `None` if the parameters were sampled from the prior. If not
-                `None`, it will trigger a different loss-function.
-
-        Returns:
-            NeuralInference object (returned so that this function is chainable).
-        """
-
-        validate_theta_and_x(theta, x)
-
-        self._check_proposal(proposal)
-        self._data_round_index.append(0)
-        self._prior_masks.append(mask_sims_from_prior(0, theta.size(0)))
-
-        self._theta_roundwise.append(theta)
-        self._x_roundwise.append(x)
-        self._proposal_roundwise.append(proposal)
-
-        return self
-
-    def train(
-        self,
-        x,
-        theta,
-        training_batch_size: int = 50,
-        learning_rate: float = 5e-4,
-        validation_fraction: float = 0.1,
-        stop_after_epochs: int = 20,
-        max_num_epochs: Optional[int] = None,
-        clip_max_norm: Optional[float] = 5.0,
-        calibration_kernel: Optional[Callable] = None,
-        exclude_invalid_x: bool = True,
-        discard_prior_samples: bool = False,
-        retrain_from_scratch_each_round: bool = False,
-        show_train_summary: bool = False,
-    ) -> DirectPosterior:
+    def train(self, x, theta, training_batch_size: int = 50, learning_rate: float = 5e-4, validation_fraction: float = 0.1, stop_after_epochs: int = 20, max_num_epochs: Optional[int] = None, clip_max_norm: Optional[float] = 5.0, calibration_kernel: Optional[Callable] = None, exclude_invalid_x: bool = True, discard_prior_samples: bool = False, retrain_from_scratch_each_round: bool = False, show_train_summary: bool = False,) -> DirectPosterior:
         r"""
         Return density estimator that approximates the distribution $p(\theta|x)$.
 
@@ -192,9 +128,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         # This is passed into NeuralPosterior, to create a neural posterior which
         # can `sample()` and `log_prob()`. The network is accessible via `.net`.
         self._neural_net = self._build_neural_net(torch.Tensor(theta), torch.Tensor(x))
-        test_posterior_net_for_multi_d_x(
-            self._neural_net, torch.Tensor(theta), torch.Tensor(x)
-        )
+        test_posterior_net_for_multi_d_x(self._neural_net, torch.Tensor(theta), torch.Tensor(x))
         self._x_shape = x_shape_from_simulation(torch.Tensor(x))
 
         # Starting index for the training set (1 = discard round-0 samples).
@@ -225,9 +159,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         # # Dataset is shared for training and validation loaders.
         # dataset = data.TensorDataset(theta, x, prior_masks,)
 
-        train_loader, val_loader, num_validation_examples = self.make_dataloaders(
-            dataset, validation_fraction, training_batch_size
-        )
+        train_loader, val_loader, num_validation_examples = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
 
         # # Create neural net and validation loaders using a subset sampler.
         # train_loader = data.DataLoader(
@@ -327,14 +259,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         return deepcopy(self._neural_net)
 
-    def build_posterior(
-        self,
-        density_estimator: Optional[TorchModule] = None,
-        rejection_sampling_parameters: Optional[Dict[str, Any]] = None,
-        sample_with_mcmc: bool = False,
-        mcmc_method: str = "slice_np",
-        mcmc_parameters: Optional[Dict[str, Any]] = None,
-    ) -> DirectPosterior:
+    def build_posterior(self, density_estimator: Optional[TorchModule] = None, rejection_sampling_parameters: Optional[Dict[str, Any]] = None, sample_with_mcmc: bool = False, mcmc_method: str = "slice_np", mcmc_parameters: Optional[Dict[str, Any]] = None,) -> DirectPosterior:
         r"""
         Build posterior from the neural density estimator.
 
@@ -377,17 +302,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         if density_estimator is None:
             density_estimator = self._neural_net
 
-        self._posterior = DirectPosterior(
-            method_family="snpe",
-            neural_net=density_estimator,
-            prior=self._prior,
-            x_shape=self._x_shape,
-            rejection_sampling_parameters=rejection_sampling_parameters,
-            sample_with_mcmc=sample_with_mcmc,
-            mcmc_method=mcmc_method,
-            mcmc_parameters=mcmc_parameters,
-            device=self._device,
-        )
+        self._posterior = DirectPosterior(method_family="snpe", neural_net=density_estimator, prior=self._prior, x_shape=self._x_shape, rejection_sampling_parameters=rejection_sampling_parameters, sample_with_mcmc=sample_with_mcmc, mcmc_method=mcmc_method, mcmc_parameters=mcmc_parameters, device=self._device,)
 
         self._posterior._num_trained_rounds = self._round + 1
 
@@ -398,9 +313,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         return deepcopy(self._posterior)
 
     @abstractmethod
-    def _log_prob_proposal_posterior(
-        self, theta: Tensor, x: Tensor, masks: Tensor, proposal: Optional[Any]
-    ) -> Tensor:
+    def _log_prob_proposal_posterior(self, theta: Tensor, x: Tensor, masks: Tensor, proposal: Optional[Any]) -> Tensor:
         raise NotImplementedError
 
     def _loss(
@@ -428,68 +341,22 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         return -(calibration_kernel(x) * log_prob)
 
-    def _check_proposal(self, proposal):
-        """
-        Check for validity of the provided proposal distribution.
-        If the proposal is a `NeuralPosterior`, we check if the default_x is set.
-        If the proposal is **not** a `NeuralPosterior`, we warn since it is likely that
-        the user simply passed the prior, but this would still trigger atomic loss.
-        """
-        if proposal is not None:
-            check_if_proposal_has_default_x(proposal)
-
-            if isinstance(proposal, RestrictedPrior):
-                if proposal._prior is not self._prior:
-                    warn(
-                        "The proposal you passed is a `RestrictedPrior`, but the "
-                        "proposal distribution it uses is not the prior (it can be "
-                        "accessed via `RestrictedPrior._prior`). We do not "
-                        "recommend to mix the `RestrictedPrior` with multi-round "
-                        "SNPE."
-                    )
-            elif (
-                not isinstance(proposal, DirectPosterior)
-                and proposal is not self._prior
-            ):
-                warn(
-                    "The proposal you passed is neither the prior nor a "
-                    "`NeuralPosterior` object. If you are an expert user and did so "
-                    "for research purposes, this is fine. If not, you might be doing "
-                    "something wrong: feel free to create an issue on Github."
-                )
-        elif self._round > 0:
-            raise ValueError(
-                "You did not specify a proposal (i.e. `proposal=None`). "
-                "However, previously, you had already specified a proposal. "
-                "This scenario is currently not allowed."
-            )
-
     def make_dataset(self, data):
         data_arrays = []
         data_labels = []
         for key, value in six.iteritems(data):
             data_labels.append(key)
             data_arrays.append(value)
-        dataset = NumpyDataset(
-            *data_arrays, dtype=torch.float
-        )  # Should maybe mod dtype
+        dataset = NumpyDataset(*data_arrays, dtype=torch.float)  # Should maybe mod dtype
         return data_labels, dataset
 
     def make_dataloaders(self, dataset, validation_split, batch_size, seed=None):
         if validation_split is None or validation_split <= 0.0:
-            train_loader = DataLoader(
-                dataset,
-                batch_size=batch_size,
-                shuffle=True,
-                pin_memory=True,  ## Run on GPU
-                num_workers=8,
-            )
+            train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=8,)  ## Run on GPU
             val_loader = None
             num_validation_examples = 0
         else:
-            assert 0.0 < validation_split < 1.0, "Wrong validation split: {}".format(
-                validation_split
-            )
+            assert 0.0 < validation_split < 1.0, "Wrong validation split: {}".format(validation_split)
 
             n_samples = len(dataset)
             indices = list(range(n_samples))
@@ -502,20 +369,8 @@ class PosteriorEstimator(NeuralInference, ABC):
             train_sampler = SubsetRandomSampler(train_idx)
             val_sampler = SubsetRandomSampler(valid_idx)
 
-            train_loader = DataLoader(
-                dataset,
-                sampler=train_sampler,
-                batch_size=batch_size,
-                pin_memory=True,  ## Run on GPU
-                num_workers=8,
-            )
-            val_loader = DataLoader(
-                dataset,
-                sampler=val_sampler,
-                batch_size=batch_size,
-                pin_memory=True,  ## Run on GPU
-                num_workers=8,
-            )
+            train_loader = DataLoader(dataset, sampler=train_sampler, batch_size=batch_size, pin_memory=True, num_workers=8,)  ## Run on GPU
+            val_loader = DataLoader(dataset, sampler=val_sampler, batch_size=batch_size, pin_memory=True, num_workers=8,)  ## Run on GPU
             num_validation_examples = split
 
         return train_loader, val_loader, num_validation_examples

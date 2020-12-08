@@ -68,8 +68,8 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
     # setup the inference procedure with the SNPE-C procedure
     inference_inst = inference.SNPE(simulator_wrapper, prior, density_estimator=neural_classifier, show_progress_bars=True, show_round_summary=True, logging_level="INFO", sample_with_mcmc=False, mcmc_method="slice_np", device=device)
 
-    x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)[:50000]
-    theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)[:50000]
+    x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
+    theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)
 
     x = torch.Tensor(np.load(x_filename))
     theta = torch.Tensor(np.load(theta_filename))
