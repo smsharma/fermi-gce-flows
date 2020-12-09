@@ -22,17 +22,14 @@ from torch.utils.data.sampler import SubsetRandomSampler
 import numpy as np
 
 from sbi import utils as utils
-from sbi.inference import NeuralInference, check_if_proposal_has_default_x
+from sbi.inference import NeuralInference
 from sbi.inference.posteriors.direct_posterior import DirectPosterior
 from sbi.types import TorchModule
 from sbi.utils import (
-    RestrictedPrior,
     check_estimator_arg,
     test_posterior_net_for_multi_d_x,
-    validate_theta_and_x,
     x_shape_from_simulation,
 )
-from sbi.utils.sbiutils import mask_sims_from_prior
 
 
 class PosteriorEstimator(NeuralInference, ABC):

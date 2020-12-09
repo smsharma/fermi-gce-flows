@@ -19,17 +19,10 @@ class CustomPytorchWrapper(Distribution):
     """
 
     def __init__(
-        self,
-        custom_prior,
-        return_type: Optional[torch.dtype] = float32,
-        batch_shape=torch.Size(),
-        event_shape=torch.Size(),
-        validate_args=None,
+        self, custom_prior, return_type: Optional[torch.dtype] = float32, batch_shape=torch.Size(), event_shape=torch.Size(), validate_args=None,
     ):
         super().__init__(
-            batch_shape=batch_shape,
-            event_shape=event_shape,
-            validate_args=validate_args,
+            batch_shape=batch_shape, event_shape=event_shape, validate_args=validate_args,
         )
 
         self.custom_prior = custom_prior
@@ -38,14 +31,10 @@ class CustomPytorchWrapper(Distribution):
         self._set_mean_and_variance()
 
     def log_prob(self, value) -> Tensor:
-        return torch.as_tensor(
-            self.custom_prior.log_prob(value), dtype=self.return_type
-        )
+        return torch.as_tensor(self.custom_prior.log_prob(value), dtype=self.return_type)
 
     def sample(self, sample_shape=torch.Size()) -> Tensor:
-        return torch.as_tensor(
-            self.custom_prior.sample(sample_shape), dtype=self.return_type
-        )
+        return torch.as_tensor(self.custom_prior.sample(sample_shape), dtype=self.return_type)
 
     def _set_mean_and_variance(self):
         """Set mean and variance if available, else estimate from samples."""
@@ -53,23 +42,16 @@ class CustomPytorchWrapper(Distribution):
         if hasattr(self.custom_prior, "mean"):
             pass
         else:
-            self.custom_prior.mean = torch.mean(
-                torch.as_tensor(self.custom_prior.sample((1000,))), dim=0
-            )
+            self.custom_prior.mean = torch.mean(torch.as_tensor(self.custom_prior.sample((1000,))), dim=0)
             warnings.warn(
-                "Prior is lacking mean attribute, estimating prior mean from samples...",
-                UserWarning,
+                "Prior is lacking mean attribute, estimating prior mean from samples...", UserWarning,
             )
         if hasattr(self.custom_prior, "variance"):
             pass
         else:
-            self.custom_prior.variance = (
-                torch.std(torch.as_tensor(self.custom_prior.sample((1000,))), dim=0)
-                ** 2
-            )
+            self.custom_prior.variance = torch.std(torch.as_tensor(self.custom_prior.sample((1000,))), dim=0) ** 2
             warnings.warn(
-                "Prior is lacking variance attribute, estimating prior variance from samples...",
-                UserWarning,
+                "Prior is lacking variance attribute, estimating prior variance from samples...", UserWarning,
             )
 
     @property
@@ -85,17 +67,10 @@ class ScipyPytorchWrapper(Distribution):
     """Wrap scipy.stats prior as a PyTorch Distribution object."""
 
     def __init__(
-        self,
-        prior_scipy: Union[rv_frozen, multi_rv_frozen],
-        return_type: Optional[torch.dtype] = float32,
-        batch_shape=torch.Size(),
-        event_shape=torch.Size(),
-        validate_args=None,
+        self, prior_scipy: Union[rv_frozen, multi_rv_frozen], return_type: Optional[torch.dtype] = float32, batch_shape=torch.Size(), event_shape=torch.Size(), validate_args=None,
     ):
         super().__init__(
-            batch_shape=batch_shape,
-            event_shape=event_shape,
-            validate_args=validate_args,
+            batch_shape=batch_shape, event_shape=event_shape, validate_args=validate_args,
         )
 
         self.prior_scipy = prior_scipy
@@ -105,9 +80,7 @@ class ScipyPytorchWrapper(Distribution):
         return torch.as_tensor(self.prior_scipy.logpdf(x=value), dtype=self.return_type)
 
     def sample(self, sample_shape=torch.Size()) -> Tensor:
-        return torch.as_tensor(
-            self.prior_scipy.rvs(size=sample_shape), dtype=self.return_type
-        )
+        return torch.as_tensor(self.prior_scipy.rvs(size=sample_shape), dtype=self.return_type)
 
     @property
     def mean(self):
@@ -122,17 +95,10 @@ class PytorchReturnTypeWrapper(Distribution):
     """Wrap PyTorch Distribution to return a given return type."""
 
     def __init__(
-        self,
-        prior: Distribution,
-        return_type: Optional[torch.dtype] = float32,
-        batch_shape=torch.Size(),
-        event_shape=torch.Size(),
-        validate_args=None,
+        self, prior: Distribution, return_type: Optional[torch.dtype] = float32, batch_shape=torch.Size(), event_shape=torch.Size(), validate_args=None,
     ):
         super().__init__(
-            batch_shape=batch_shape,
-            event_shape=event_shape,
-            validate_args=validate_args,
+            batch_shape=batch_shape, event_shape=event_shape, validate_args=validate_args,
         )
 
         self.prior = prior
@@ -180,11 +146,7 @@ class MultipleIndependent(Distribution):
         self.ndims = torch.sum(torch.as_tensor(self.dims_per_dist)).item()
 
         super().__init__(
-            batch_shape=torch.Size([]),  # batch size was ensured to be <= 1 above.
-            event_shape=torch.Size(
-                [self.ndims]
-            ),  # Event shape is the sum of all ndims.
-            validate_args=validate_args,
+            batch_shape=torch.Size([]), event_shape=torch.Size([self.ndims]), validate_args=validate_args,  # batch size was ensured to be <= 1 above.  # Event shape is the sum of all ndims.
         )
 
     def _check_distributions(self, dists):
@@ -200,18 +162,10 @@ class MultipleIndependent(Distribution):
     def _check_distribution(self, dist: Distribution):
         """Check type and shape of a single input distribution."""
 
-        assert not isinstance(
-            dist, MultipleIndependent
-        ), "Nesting of combined distributions is not possible."
-        assert isinstance(
-            dist, Distribution
-        ), "Distribution must be a PyTorch distribution."
+        assert not isinstance(dist, MultipleIndependent), "Nesting of combined distributions is not possible."
+        assert isinstance(dist, Distribution), "Distribution must be a PyTorch distribution."
         # Make sure batch shape is smaller or equal to 1.
-        assert dist.batch_shape in (
-            torch.Size([1]),
-            torch.Size([0]),
-            torch.Size([]),
-        ), "The batch shape of every distribution must be smaller or equal to 1."
+        assert dist.batch_shape in (torch.Size([1]), torch.Size([0]), torch.Size([]),), "The batch shape of every distribution must be smaller or equal to 1."
 
         assert (
             len(dist.batch_shape) > 0 or len(dist.event_shape) > 0
@@ -264,15 +218,11 @@ class MultipleIndependent(Distribution):
         if value.ndim < 2:
             value = value.unsqueeze(0)
 
-        assert (
-            value.ndim == 2
-        ), f"value in log_prob must have ndim <= 2, it is {value.ndim}."
+        assert value.ndim == 2, f"value in log_prob must have ndim <= 2, it is {value.ndim}."
 
         batch_shape, num_value_dims = value.shape
 
-        assert (
-            num_value_dims == self.ndims
-        ), f"Number of dimensions must match dimensions of this joint: {self.ndims}."
+        assert num_value_dims == self.ndims, f"Number of dimensions must match dimensions of this joint: {self.ndims}."
 
         return value
 

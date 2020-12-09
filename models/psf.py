@@ -20,7 +20,6 @@ class KingPSF:
     def psf_fermi_r(self, r):
         return self.fcore * self.king_fn(r / self.spe, self.score, self.gcore) + (1 - self.fcore) * self.king_fn(r / self.spe, self.stail, self.gtail)
 
-    @classmethod
     def psf_gauss_r(self, r, psf_sigma_deg):
 
         # Define parameters that specify the PSF

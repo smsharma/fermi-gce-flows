@@ -12,57 +12,9 @@ import torch
 from torch import Tensor
 from torch.utils.tensorboard import SummaryWriter
 
-import sbi.inference
 from sbi.inference.posteriors.base_posterior import NeuralPosterior
-from sbi.simulators.simutils import simulate_in_batches
-from sbi.user_input.user_input_checks import prepare_for_sbi
 from sbi.utils import get_log_root
 from sbi.utils.torchutils import process_device
-
-
-def infer(simulator: Callable, prior, method: str, num_simulations: int, num_workers: int = 1) -> NeuralPosterior:
-    r"""
-    Return posterior distribution by running simulation-based inference.
-
-    This function provides a simple interface to run sbi. Inference is run for a single
-    round and hence the returned posterior $p(\theta|x)$ can be sampled and evaluated
-    for any $x$ (i.e. it is amortized).
-
-    The scope of this function is limited to the most essential features of sbi. For
-    more flexibility (e.g. multi-round inference, different density estimators) please
-    use the flexible interface described here:
-    https://www.mackelab.org/sbi/tutorial/02_flexible_interface/
-
-    Args:
-        simulator: A function that takes parameters $\theta$ and maps them to
-            simulations, or observations, `x`, $\mathrm{sim}(\theta)\to x$. Any
-            regular Python callable (i.e. function or class with `__call__` method)
-            can be used.
-        prior: A probability distribution that expresses prior knowledge about the
-            parameters, e.g. which ranges are meaningful for them. Any
-            object with `.log_prob()`and `.sample()` (for example, a PyTorch
-            distribution) can be used.
-        method: What inference method to use. Either of SNPE, SNLE or SNRE.
-        num_simulations: Number of simulation calls. More simulations means a longer
-            runtime, but a better posterior estimate.
-        num_workers: Number of parallel workers to use for simulations.
-
-    Returns: Posterior over parameters conditional on observations (amortized).
-    """
-
-    try:
-        method_fun: Callable = getattr(sbi.inference, method.upper())
-    except AttributeError:
-        raise NameError("Method not available. `method` must be one of 'SNPE', 'SNLE', 'SNRE'.")
-
-    simulator, prior = prepare_for_sbi(simulator, prior)
-
-    inference = method_fun(prior)
-    theta, x = simulate_for_sbi(simulator=simulator, proposal=prior, num_simulations=num_simulations, num_workers=num_workers,)
-    _ = inference.append_simulations(theta, x).train()
-    posterior = inference.build_posterior()
-
-    return posterior
 
 
 class NeuralInference(ABC):
@@ -275,7 +227,7 @@ class NeuralInference(ABC):
 
         # Add validation log prob for every epoch.
         # Offset with all previous epochs.
-        offset = torch.tensor(self._summary["epochs"][:-1], dtype=int).sum().item()
+        offset = torch.Tensor(self._summary["epochs"][:-1], dtype=int).sum().item()
         for i, vlp in enumerate(self._summary["validation_log_probs"][offset:]):
             self._summary_writer.add_scalar(
                 tag="validation_log_probs_across_rounds", scalar_value=vlp, global_step=offset + i,
@@ -286,54 +238,3 @@ class NeuralInference(ABC):
     @property
     def summary(self):
         return self._summary
-
-
-def simulate_for_sbi(simulator: Callable, proposal: Any, num_simulations: int, num_workers: int = 1, simulation_batch_size: int = 1, show_progress_bar: bool = True,) -> Tuple[Tensor, Tensor]:
-    r"""
-    Returns ($\theta, x$) pairs obtained from sampling the proposal and simulating.
-
-    This function performs two steps:
-
-    - Sample parameters $\theta$ from the `proposal`.
-    - Simulate these parameters to obtain $x$.
-
-    Args:
-        simulator: A function that takes parameters $\theta$ and maps them to
-            simulations, or observations, `x`, $\text{sim}(\theta)\to x$. Any
-            regular Python callable (i.e. function or class with `__call__` method)
-            can be used.
-        proposal: Probability distribution that the parameters $\theta$ are sampled
-            from.
-        num_simulations: Number of simulations that are run.
-        num_workers: Number of parallel workers to use for simulations.
-        simulation_batch_size: Number of parameter sets that the simulator
-            maps to data x at once. If None, we simulate all parameter sets at the
-            same time. If >= 1, the simulator has to process data of shape
-            (simulation_batch_size, parameter_dimension).
-        show_progress_bar: Whether to show a progress bar for simulating. This will not
-            affect whether there will be a progressbar while drawing samples from the
-            proposal.
-
-    Returns: Sampled parameters $\theta$ and simulation-outputs $x$.
-    """
-
-    check_if_proposal_has_default_x(proposal)
-
-    theta = proposal.sample((num_simulations,))
-
-    x = simulate_in_batches(simulator, theta, simulation_batch_size, num_workers, show_progress_bar,)
-
-    return theta, x
-
-
-def check_if_proposal_has_default_x(proposal: Any):
-    """
-    Check for validity of the provided proposal distribution.
-
-    If the proposal is a `NeuralPosterior`, we check if the default_x is set and
-    if it matches the `_x_o_training_focused_on`.
-    """
-    if isinstance(proposal, NeuralPosterior):
-        if proposal.default_x is None:
-            raise ValueError("`proposal.default_x` is None, i.e. there is no " "x_o for training. Set it with " "`posterior.set_default_x(x_o)`.")
-
