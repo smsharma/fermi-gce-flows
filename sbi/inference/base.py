@@ -20,9 +20,7 @@ from sbi.utils import get_log_root
 from sbi.utils.torchutils import process_device
 
 
-def infer(
-    simulator: Callable, prior, method: str, num_simulations: int, num_workers: int = 1
-) -> NeuralPosterior:
+def infer(simulator: Callable, prior, method: str, num_simulations: int, num_workers: int = 1) -> NeuralPosterior:
     r"""
     Return posterior distribution by running simulation-based inference.
 
@@ -55,19 +53,12 @@ def infer(
     try:
         method_fun: Callable = getattr(sbi.inference, method.upper())
     except AttributeError:
-        raise NameError(
-            "Method not available. `method` must be one of 'SNPE', 'SNLE', 'SNRE'."
-        )
+        raise NameError("Method not available. `method` must be one of 'SNPE', 'SNLE', 'SNRE'.")
 
     simulator, prior = prepare_for_sbi(simulator, prior)
 
     inference = method_fun(prior)
-    theta, x = simulate_for_sbi(
-        simulator=simulator,
-        proposal=prior,
-        num_simulations=num_simulations,
-        num_workers=num_workers,
-    )
+    theta, x = simulate_for_sbi(simulator=simulator, proposal=prior, num_simulations=num_simulations, num_workers=num_workers,)
     _ = inference.append_simulations(theta, x).train()
     posterior = inference.build_posterior()
 
@@ -78,13 +69,7 @@ class NeuralInference(ABC):
     """Abstract base class for neural inference methods."""
 
     def __init__(
-        self,
-        prior,
-        device: str = "cpu",
-        logging_level: Union[int, str] = "WARNING",
-        summary_writer: Optional[SummaryWriter] = None,
-        show_progress_bars: bool = True,
-        **unused_args,
+        self, prior, device: str = "cpu", logging_level: Union[int, str] = "WARNING", summary_writer: Optional[SummaryWriter] = None, show_progress_bars: bool = True, **unused_args,
     ):
         r"""
         Base class for inference methods.
@@ -109,16 +94,7 @@ class NeuralInference(ABC):
         self._device = process_device(device)
 
         if unused_args:
-            warn(
-                f"You passed some keyword arguments that will not be used. "
-                f"Specifically, the unused arguments are: {list(unused_args.keys())}. "
-                f"These arguments might have been supported in sbi "
-                f"versions <0.14.0. Since 0.14.0, the API was changed. Please consult "
-                f"the corresponding pull request on github: "
-                f"https://github.com/mackelab/sbi/pull/378 and tutorials: "
-                f"https://www.mackelab.org/sbi/tutorial/02_flexible_interface/ for "
-                f"further information.",
-            )
+            warn(f"You passed some keyword arguments that will not be used. " f"Specifically, the unused arguments are: {list(unused_args.keys())}. " f"These arguments might have been supported in sbi " f"versions <0.14.0. Since 0.14.0, the API was changed. Please consult " f"the corresponding pull request on github: " f"https://github.com/mackelab/sbi/pull/378 and tutorials: " f"https://www.mackelab.org/sbi/tutorial/02_flexible_interface/ for " f"further information.",)
 
         self._prior = prior
         self._posterior = None
@@ -142,17 +118,10 @@ class NeuralInference(ABC):
         #     2. `method_family` cannot be resolved only from `self.__class__.__name__`,
         #         since SRE, AALR demand different handling but are both in SRE class.
 
-        self._summary_writer = (
-            self._default_summary_writer() if summary_writer is None else summary_writer
-        )
+        self._summary_writer = self._default_summary_writer() if summary_writer is None else summary_writer
 
         # Logging during training (by SummaryWriter).
-        self._summary = dict(
-            median_observation_distances=[],
-            epochs=[],
-            best_validation_log_probs=[],
-            validation_log_probs=[],
-        )
+        self._summary = dict(median_observation_distances=[], epochs=[], best_validation_log_probs=[], validation_log_probs=[],)
 
     def __call__(self, unused_args):
         """
@@ -162,19 +131,9 @@ class NeuralInference(ABC):
         f"further information, see the corresponding pull request on github:
         f"https://github.com/mackelab/sbi/pull/378.",
         """
-        raise NameError(
-            f"The inference object is no longer callable as of `sbi` v0.14.0. "
-            f"Please consult the release notes for a tutorial on how to adapt your "
-            f"code: https://github.com/mackelab/sbi/releases/tag/v0.14.0"
-            f"For more information, visit our website: "
-            f"https://www.mackelab.org/sbi/tutorial/02_flexible_interface/ or "
-            f"see the corresponding pull request on github: "
-            f"https://github.com/mackelab/sbi/pull/378.",
-        )
+        raise NameError(f"The inference object is no longer callable as of `sbi` v0.14.0. " f"Please consult the release notes for a tutorial on how to adapt your " f"code: https://github.com/mackelab/sbi/releases/tag/v0.14.0" f"For more information, visit our website: " f"https://www.mackelab.org/sbi/tutorial/02_flexible_interface/ or " f"see the corresponding pull request on github: " f"https://github.com/mackelab/sbi/pull/378.",)
 
-    def provide_presimulated(
-        self, theta: Tensor, x: Tensor, from_round: int = 0
-    ) -> None:
+    def provide_presimulated(self, theta: Tensor, x: Tensor, from_round: int = 0) -> None:
         r"""
         Deprecated since sbi 0.14.0.
 
@@ -194,33 +153,10 @@ class NeuralInference(ABC):
             from_round: Which round the data was simulated from. `from_round=0` means
                 that the data came from the first round, i.e. the prior.
         """
-        raise NameError(
-            f"Deprecated since sbi 0.14.0. "
-            f"Instead of using this, please use `.append_simulations()`. Please "
-            f"consult release notes to see how you can update your code: "
-            f"https://github.com/mackelab/sbi/releases/tag/v0.14.0"
-            f"More information can be found under the corresponding pull request on "
-            f"github: "
-            f"https://github.com/mackelab/sbi/pull/378"
-            f"and tutorials: "
-            f"https://www.mackelab.org/sbi/tutorial/02_flexible_interface/",
-        )
+        raise NameError(f"Deprecated since sbi 0.14.0. " f"Instead of using this, please use `.append_simulations()`. Please " f"consult release notes to see how you can update your code: " f"https://github.com/mackelab/sbi/releases/tag/v0.14.0" f"More information can be found under the corresponding pull request on " f"github: " f"https://github.com/mackelab/sbi/pull/378" f"and tutorials: " f"https://www.mackelab.org/sbi/tutorial/02_flexible_interface/",)
 
     @abstractmethod
-    def train(
-        self,
-        training_batch_size: int = 50,
-        learning_rate: float = 5e-4,
-        validation_fraction: float = 0.1,
-        stop_after_epochs: int = 20,
-        max_num_epochs: Optional[int] = None,
-        clip_max_norm: Optional[float] = 5.0,
-        calibration_kernel: Optional[Callable] = None,
-        exclude_invalid_x: bool = True,
-        discard_prior_samples: bool = False,
-        retrain_from_scratch_each_round: bool = False,
-        show_train_summary: bool = False,
-    ) -> NeuralPosterior:
+    def train(self, training_batch_size: int = 50, learning_rate: float = 5e-4, validation_fraction: float = 0.1, stop_after_epochs: int = 20, max_num_epochs: Optional[int] = None, clip_max_norm: Optional[float] = 5.0, calibration_kernel: Optional[Callable] = None, exclude_invalid_x: bool = True, discard_prior_samples: bool = False, retrain_from_scratch_each_round: bool = False, show_train_summary: bool = False,) -> NeuralPosterior:
         raise NotImplementedError
 
     def _converged(self, epoch: int, stop_after_epochs: int) -> bool:
@@ -258,22 +194,15 @@ class NeuralInference(ABC):
         """Return summary writer logging to method- and simulator-specific directory."""
 
         method = self.__class__.__name__
-        logdir = Path(
-            get_log_root(), method, datetime.now().isoformat().replace(":", "_"),
-        )
+        logdir = Path(get_log_root(), method, datetime.now().isoformat().replace(":", "_"),)
         return SummaryWriter(logdir)
 
     @staticmethod
-    def _ensure_list(
-        num_simulations_per_round: Union[List[int], int], num_rounds: int
-    ) -> List[int]:
+    def _ensure_list(num_simulations_per_round: Union[List[int], int], num_rounds: int) -> List[int]:
         """Return `num_simulations_per_round` as a list of length `num_rounds`.
         """
         try:
-            assert len(num_simulations_per_round) == num_rounds, (
-                "Please provide a list with number of simulations per round for each "
-                "round, or a single integer to be used for all rounds."
-            )
+            assert len(num_simulations_per_round) == num_rounds, "Please provide a list with number of simulations per round for each " "round, or a single integer to be used for all rounds."
         except TypeError:
             num_simulations_per_round: List = [num_simulations_per_round] * num_rounds
 
@@ -302,16 +231,11 @@ class NeuralInference(ABC):
             # https://stackoverflow.com/questions/3419984/
             print("Training neural network. Epochs trained: ", epoch, end="\r")
 
-    def _report_convergence_at_end(
-        self, epoch: int, stop_after_epochs: int, max_num_epochs: int
-    ) -> None:
+    def _report_convergence_at_end(self, epoch: int, stop_after_epochs: int, max_num_epochs: int) -> None:
         if self._converged(epoch, stop_after_epochs):
             print(f"Neural network successfully converged after {epoch} epochs.")
         elif max_num_epochs == epoch:
-            warn(
-                "Maximum number of epochs `max_num_epochs={max_num_epochs}` reached,"
-                "but network has not yet fully converged. Consider increasing it."
-            )
+            warn("Maximum number of epochs `max_num_epochs={max_num_epochs}` reached," "but network has not yet fully converged. Consider increasing it.")
 
     @staticmethod
     def _assert_all_finite(quantity: Tensor, description: str = "tensor") -> None:
@@ -320,9 +244,7 @@ class NeuralInference(ABC):
         msg = f"NaN/Inf present in {description}."
         assert torch.isfinite(quantity).all(), msg
 
-    def _summarize(
-        self, round_: int, x_o: Union[Tensor, None], theta_bank: Tensor, x_bank: Tensor,
-    ) -> None:
+    def _summarize(self, round_: int, x_o: Union[Tensor, None], theta_bank: Tensor, x_bank: Tensor,) -> None:
         """Update the summary_writer with statistics for a given round.
 
         Statistics are extracted from the arguments and from entries in self._summary
@@ -335,30 +257,20 @@ class NeuralInference(ABC):
 
         # Median |x - x0| for most recent round.
         if x_o is not None:
-            median_observation_distance = torch.median(
-                torch.sqrt(torch.sum((x_bank - x_o.reshape(1, -1)) ** 2, dim=-1,))
-            )
-            self._summary["median_observation_distances"].append(
-                median_observation_distance.item()
-            )
+            median_observation_distance = torch.median(torch.sqrt(torch.sum((x_bank - x_o.reshape(1, -1)) ** 2, dim=-1,)))
+            self._summary["median_observation_distances"].append(median_observation_distance.item())
 
             self._summary_writer.add_scalar(
-                tag="median_observation_distance",
-                scalar_value=self._summary["median_observation_distances"][-1],
-                global_step=round_ + 1,
+                tag="median_observation_distance", scalar_value=self._summary["median_observation_distances"][-1], global_step=round_ + 1,
             )
 
         # Add most recent training stats to summary writer.
         self._summary_writer.add_scalar(
-            tag="epochs_trained",
-            scalar_value=self._summary["epochs"][-1],
-            global_step=round_ + 1,
+            tag="epochs_trained", scalar_value=self._summary["epochs"][-1], global_step=round_ + 1,
         )
 
         self._summary_writer.add_scalar(
-            tag="best_validation_log_prob",
-            scalar_value=self._summary["best_validation_log_probs"][-1],
-            global_step=round_ + 1,
+            tag="best_validation_log_prob", scalar_value=self._summary["best_validation_log_probs"][-1], global_step=round_ + 1,
         )
 
         # Add validation log prob for every epoch.
@@ -366,9 +278,7 @@ class NeuralInference(ABC):
         offset = torch.tensor(self._summary["epochs"][:-1], dtype=int).sum().item()
         for i, vlp in enumerate(self._summary["validation_log_probs"][offset:]):
             self._summary_writer.add_scalar(
-                tag="validation_log_probs_across_rounds",
-                scalar_value=vlp,
-                global_step=offset + i,
+                tag="validation_log_probs_across_rounds", scalar_value=vlp, global_step=offset + i,
             )
 
         self._summary_writer.flush()
@@ -378,14 +288,7 @@ class NeuralInference(ABC):
         return self._summary
 
 
-def simulate_for_sbi(
-    simulator: Callable,
-    proposal: Any,
-    num_simulations: int,
-    num_workers: int = 1,
-    simulation_batch_size: int = 1,
-    show_progress_bar: bool = True,
-) -> Tuple[Tensor, Tensor]:
+def simulate_for_sbi(simulator: Callable, proposal: Any, num_simulations: int, num_workers: int = 1, simulation_batch_size: int = 1, show_progress_bar: bool = True,) -> Tuple[Tensor, Tensor]:
     r"""
     Returns ($\theta, x$) pairs obtained from sampling the proposal and simulating.
 
@@ -418,9 +321,7 @@ def simulate_for_sbi(
 
     theta = proposal.sample((num_simulations,))
 
-    x = simulate_in_batches(
-        simulator, theta, simulation_batch_size, num_workers, show_progress_bar,
-    )
+    x = simulate_in_batches(simulator, theta, simulation_batch_size, num_workers, show_progress_bar,)
 
     return theta, x
 
@@ -434,8 +335,5 @@ def check_if_proposal_has_default_x(proposal: Any):
     """
     if isinstance(proposal, NeuralPosterior):
         if proposal.default_x is None:
-            raise ValueError(
-                "`proposal.default_x` is None, i.e. there is no "
-                "x_o for training. Set it with "
-                "`posterior.set_default_x(x_o)`."
-            )
+            raise ValueError("`proposal.default_x` is None, i.e. there is no " "x_o for training. Set it with " "`posterior.set_default_x(x_o)`.")
+
