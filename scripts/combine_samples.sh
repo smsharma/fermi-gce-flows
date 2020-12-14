@@ -8,6 +8,7 @@
 #SBATCH --time=00:59:00
 # #SBATCH --gres=gpu:1
 
+source ~/.bashrc
 conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi
 ./combine_samples.py --regex train 'train_\d+' --dir /scratch/sm8383/sbi-fermi/
