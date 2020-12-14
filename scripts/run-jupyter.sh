@@ -52,17 +52,6 @@ if [ "$SLURM_JOBTMP" != "" ]; then
     export XDG_RUNTIME_DIR=$SLURM_JOBTMP
 fi
 
-cd /scratch/sm8383/
-module purge
-
-#singularity exec --nv \
-#            --overlay /scratch/sm8383/sbi-fermi-overlay.ext3:ro \
-#            
-#/scratch/work/public/singularity/cuda11.0-cudnn8-devel-ubuntu18.04.sif \
-#            bash -c "source /ext3/env.sh; conda activate sbi-fermi; cd /scratch/sm8383; \
-            jupyter lab --no-browser --port ${port} --notebook-dir=${pwd}" 
-
-
 conda activate sbi-fermi
 cd /scratch/sm8383/
 jupyter lab --no-browser --port ${port} --notebook-dir=${pwd}
