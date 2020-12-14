@@ -5,6 +5,7 @@
 .coverage
 *.idea
 .vscode
+samples/
 
 # Tex
 *.aux
