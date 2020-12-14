@@ -160,21 +160,21 @@ class NeuralInference(ABC):
 
         return cast(list, num_simulations_per_round)
 
-    @staticmethod
-    def _describe_round(round_: int, summary: Dict[str, list]) -> str:
-        epochs = summary["epochs"][-1]
-        best_validation_log_probs = summary["best_validation_log_probs"][-1]
+    # @staticmethod
+    # def _describe_round(round_: int, summary: Dict[str, list]) -> str:
+    #     epochs = summary["epochs"][-1]
+    #     best_validation_log_probs = summary["best_validation_log_probs"][-1]
 
-        description = f"""
-        -------------------------
-        ||||| ROUND {round_ + 1} STATS |||||:
-        -------------------------
-        Epochs trained: {epochs}
-        Best validation performance: {best_validation_log_probs:.4f}
-        -------------------------
-        """
+    #     description = f"""
+    #     -------------------------
+    #     ||||| ROUND {round_ + 1} STATS |||||:
+    #     -------------------------
+    #     Epochs trained: {epochs}
+    #     Best validation performance: {best_validation_log_probs:.4f}
+    #     -------------------------
+    #     """
 
-        return description
+    #     return description
 
     @staticmethod
     def _maybe_show_progress(show=bool, epoch=int) -> None:
@@ -195,46 +195,3 @@ class NeuralInference(ABC):
 
         msg = f"NaN/Inf present in {description}."
         assert torch.isfinite(quantity).all(), msg
-
-    def _summarize(self, round_: int, x_o: Union[Tensor, None], theta_bank: Tensor, x_bank: Tensor,) -> None:
-        """Update the summary_writer with statistics for a given round.
-
-        Statistics are extracted from the arguments and from entries in self._summary
-        created during training.
-        """
-
-        # NB. This is a subset of the logging as done in `GH:conormdurkan/lfi`. A big
-        # part of the logging was removed because of API changes, e.g., logging
-        # comparisons to ground-truth parameters and samples.
-
-        # Median |x - x0| for most recent round.
-        if x_o is not None:
-            median_observation_distance = torch.median(torch.sqrt(torch.sum((x_bank - x_o.reshape(1, -1)) ** 2, dim=-1,)))
-            self._summary["median_observation_distances"].append(median_observation_distance.item())
-
-            self._summary_writer.add_scalar(
-                tag="median_observation_distance", scalar_value=self._summary["median_observation_distances"][-1], global_step=round_ + 1,
-            )
-
-        # Add most recent training stats to summary writer.
-        self._summary_writer.add_scalar(
-            tag="epochs_trained", scalar_value=self._summary["epochs"][-1], global_step=round_ + 1,
-        )
-
-        self._summary_writer.add_scalar(
-            tag="best_validation_log_prob", scalar_value=self._summary["best_validation_log_probs"][-1], global_step=round_ + 1,
-        )
-
-        # Add validation log prob for every epoch.
-        # Offset with all previous epochs.
-        offset = torch.Tensor(self._summary["epochs"][:-1], dtype=int).sum().item()
-        for i, vlp in enumerate(self._summary["validation_log_probs"][offset:]):
-            self._summary_writer.add_scalar(
-                tag="validation_log_probs_across_rounds", scalar_value=vlp, global_step=offset + i,
-            )
-
-        self._summary_writer.flush()
-
-    @property
-    def summary(self):
-        return self._summary

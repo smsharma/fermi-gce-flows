@@ -181,15 +181,6 @@ class PosteriorEstimator(NeuralInference, ABC):
         self._summary["epochs"].append(epoch)
         self._summary["best_validation_log_probs"].append(self._best_val_log_prob)
 
-        # Update tensorboard and summary dict.
-        self._summarize(
-            round_=self._round, x_o=None, theta_bank=theta, x_bank=x,
-        )
-
-        # Update description for progress bar.
-        if show_train_summary:
-            print(self._describe_round(self._round, self._summary))
-
         return deepcopy(self._neural_net)
 
     def build_posterior(self, density_estimator: Optional[TorchModule] = None, rejection_sampling_parameters: Optional[Dict[str, Any]] = None, sample_with_mcmc: bool = False, mcmc_method: str = "slice_np", mcmc_parameters: Optional[Dict[str, Any]] = None,) -> DirectPosterior:

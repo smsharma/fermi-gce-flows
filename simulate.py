@@ -42,7 +42,7 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king"):
     results = {}
 
     # Generate simulation parameter points. Priors hard-coded for now.
-    prior = utils.BoxUniform(low=torch.tensor([1.0, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.tensor([3.0, 20.0, 1.99, 1.99, 50.0, 4.99]))
+    prior = utils.BoxUniform(low=torch.tensor([0.001, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.tensor([0.5, 0.5, 20.0, 1.99, 1.99, 50.0, 4.99]))
     thetas = prior.sample((n,))
     results["theta"] = thetas
 

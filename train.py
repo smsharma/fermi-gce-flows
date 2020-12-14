@@ -50,8 +50,7 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
     sg_embed = SphericalGraphCNN(nside_list, indexes_list)
 
     # Priors hard-coded for now.
-    prior = utils.BoxUniform(low=torch.Tensor([1.0, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.Tensor([3.0, 20.0, 1.99, 1.99, 50.0, 4.99]))
-
+    prior = utils.BoxUniform(low=torch.tensor([0.001, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.tensor([0.5, 0.5, 20.0, 1.99, 1.99, 50.0, 4.99]))
     # Embedding net
     sg_embed = SphericalGraphCNN(nside_list, indexes_list)
 
