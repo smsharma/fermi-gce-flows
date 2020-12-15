@@ -46,7 +46,7 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
         masks_list.append(hp_mask)
         indexes_list.append(np.arange(hp.nside2npix(nside))[~hp_mask])
 
-    # Embedding net
+    # Embedding net (feature extractor)
     sg_embed = SphericalGraphCNN(nside_list, indexes_list)
 
     # Priors hard-coded for now.

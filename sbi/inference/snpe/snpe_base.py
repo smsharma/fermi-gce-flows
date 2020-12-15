@@ -134,10 +134,16 @@ class PosteriorEstimator(NeuralInference, ABC):
         optimizer = optim.Adam(list(self._neural_net.parameters()), lr=learning_rate,)
 
         epoch, self._val_log_prob = 0, float("-Inf")
+
+        writer = SummaryWriter()
+
         while epoch <= max_num_epochs and not self._converged(epoch, stop_after_epochs):
 
             # Train for a single epoch.
             self._neural_net.train()
+
+            loss_train = 0.0
+
             for batch in train_loader:
                 optimizer.zero_grad()
                 theta_batch, x_batch = (
@@ -146,6 +152,7 @@ class PosteriorEstimator(NeuralInference, ABC):
                 )
 
                 batch_loss = torch.mean(self._loss(theta_batch, x_batch, proposal, calibration_kernel,))
+                loss_train += batch_loss
                 batch_loss.backward()
                 if clip_max_norm is not None:
                     clip_grad_norm_(
@@ -153,10 +160,13 @@ class PosteriorEstimator(NeuralInference, ABC):
                     )
                 optimizer.step()
 
+            loss_train /= len(train_loader)
+
             epoch += 1
 
             # Calculate validation performance.
             self._neural_net.eval()
+            loss_val = 0.0
             log_prob_sum = 0
             with torch.no_grad():
                 for batch in val_loader:
@@ -167,7 +177,13 @@ class PosteriorEstimator(NeuralInference, ABC):
 
                     # Take negative loss here to get validation log_prob.
                     batch_log_prob = -self._loss(theta_batch, x_batch, proposal, calibration_kernel,)
+                    loss_val += -batch_log_prob
                     log_prob_sum += batch_log_prob.sum().item()
+
+            loss_val /= len(val_loader)
+
+            writer.add_scalar("Loss/train", loss_train, epoch)
+            writer.add_scalar("Loss/validation", loss_val, epoch)
 
             self._val_log_prob = log_prob_sum / num_validation_examples
             # Log validation log prob for every epoch.

@@ -7,7 +7,7 @@ from models.scd import dnds
 def simulator(theta, mask, temp_ps, psf_r_func):
 
     the_map = np.zeros(np.sum(~mask) + 1)
-    map_mean = 0
+    mean_map = 0
     good_map = False
 
     while not good_map:
