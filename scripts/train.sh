@@ -11,4 +11,4 @@
 source ~/.bashrc
 conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi/
-python -u train.py --sample train --name vanilla
+python -u train.py --sample train_dif --name vanilla_dif
