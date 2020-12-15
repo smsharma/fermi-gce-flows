@@ -177,7 +177,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
                     # Take negative loss here to get validation log_prob.
                     batch_log_prob = -self._loss(theta_batch, x_batch, proposal, calibration_kernel,)
-                    loss_val += -batch_log_prob
+                    loss_val += torch.mean(-batch_log_prob)
                     log_prob_sum += batch_log_prob.sum().item()
 
             loss_val /= len(val_loader)
