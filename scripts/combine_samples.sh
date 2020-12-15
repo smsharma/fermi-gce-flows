@@ -11,4 +11,4 @@
 source ~/.bashrc
 conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi
-./combine_samples.py --regex train 'train_\d+' --dir /scratch/sm8383/sbi-fermi/
+./combine_samples.py --regex train 'train_dif_\d+' --dir /scratch/sm8383/sbi-fermi/
