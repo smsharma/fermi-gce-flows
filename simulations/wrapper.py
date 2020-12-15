@@ -4,7 +4,7 @@ from simulations.simulate_ps import SimulateMap
 from models.scd import dnds
 
 
-def simulator(theta, mask, temp_ps, psf_r_func):
+def simulator(theta, mask, temp_ps, psf_r_func, temp_dif, norm_dif=12.0):
 
     the_map = np.zeros(np.sum(~mask) + 1)
     mean_map = 0
@@ -17,7 +17,7 @@ def simulator(theta, mask, temp_ps, psf_r_func):
         norm_poiss = theta[0] / np.mean(temp_ps[np.where(~mask)])
         s_exp = np.trapz(s_ary * dnds_ary, s_ary)
         dnds_ary *= theta[1] * np.sum(~mask) / s_exp / temp_ratio
-        sm = SimulateMap([temp_ps], [norm_poiss], [s_ary], [dnds_ary], [temp_ps], psf_r_func)
+        sm = SimulateMap([temp_ps, temp_dif], [norm_poiss, norm_dif], [s_ary], [dnds_ary], [temp_ps], psf_r_func)
         the_map_temp = sm.create_map()
         the_map[:-1] = the_map_temp[~mask].astype(np.float32)
         mean_map = np.mean(the_map)

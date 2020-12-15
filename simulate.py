@@ -29,6 +29,7 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king"):
     mask_sim = hp.ud_grade(hp_mask_nside1, nside)
 
     temp_gce = np.load("data/fermi_data/template_gce.npy")
+    temp_dif = np.load("data/fermi_data/template_dif.npy")
 
     # King PSF hard-coded for now
     if psf == "king":
@@ -47,7 +48,7 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king"):
     results["theta"] = thetas
 
     # Generate maps
-    x = [simulator(theta.detach().numpy(), mask_sim, temp_gce, kp.psf_fermi_r) for theta in tqdm(thetas)]
+    x = [simulator(theta.detach().numpy(), mask_sim, temp_gce, kp.psf_fermi_r, temp_dif) for theta in tqdm(thetas)]
     results["x"] = x
 
     return results
