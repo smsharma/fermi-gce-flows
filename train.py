@@ -63,7 +63,7 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
     x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
     theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)
 
-    density_estimator = inference_inst.train(x=x_filename, theta=theta_filename, proposal=prior, training_batch_size=64, max_num_epochs=100)
+    density_estimator = inference_inst.train(x=x_filename, theta=theta_filename, proposal=prior, training_batch_size=64, max_num_epochs=40)
     torch.save(density_estimator, "{}/models/{}.pt".format(data_dir, model_filename))
 
 
