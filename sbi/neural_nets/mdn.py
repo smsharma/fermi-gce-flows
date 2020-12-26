@@ -9,16 +9,7 @@ from torch import Tensor, nn
 from sbi.utils.sbiutils import standardizing_net, standardizing_transform
 
 
-def build_mdn(
-    batch_x: Tensor = None,
-    batch_y: Tensor = None,
-    z_score_x: bool = True,
-    z_score_y: bool = True,
-    hidden_features: int = 50,
-    num_components: int = 10,
-    embedding_net: nn.Module = nn.Identity(),
-    **kwargs
-) -> nn.Module:
+def build_mdn(batch_x: Tensor = None, batch_y: Tensor = None, z_score_x: bool = True, z_score_y: bool = True, hidden_features: int = 50, num_components: int = 10, embedding_net: nn.Module = nn.Identity(), **kwargs) -> nn.Module:
     """Builds MDN p(x|y).
 
     Args:
@@ -48,22 +39,7 @@ def build_mdn(
     if z_score_y:
         embedding_net = nn.Sequential(standardizing_net(batch_y), embedding_net)
 
-    distribution = MultivariateGaussianMDN(
-        features=x_numel,
-        context_features=y_numel,
-        hidden_features=hidden_features,
-        hidden_net=nn.Sequential(
-            nn.Linear(y_numel, hidden_features),
-            nn.ReLU(),
-            nn.Dropout(p=0.0),
-            nn.Linear(hidden_features, hidden_features),
-            nn.ReLU(),
-            nn.Linear(hidden_features, hidden_features),
-            nn.ReLU(),
-        ),
-        num_components=num_components,
-        custom_initialization=True,
-    )
+    distribution = MultivariateGaussianMDN(features=x_numel, context_features=y_numel, hidden_features=hidden_features, hidden_net=nn.Sequential(nn.Linear(y_numel, hidden_features), nn.ReLU(), nn.Dropout(p=0.0), nn.Linear(hidden_features, hidden_features), nn.ReLU(), nn.Linear(hidden_features, hidden_features), nn.ReLU(),), num_components=num_components, custom_initialization=True,)
 
     neural_net = flows.Flow(transform, distribution, embedding_net)
 

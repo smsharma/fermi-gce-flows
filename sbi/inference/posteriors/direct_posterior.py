@@ -35,16 +35,7 @@ class DirectPosterior(NeuralPosterior):
     """
 
     def __init__(
-        self,
-        method_family: str,
-        neural_net: nn.Module,
-        prior,
-        x_shape: torch.Size,
-        rejection_sampling_parameters: Optional[Dict[str, Any]] = None,
-        sample_with_mcmc: bool = True,
-        mcmc_method: str = "slice_np",
-        mcmc_parameters: Optional[Dict[str, Any]] = None,
-        device: str = "cpu",
+        self, method_family: str, neural_net: nn.Module, prior, x_shape: torch.Size, rejection_sampling_parameters: Optional[Dict[str, Any]] = None, sample_with_mcmc: bool = True, mcmc_method: str = "slice_np", mcmc_parameters: Optional[Dict[str, Any]] = None, device: str = "cpu",
     ):
         """
         Args:
@@ -74,23 +65,12 @@ class DirectPosterior(NeuralPosterior):
                 locations.
         """
 
-        kwargs = del_entries(
-            locals(),
-            entries=(
-                "self",
-                "__class__",
-                "sample_with_mcmc",
-                "rejection_sampling_parameters",
-            ),
-        )
+        kwargs = del_entries(locals(), entries=("self", "__class__", "sample_with_mcmc", "rejection_sampling_parameters",),)
         super().__init__(**kwargs)
 
         self.set_sample_with_mcmc(sample_with_mcmc)
         self.set_rejection_sampling_parameters(rejection_sampling_parameters)
-        self._purpose = (
-            "It allows to .sample() and .log_prob() the posterior and wraps the "
-            "output of the .net to avoid leakage into regions with 0 prior probability."
-        )
+        self._purpose = "It allows to .sample() and .log_prob() the posterior and wraps the " "output of the .net to avoid leakage into regions with 0 prior probability."
 
     @property
     def sample_with_mcmc(self) -> bool:
@@ -133,9 +113,7 @@ class DirectPosterior(NeuralPosterior):
         """See `set_rejection_sampling_parameters`."""
         self.set_rejection_sampling_parameters(parameters)
 
-    def set_rejection_sampling_parameters(
-        self, parameters: Dict[str, Any]
-    ) -> "NeuralPosterior":
+    def set_rejection_sampling_parameters(self, parameters: Dict[str, Any]) -> "NeuralPosterior":
         """Sets parameters for rejection sampling and returns `NeuralPosterior`.
 
         Args:
@@ -151,13 +129,7 @@ class DirectPosterior(NeuralPosterior):
         self._rejection_sampling_parameters = parameters
         return self
 
-    def log_prob(
-        self,
-        theta: Tensor,
-        x: Optional[Tensor] = None,
-        norm_posterior: bool = True,
-        track_gradients: bool = False,
-    ) -> Tensor:
+    def log_prob(self, theta: Tensor, x: Optional[Tensor] = None, norm_posterior: bool = True, track_gradients: bool = False,) -> Tensor:
         r"""
         Returns the log-probability of the posterior $p(\theta|x).$
 
@@ -191,36 +163,19 @@ class DirectPosterior(NeuralPosterior):
         with torch.set_grad_enabled(track_gradients):
 
             # Evaluate on device, move back to cpu for comparison with prior.
-            unnorm_log_prob = self.net.log_prob(
-                theta.to(self._device), x.to(self._device)
-            ).cpu()
+            unnorm_log_prob = self.net.log_prob(theta.to(self._device), x.to(self._device)).cpu()
 
             # Force probability to be zero outside prior support.
             is_prior_finite = torch.isfinite(self._prior.log_prob(theta))
 
-            masked_log_prob = torch.where(
-                is_prior_finite,
-                unnorm_log_prob,
-                torch.tensor(float("-inf"), dtype=torch.float32),
-            )
+            masked_log_prob = torch.where(is_prior_finite, unnorm_log_prob, torch.tensor(float("-inf"), dtype=torch.float32),)
 
-            log_factor = (
-                log(self.leakage_correction(x=batched_first_of_batch(x)))
-                if norm_posterior
-                else 0
-            )
+            log_factor = log(self.leakage_correction(x=batched_first_of_batch(x))) if norm_posterior else 0
 
             return masked_log_prob - log_factor
 
     @torch.no_grad()
-    def leakage_correction(
-        self,
-        x: Tensor,
-        num_rejection_samples: int = 10_000,
-        force_update: bool = False,
-        show_progress_bars: bool = False,
-        rejection_sampling_batch_size: int = 10_000,
-    ) -> Tensor:
+    def leakage_correction(self, x: Tensor, num_rejection_samples: int = 10_000, force_update: bool = False, show_progress_bars: bool = False, rejection_sampling_batch_size: int = 10_000,) -> Tensor:
         r"""Return leakage correction factor for a leaky posterior density estimate.
 
         The factor is estimated from the acceptance probability during rejection
@@ -245,20 +200,10 @@ class DirectPosterior(NeuralPosterior):
         """
 
         def acceptance_at(x: Tensor) -> Tensor:
-            return utils.sample_posterior_within_prior(
-                self.net,
-                self._prior,
-                x.to(self._device),
-                num_rejection_samples,
-                show_progress_bars,
-                sample_for_correction_factor=True,
-                max_sampling_batch_size=rejection_sampling_batch_size,
-            )[1]
+            return utils.sample_posterior_within_prior(self.net, self._prior, x.to(self._device), num_rejection_samples, show_progress_bars, sample_for_correction_factor=True, max_sampling_batch_size=rejection_sampling_batch_size,)[1]
 
         # Check if the provided x matches the default x (short-circuit on identity).
-        is_new_x = self.default_x is None or (
-            x is not self.default_x and (x != self.default_x).any()
-        )
+        is_new_x = self.default_x is None or (x is not self.default_x and (x != self.default_x).any())
 
         not_saved_at_default_x = self._leakage_density_correction_factor is None
 
@@ -269,16 +214,7 @@ class DirectPosterior(NeuralPosterior):
 
         return self._leakage_density_correction_factor  # type:ignore
 
-    def sample(
-        self,
-        sample_shape: Shape = torch.Size(),
-        x: Optional[Tensor] = None,
-        show_progress_bars: bool = True,
-        sample_with_mcmc: Optional[bool] = None,
-        mcmc_method: Optional[str] = None,
-        mcmc_parameters: Optional[Dict[str, Any]] = None,
-        rejection_sampling_parameters: Optional[Dict[str, Any]] = None,
-    ) -> Tensor:
+    def sample(self, sample_shape: Shape = torch.Size(), x: Optional[Tensor] = None, show_progress_bars: bool = True, sample_with_mcmc: Optional[bool] = None, mcmc_method: Optional[str] = None, mcmc_parameters: Optional[Dict[str, Any]] = None, rejection_sampling_parameters: Optional[Dict[str, Any]] = None,) -> Tensor:
         r"""
         Return samples from posterior distribution $p(\theta|x)$.
 
@@ -314,59 +250,24 @@ class DirectPosterior(NeuralPosterior):
             Samples from posterior.
         """
 
-        x, num_samples, mcmc_method, mcmc_parameters = self._prepare_for_sample(
-            x, sample_shape, mcmc_method, mcmc_parameters
-        )
+        x, num_samples, mcmc_method, mcmc_parameters = self._prepare_for_sample(x, sample_shape, mcmc_method, mcmc_parameters)
 
-        sample_with_mcmc = (
-            sample_with_mcmc if sample_with_mcmc is not None else self.sample_with_mcmc
-        )
+        sample_with_mcmc = sample_with_mcmc if sample_with_mcmc is not None else self.sample_with_mcmc
 
         self.net.eval()
 
         if sample_with_mcmc:
             potential_fn_provider = PotentialFunctionProvider()
-            samples = self._sample_posterior_mcmc(
-                num_samples=num_samples,
-                potential_fn=potential_fn_provider(
-                    self._prior, self.net, x, mcmc_method
-                ),
-                init_fn=self._build_mcmc_init_fn(
-                    self._prior,
-                    potential_fn_provider(self._prior, self.net, x, "slice_np"),
-                    **mcmc_parameters,
-                ),
-                mcmc_method=mcmc_method,
-                show_progress_bars=show_progress_bars,
-                **mcmc_parameters,
-            )
+            samples = self._sample_posterior_mcmc(num_samples=num_samples, potential_fn=potential_fn_provider(self._prior, self.net, x, mcmc_method), init_fn=self._build_mcmc_init_fn(self._prior, potential_fn_provider(self._prior, self.net, x, "slice_np"), **mcmc_parameters,), mcmc_method=mcmc_method, show_progress_bars=show_progress_bars, **mcmc_parameters,)
         else:
             # Rejection sampling.
-            samples, _ = utils.sample_posterior_within_prior(
-                self.net,
-                self._prior,
-                x,
-                num_samples=num_samples,
-                show_progress_bars=show_progress_bars,
-                **rejection_sampling_parameters
-                if (rejection_sampling_parameters is not None)
-                else self.rejection_sampling_parameters,
-            )
+            samples, _ = utils.sample_posterior_within_prior(self.net, self._prior, x, num_samples=num_samples, show_progress_bars=show_progress_bars, **rejection_sampling_parameters if (rejection_sampling_parameters is not None) else self.rejection_sampling_parameters,)
 
         self.net.train(True)
 
         return samples.reshape((*sample_shape, -1))
 
-    def sample_conditional(
-        self,
-        sample_shape: Shape,
-        condition: Tensor,
-        dims_to_sample: List[int],
-        x: Optional[Tensor] = None,
-        show_progress_bars: bool = True,
-        mcmc_method: Optional[str] = None,
-        mcmc_parameters: Optional[Dict[str, Any]] = None,
-    ) -> Tensor:
+    def sample_conditional(self, sample_shape: Shape, condition: Tensor, dims_to_sample: List[int], x: Optional[Tensor] = None, show_progress_bars: bool = True, mcmc_method: Optional[str] = None, mcmc_parameters: Optional[Dict[str, Any]] = None,) -> Tensor:
         r"""
         Return samples from conditional posterior $p(\theta_i|\theta_j, x)$.
 
@@ -405,16 +306,7 @@ class DirectPosterior(NeuralPosterior):
             Samples from conditional posterior.
         """
 
-        return super().sample_conditional(
-            PotentialFunctionProvider(),
-            sample_shape,
-            condition,
-            dims_to_sample,
-            x,
-            show_progress_bars,
-            mcmc_method,
-            mcmc_parameters,
-        )
+        return super().sample_conditional(PotentialFunctionProvider(), sample_shape, condition, dims_to_sample, x, show_progress_bars, mcmc_method, mcmc_parameters,)
 
 
 class PotentialFunctionProvider:
@@ -436,9 +328,7 @@ class PotentialFunctionProvider:
         Potential function for use by either numpy or pyro sampler
     """
 
-    def __call__(
-        self, prior, posterior_nn: nn.Module, x: Tensor, mcmc_method: str,
-    ) -> Callable:
+    def __call__(self, prior, posterior_nn: nn.Module, x: Tensor, mcmc_method: str,) -> Callable:
         """Return potential function.
 
         Switch on numpy or pyro potential function based on `mcmc_method`.
@@ -467,14 +357,10 @@ class PotentialFunctionProvider:
 
         x_batched = ensure_x_batched(self.x)
         # Repeat x over batch dim to match theta batch, accounting for multi-D x.
-        x_repeated = x_batched.repeat(
-            num_batch, *(1 for _ in range(x_batched.ndim - 1))
-        )
+        x_repeated = x_batched.repeat(num_batch, *(1 for _ in range(x_batched.ndim - 1)))
 
         with torch.set_grad_enabled(False):
-            target_log_prob = self.posterior_nn.log_prob(
-                inputs=theta.to(self.x.device), context=x_repeated,
-            )
+            target_log_prob = self.posterior_nn.log_prob(inputs=theta.to(self.x.device), context=x_repeated,)
             is_within_prior = torch.isfinite(self.prior.log_prob(theta))
             target_log_prob[~is_within_prior] = -float("Inf")
 
@@ -494,9 +380,7 @@ class PotentialFunctionProvider:
 
         # Notice opposite sign to numpy.
         # Move theta to device for evaluation.
-        log_prob_posterior = -self.posterior_nn.log_prob(
-            inputs=theta.to(self.x.device), context=self.x
-        ).cpu()
+        log_prob_posterior = -self.posterior_nn.log_prob(inputs=theta.to(self.x.device), context=self.x).cpu()
         log_prob_prior = self.prior.log_prob(theta)
 
         within_prior = torch.isfinite(log_prob_prior)
