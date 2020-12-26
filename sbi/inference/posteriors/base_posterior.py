@@ -42,7 +42,14 @@ class NeuralPosterior(ABC):
     """
 
     def __init__(
-        self, method_family: str, neural_net: nn.Module, prior, x_shape: torch.Size, mcmc_method: str = "slice_np", mcmc_parameters: Optional[Dict[str, Any]] = None, device: str = "cpu",
+        self,
+        method_family: str,
+        neural_net: nn.Module,
+        prior,
+        x_shape: torch.Size,
+        mcmc_method: str = "slice_np",
+        mcmc_parameters: Optional[Dict[str, Any]] = None,
+        device: str = "cpu",
     ):
         """
         Args:
@@ -172,12 +179,24 @@ class NeuralPosterior(ABC):
         return self
 
     @abstractmethod
-    def log_prob(self, theta: Tensor, x: Optional[Tensor] = None, track_gradients: bool = False,) -> Tensor:
+    def log_prob(
+        self,
+        theta: Tensor,
+        x: Optional[Tensor] = None,
+        track_gradients: bool = False,
+    ) -> Tensor:
         """See child classes for docstring."""
         pass
 
     @abstractmethod
-    def sample(self, sample_shape: Shape = torch.Size(), x: Optional[Tensor] = None, show_progress_bars: bool = True, mcmc_method: Optional[str] = None, mcmc_parameters: Optional[Dict[str, Any]] = None,) -> Tensor:
+    def sample(
+        self,
+        sample_shape: Shape = torch.Size(),
+        x: Optional[Tensor] = None,
+        show_progress_bars: bool = True,
+        mcmc_method: Optional[str] = None,
+        mcmc_parameters: Optional[Dict[str, Any]] = None,
+    ) -> Tensor:
         """See child classes for docstring."""
         pass
 
@@ -192,7 +211,7 @@ class NeuralPosterior(ABC):
 
         Args:
             posterior: Posterior that the hyperparameters are copied from.
-        
+
         Returns: Posterior object with the same hyperparameters as the passed posterior.
             This makes the call chainable:
             `posterior = infer.build_posterior().copy_hyperparameters_from(proposal)`
@@ -211,7 +230,11 @@ class NeuralPosterior(ABC):
 
         return self
 
-    def _prepare_theta_and_x_for_log_prob_(self, theta: Tensor, x: Optional[Tensor] = None,) -> Tuple[Tensor, Tensor]:
+    def _prepare_theta_and_x_for_log_prob_(
+        self,
+        theta: Tensor,
+        x: Optional[Tensor] = None,
+    ) -> Tuple[Tensor, Tensor]:
         r"""Returns $\theta$ and $x$ in shape that can be used by posterior.log_prob().
 
         Checks shapes of $\theta$ and $x$ and then repeats $x$ as often as there were
@@ -242,7 +265,13 @@ class NeuralPosterior(ABC):
 
         return theta, x
 
-    def _prepare_for_sample(self, x: Tensor, sample_shape: Optional[Tensor], mcmc_method: Optional[str], mcmc_parameters: Optional[Dict[str, Any]],) -> Tuple[Tensor, int, str, Dict[str, Any]]:
+    def _prepare_for_sample(
+        self,
+        x: Tensor,
+        sample_shape: Optional[Tensor],
+        mcmc_method: Optional[str],
+        mcmc_parameters: Optional[Dict[str, Any]],
+    ) -> Tuple[Tensor, int, str, Dict[str, Any]]:
         r"""
         Return checked and (potentially default) values to sample from the posterior.
 
@@ -281,7 +310,18 @@ class NeuralPosterior(ABC):
 
         return x, num_samples, mcmc_method, mcmc_parameters
 
-    def _sample_posterior_mcmc(self, num_samples: int, potential_fn: Callable, init_fn: Optional[Callable] = None, mcmc_method: str = "slice_np", thin: int = 10, warmup_steps: int = 20, num_chains: Optional[int] = 1, show_progress_bars: bool = True, **kwargs,) -> Tensor:
+    def _sample_posterior_mcmc(
+        self,
+        num_samples: int,
+        potential_fn: Callable,
+        init_fn: Optional[Callable] = None,
+        mcmc_method: str = "slice_np",
+        thin: int = 10,
+        warmup_steps: int = 20,
+        num_chains: Optional[int] = 1,
+        show_progress_bars: bool = True,
+        **kwargs,
+    ) -> Tensor:
         r"""
         Return MCMC samples from posterior $p(\theta|x)$.
 
@@ -316,15 +356,41 @@ class NeuralPosterior(ABC):
         track_gradients = mcmc_method in ("hmc", "nuts")
         with torch.set_grad_enabled(track_gradients):
             if mcmc_method in ("slice_np", "slice_np_vectorized"):
-                samples = self._slice_np_mcmc(num_samples=num_samples, potential_function=potential_fn, initial_params=initial_params, thin=thin, warmup_steps=warmup_steps, vectorized=(mcmc_method == "slice_np_vectorized"), show_progress_bars=show_progress_bars,)
+                samples = self._slice_np_mcmc(
+                    num_samples=num_samples,
+                    potential_function=potential_fn,
+                    initial_params=initial_params,
+                    thin=thin,
+                    warmup_steps=warmup_steps,
+                    vectorized=(mcmc_method == "slice_np_vectorized"),
+                    show_progress_bars=show_progress_bars,
+                )
             elif mcmc_method in ("hmc", "nuts", "slice"):
-                samples = self._pyro_mcmc(num_samples=num_samples, potential_function=potential_fn, initial_params=initial_params, mcmc_method=mcmc_method, thin=thin, warmup_steps=warmup_steps, num_chains=num_chains, show_progress_bars=show_progress_bars,).detach()
+                samples = self._pyro_mcmc(
+                    num_samples=num_samples,
+                    potential_function=potential_fn,
+                    initial_params=initial_params,
+                    mcmc_method=mcmc_method,
+                    thin=thin,
+                    warmup_steps=warmup_steps,
+                    num_chains=num_chains,
+                    show_progress_bars=show_progress_bars,
+                ).detach()
             else:
                 raise NameError
 
         return samples
 
-    def _slice_np_mcmc(self, num_samples: int, potential_function: Callable, initial_params: Tensor, thin: int, warmup_steps: int, vectorized: bool = False, show_progress_bars: bool = True,) -> Tensor:
+    def _slice_np_mcmc(
+        self,
+        num_samples: int,
+        potential_function: Callable,
+        initial_params: Tensor,
+        thin: int,
+        warmup_steps: int,
+        vectorized: bool = False,
+        show_progress_bars: bool = True,
+    ) -> Tensor:
         """
         Custom implementation of slice sampling using Numpy.
 
@@ -347,14 +413,24 @@ class NeuralPosterior(ABC):
         if not vectorized:  # Sample all chains sequentially
             all_samples = []
             for c in range(num_chains):
-                posterior_sampler = SliceSampler(utils.tensor2numpy(initial_params[c, :]).reshape(-1), lp_f=potential_function, thin=thin, verbose=show_progress_bars,)
+                posterior_sampler = SliceSampler(
+                    utils.tensor2numpy(initial_params[c, :]).reshape(-1),
+                    lp_f=potential_function,
+                    thin=thin,
+                    verbose=show_progress_bars,
+                )
                 if warmup_steps > 0:
                     posterior_sampler.gen(int(warmup_steps))
                 all_samples.append(posterior_sampler.gen(ceil(num_samples / num_chains)))
             all_samples = np.stack(all_samples).astype(np.float32)
             samples = torch.from_numpy(all_samples)  # chains x samples x dim
         else:  # Sample all chains at the same time
-            posterior_sampler = SliceSamplerVectorized(init_params=utils.tensor2numpy(initial_params), log_prob_fn=potential_function, num_chains=num_chains, verbose=show_progress_bars,)
+            posterior_sampler = SliceSamplerVectorized(
+                init_params=utils.tensor2numpy(initial_params),
+                log_prob_fn=potential_function,
+                num_chains=num_chains,
+                verbose=show_progress_bars,
+            )
             warmup_ = warmup_steps * thin
             num_samples_ = ceil((num_samples * thin) / num_chains)
             samples = posterior_sampler.run(warmup_ + num_samples_)
@@ -371,7 +447,15 @@ class NeuralPosterior(ABC):
         return samples.type(torch.float32)
 
     def _pyro_mcmc(
-        self, num_samples: int, potential_function: Callable, initial_params: Tensor, mcmc_method: str = "slice", thin: int = 10, warmup_steps: int = 200, num_chains: Optional[int] = 1, show_progress_bars: bool = True,
+        self,
+        num_samples: int,
+        potential_function: Callable,
+        initial_params: Tensor,
+        mcmc_method: str = "slice",
+        thin: int = 10,
+        warmup_steps: int = 200,
+        num_chains: Optional[int] = 1,
+        show_progress_bars: bool = True,
     ):
         r"""Return samples obtained using Pyro HMC, NUTS for slice kernels.
 
@@ -392,7 +476,16 @@ class NeuralPosterior(ABC):
 
         kernels = dict(slice=Slice, hmc=HMC, nuts=NUTS)
 
-        sampler = MCMC(kernel=kernels[mcmc_method](potential_fn=potential_function), num_samples=(thin * num_samples) // num_chains + num_chains, warmup_steps=warmup_steps, initial_params={"": initial_params}, num_chains=num_chains, mp_context="fork", disable_progbar=not show_progress_bars, transforms={},)
+        sampler = MCMC(
+            kernel=kernels[mcmc_method](potential_fn=potential_function),
+            num_samples=(thin * num_samples) // num_chains + num_chains,
+            warmup_steps=warmup_steps,
+            initial_params={"": initial_params},
+            num_chains=num_chains,
+            mp_context="fork",
+            disable_progbar=not show_progress_bars,
+            transforms={},
+        )
         sampler.run()
         samples = next(iter(sampler.get_samples().values())).reshape(-1, initial_params.shape[1])  # .shape[1] = dim of theta
 
@@ -401,7 +494,17 @@ class NeuralPosterior(ABC):
 
         return samples
 
-    def sample_conditional(self, potential_fn_provider: Callable, sample_shape: Shape, condition: Tensor, dims_to_sample: List[int], x: Optional[Tensor] = None, show_progress_bars: bool = True, mcmc_method: Optional[str] = None, mcmc_parameters: Optional[Dict[str, Any]] = None,) -> Tensor:
+    def sample_conditional(
+        self,
+        potential_fn_provider: Callable,
+        sample_shape: Shape,
+        condition: Tensor,
+        dims_to_sample: List[int],
+        x: Optional[Tensor] = None,
+        show_progress_bars: bool = True,
+        mcmc_method: Optional[str] = None,
+        mcmc_parameters: Optional[Dict[str, Any]] = None,
+    ) -> Tensor:
         r"""
         Return samples from conditional posterior $p(\theta_i|\theta_j, x)$.
 
@@ -468,7 +571,13 @@ class NeuralPosterior(ABC):
 
         return samples.reshape((*sample_shape, -1))
 
-    def _build_mcmc_init_fn(self, prior: Any, potential_fn: Callable, init_strategy: str = "prior", **kwargs,) -> Callable:
+    def _build_mcmc_init_fn(
+        self,
+        prior: Any,
+        potential_fn: Callable,
+        init_strategy: str = "prior",
+        **kwargs,
+    ) -> Callable:
         """
         Return function that, when called, creates an initial parameter set for MCMC.
 
@@ -620,7 +729,10 @@ class ConditionalPotentialFunctionProvider:
     """
 
     def __init__(
-        self, potential_fn_provider: Callable, condition: Tensor, dims_to_sample: List[int],
+        self,
+        potential_fn_provider: Callable,
+        condition: Tensor,
+        dims_to_sample: List[int],
     ):
         """
         Args:
@@ -639,7 +751,13 @@ class ConditionalPotentialFunctionProvider:
         self.condition = ensure_theta_batched(condition)
         self.dims_to_sample = dims_to_sample
 
-    def __call__(self, prior, net: nn.Module, x: Tensor, mcmc_method: str,) -> Callable:
+    def __call__(
+        self,
+        prior,
+        net: nn.Module,
+        x: Tensor,
+        mcmc_method: str,
+    ) -> Callable:
         """Return potential function.
 
         Switch on numpy or pyro potential function based on `mcmc_method`.
@@ -705,7 +823,9 @@ class RestrictedPriorForConditional:
     """
 
     def __init__(
-        self, full_prior: Any, dims_to_sample: List[int],
+        self,
+        full_prior: Any,
+        dims_to_sample: List[int],
     ):
         self.full_prior = full_prior
         self.dims_to_sample = dims_to_sample

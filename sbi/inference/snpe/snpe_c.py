@@ -26,7 +26,14 @@ from sbi.utils import (
 
 class SNPE_C(PosteriorEstimator):
     def __init__(
-        self, prior, density_estimator: Union[str, Callable] = "maf", device: str = "cpu", logging_level: Union[int, str] = "WARNING", summary_writer: Optional[TensorboardSummaryWriter] = None, show_progress_bars: bool = True, **unused_args,
+        self,
+        prior,
+        density_estimator: Union[str, Callable] = "maf",
+        device: str = "cpu",
+        logging_level: Union[int, str] = "WARNING",
+        summary_writer: Optional[TensorboardSummaryWriter] = None,
+        show_progress_bars: bool = True,
+        **unused_args,
     ):
         r"""SNPE-C / APT [1].
 
@@ -82,7 +89,20 @@ class SNPE_C(PosteriorEstimator):
         kwargs = del_entries(locals(), entries=("self", "__class__", "unused_args"))
         super().__init__(**kwargs, **unused_args)
 
-    def train(self, x, theta, proposal, num_atoms: int = 10, training_batch_size: int = 50, learning_rate: float = 5e-4, validation_fraction: float = 0.1, stop_after_epochs: int = 20, max_num_epochs: Optional[int] = None, clip_max_norm: Optional[float] = 5.0, calibration_kernel: Optional[Callable] = None, exclude_invalid_x: bool = True, discard_prior_samples: bool = False, use_combined_loss: bool = False, retrain_from_scratch_each_round: bool = False, show_train_summary: bool = False,) -> DirectPosterior:
+    def train(
+        self,
+        x,
+        theta,
+        proposal,
+        training_batch_size: int = 50,
+        learning_rate: float = 5e-4,
+        validation_fraction: float = 0.1,
+        stop_after_epochs: int = 20,
+        max_num_epochs: Optional[int] = None,
+        clip_max_norm: Optional[float] = 5.0,
+        calibration_kernel: Optional[Callable] = None,
+        exclude_invalid_x: bool = True,
+    ) -> DirectPosterior:
         r"""
         Return density estimator that approximates the distribution $p(\theta|x)$.
 
@@ -122,92 +142,6 @@ class SNPE_C(PosteriorEstimator):
         # requiring the signature to have `num_atoms`, save it for use below, and
         # continue. It's sneaky because we are using the object (self) as a namespace
         # to pass arguments between functions, and that's implicit state management.
-        self._num_atoms = num_atoms
-        self._use_combined_loss = use_combined_loss
-        kwargs = del_entries(locals(), entries=("self", "__class__", "num_atoms", "use_combined_loss"))
+        kwargs = del_entries(locals(), entries=("self", "__class__"))
 
-        # Hard-coded single round
-        self._data_round_index.append(0)
-        self._round = max(self._data_round_index)
         return super().train(**kwargs)
-
-    def _log_prob_proposal_posterior(self, theta: Tensor, x: Tensor, masks: Tensor, proposal: Optional[Any]) -> Tensor:
-        """
-        Return the log-probability of the proposal posterior.
-
-        If the proposal is a MoG, the density estimator is a MoG, and the prior is
-        either Gaussian or uniform, we use non-atomic loss. Else, use atomic loss (which
-        suffers from leakage).
-
-        Args:
-            theta: Batch of parameters θ.
-            x: Batch of data.
-            masks: Mask that is True for prior samples in the batch in order to train
-                them with prior loss.
-            proposal: Proposal distribution.
-
-        Returns: Log-probability of the proposal posterior.
-        """
-
-        return self._log_prob_proposal_posterior_atomic(theta, x, masks)
-
-    def _log_prob_proposal_posterior_atomic(self, theta: Tensor, x: Tensor, masks: Tensor):
-        """
-        Return log probability of the proposal posterior for atomic proposals.
-
-        We have two main options when evaluating the proposal posterior.
-            (1) Generate atoms from the proposal prior.
-            (2) Generate atoms from a more targeted distribution, such as the most
-                recent posterior.
-        If we choose the latter, it is likely beneficial not to do this in the first
-        round, since we would be sampling from a randomly-initialized neural density
-        estimator.
-
-        Args:
-            theta: Batch of parameters θ.
-            x: Batch of data.
-            masks: Mask that is True for prior samples in the batch in order to train
-                them with prior loss.
-
-        Returns:
-            Log-probability of the proposal posterior.
-        """
-
-        batch_size = theta.shape[0]
-
-        num_atoms = clamp_and_warn("num_atoms", self._num_atoms, min_val=2, max_val=batch_size)
-
-        # Each set of parameter atoms is evaluated using the same x,
-        # so we repeat rows of the data x, e.g. [1, 2] -> [1, 1, 2, 2]
-        repeated_x = repeat_rows(x, num_atoms)
-
-        # To generate the full set of atoms for a given item in the batch,
-        # we sample without replacement num_atoms - 1 times from the rest
-        # of the theta in the batch.
-        probs = ones(batch_size, batch_size) * (1 - eye(batch_size)) / (batch_size - 1)
-
-        choices = torch.multinomial(probs, num_samples=num_atoms - 1, replacement=False)
-        contrasting_theta = theta[choices]
-
-        # We can now create our sets of atoms from the contrasting parameter sets
-        # we have generated.
-        atomic_theta = torch.cat((theta[:, None, :], contrasting_theta), dim=1).reshape(batch_size * num_atoms, -1)
-
-        # Evaluate large batch giving (batch_size * num_atoms) log prob posterior evals.
-        log_prob_posterior = self._neural_net.log_prob(atomic_theta, repeated_x)
-        self._assert_all_finite(log_prob_posterior, "posterior eval")
-        log_prob_posterior = log_prob_posterior.reshape(batch_size, num_atoms)
-
-        # Get (batch_size * num_atoms) log prob prior evals.
-        log_prob_prior = self._prior.log_prob(atomic_theta)
-        log_prob_prior = log_prob_prior.reshape(batch_size, num_atoms)
-        self._assert_all_finite(log_prob_prior, "prior eval")
-
-        # Compute unnormalized proposal posterior.
-        unnormalized_log_prob = log_prob_posterior - log_prob_prior
-
-        # Normalize proposal posterior across discrete set of atoms.
-        log_prob_proposal_posterior = unnormalized_log_prob[:, 0] - torch.logsumexp(unnormalized_log_prob, dim=-1)
-        self._assert_all_finite(log_prob_proposal_posterior, "proposal posterior eval")
-
-        return log_prob_proposal_posterior

@@ -53,7 +53,12 @@ class PosteriorEstimator(NeuralInference, ABC):
         """
 
         super().__init__(
-            prior=prior, device=device, logging_level=logging_level, summary_writer=summary_writer, show_progress_bars=show_progress_bars, **unused_args,
+            prior=prior,
+            device=device,
+            logging_level=logging_level,
+            summary_writer=summary_writer,
+            show_progress_bars=show_progress_bars,
+            **unused_args,
         )
 
         # As detailed in the docstring, `density_estimator` is either a string or
@@ -67,13 +72,23 @@ class PosteriorEstimator(NeuralInference, ABC):
         else:
             self._build_neural_net = density_estimator
 
-        self._proposal_roundwise = []
-        self.use_non_atomic_loss = False
-
         # Extra SNPE-specific fields summary_writer.
         self._summary.update({"rejection_sampling_acceptance_rates": []})  # type:ignore
 
-    def train(self, x, theta, proposal, training_batch_size: int = 50, learning_rate: float = 5e-4, validation_fraction: float = 0.1, stop_after_epochs: int = 20, max_num_epochs: Optional[int] = None, clip_max_norm: Optional[float] = 5.0, calibration_kernel: Optional[Callable] = None, exclude_invalid_x: bool = True, discard_prior_samples: bool = False, retrain_from_scratch_each_round: bool = False, show_train_summary: bool = False,) -> DirectPosterior:
+    def train(
+        self,
+        x,
+        theta,
+        proposal,
+        training_batch_size: int = 50,
+        learning_rate: float = 5e-4,
+        validation_fraction: float = 0.1,
+        stop_after_epochs: int = 20,
+        max_num_epochs: Optional[int] = None,
+        clip_max_norm: Optional[float] = 5.0,
+        calibration_kernel: Optional[Callable] = None,
+        exclude_invalid_x: bool = True,
+    ) -> DirectPosterior:
         r"""
         Return density estimator that approximates the distribution $p(\theta|x)$.
 
@@ -131,7 +146,10 @@ class PosteriorEstimator(NeuralInference, ABC):
         train_loader, val_loader, num_validation_examples = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
 
         self._neural_net.to(self._device)
-        optimizer = optim.Adam(list(self._neural_net.parameters()), lr=learning_rate,)
+        optimizer = optim.Adam(
+            list(self._neural_net.parameters()),
+            lr=learning_rate,
+        )
 
         epoch, self._val_log_prob = 0, float("-Inf")
 
@@ -151,12 +169,20 @@ class PosteriorEstimator(NeuralInference, ABC):
                     batch[1].to(self._device),
                 )
 
-                batch_loss = torch.mean(self._loss(theta_batch, x_batch, proposal, calibration_kernel,))
+                batch_loss = torch.mean(
+                    self._loss(
+                        theta_batch,
+                        x_batch,
+                        proposal,
+                        calibration_kernel,
+                    )
+                )
                 loss_train += batch_loss
                 batch_loss.backward()
                 if clip_max_norm is not None:
                     clip_grad_norm_(
-                        self._neural_net.parameters(), max_norm=clip_max_norm,
+                        self._neural_net.parameters(),
+                        max_norm=clip_max_norm,
                     )
                 optimizer.step()
 
@@ -176,7 +202,12 @@ class PosteriorEstimator(NeuralInference, ABC):
                     )
 
                     # Take negative loss here to get validation log_prob.
-                    batch_log_prob = -self._loss(theta_batch, x_batch, proposal, calibration_kernel,)
+                    batch_log_prob = -self._loss(
+                        theta_batch,
+                        x_batch,
+                        proposal,
+                        calibration_kernel,
+                    )
                     loss_val += torch.mean(-batch_log_prob)
                     log_prob_sum += batch_log_prob.sum().item()
 
@@ -199,7 +230,14 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         return deepcopy(self._neural_net)
 
-    def build_posterior(self, density_estimator: Optional[TorchModule] = None, rejection_sampling_parameters: Optional[Dict[str, Any]] = None, sample_with_mcmc: bool = False, mcmc_method: str = "slice_np", mcmc_parameters: Optional[Dict[str, Any]] = None,) -> DirectPosterior:
+    def build_posterior(
+        self,
+        density_estimator: Optional[TorchModule] = None,
+        rejection_sampling_parameters: Optional[Dict[str, Any]] = None,
+        sample_with_mcmc: bool = False,
+        mcmc_method: str = "slice_np",
+        mcmc_parameters: Optional[Dict[str, Any]] = None,
+    ) -> DirectPosterior:
         r"""
         Build posterior from the neural density estimator.
 
@@ -242,21 +280,30 @@ class PosteriorEstimator(NeuralInference, ABC):
         if density_estimator is None:
             density_estimator = self._neural_net
 
-        self._posterior = DirectPosterior(method_family="snpe", neural_net=density_estimator, prior=self._prior, x_shape=self._x_shape, rejection_sampling_parameters=rejection_sampling_parameters, sample_with_mcmc=sample_with_mcmc, mcmc_method=mcmc_method, mcmc_parameters=mcmc_parameters, device=self._device,)
+        self._posterior = DirectPosterior(
+            method_family="snpe",
+            neural_net=density_estimator,
+            prior=self._prior,
+            x_shape=self._x_shape,
+            rejection_sampling_parameters=rejection_sampling_parameters,
+            sample_with_mcmc=sample_with_mcmc,
+            mcmc_method=mcmc_method,
+            mcmc_parameters=mcmc_parameters,
+            device=self._device,
+        )
 
-        self._posterior._num_trained_rounds = self._round + 1
-
-        # Store models at end of each round.
-        self._model_bank.append(deepcopy(self._posterior))
-        self._model_bank[-1].net.eval()
+        # Posterior in eval mode
+        self._posterior.net.eval()
 
         return deepcopy(self._posterior)
 
-    @abstractmethod
-    def _log_prob_proposal_posterior(self, theta: Tensor, x: Tensor, masks: Tensor, proposal: Optional[Any]) -> Tensor:
-        raise NotImplementedError
-
-    def _loss(self, theta: Tensor, x: Tensor, proposal: Optional[Any], calibration_kernel: Callable,) -> Tensor:
+    def _loss(
+        self,
+        theta: Tensor,
+        x: Tensor,
+        proposal: Optional[Any],
+        calibration_kernel: Callable,
+    ) -> Tensor:
         """Return loss with proposal correction (`round_>0`) or without it (`round_=0`).
 
         The loss is the negative log prob. Irrespective of the round or SNPE method
@@ -282,7 +329,13 @@ class PosteriorEstimator(NeuralInference, ABC):
 
     def make_dataloaders(self, dataset, validation_split, batch_size, seed=None):
         if validation_split is None or validation_split <= 0.0:
-            train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=8,)  ## Run on GPU
+            train_loader = DataLoader(
+                dataset,
+                batch_size=batch_size,
+                shuffle=True,
+                pin_memory=True,
+                num_workers=8,
+            )  ## Run on GPU
             val_loader = None
             num_validation_examples = 0
         else:
@@ -299,8 +352,20 @@ class PosteriorEstimator(NeuralInference, ABC):
             train_sampler = SubsetRandomSampler(train_idx)
             val_sampler = SubsetRandomSampler(valid_idx)
 
-            train_loader = DataLoader(dataset, sampler=train_sampler, batch_size=batch_size, pin_memory=True, num_workers=8,)  ## Run on GPU
-            val_loader = DataLoader(dataset, sampler=val_sampler, batch_size=batch_size, pin_memory=True, num_workers=8,)  ## Run on GPU
+            train_loader = DataLoader(
+                dataset,
+                sampler=train_sampler,
+                batch_size=batch_size,
+                pin_memory=True,
+                num_workers=8,
+            )  ## Run on GPU
+            val_loader = DataLoader(
+                dataset,
+                sampler=val_sampler,
+                batch_size=batch_size,
+                pin_memory=True,
+                num_workers=8,
+            )  ## Run on GPU
             num_validation_examples = split
 
         return train_loader, val_loader, num_validation_examples
@@ -348,4 +413,3 @@ class NumpyDataset(Dataset):
 
     def __len__(self):
         return self.n
-

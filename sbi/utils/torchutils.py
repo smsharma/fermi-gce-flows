@@ -23,13 +23,13 @@ def process_device(device: str) -> str:
             device = "cuda"
         try:
             torch.zeros(1).to(device)
-            warnings.warn(
-                """GPU was selected as a device for training the neural network. Note
-                   that we expect **no** significant speed ups in training for the
-                   default architectures we provide. Using the GPU will be effective
-                   only for large neural networks with operations that are fast on the
-                   GPU, e.g., for a CNN or RNN `embedding_net`."""
-            )
+            # warnings.warn(
+            #     """GPU was selected as a device for training the neural network. Note
+            #        that we expect **no** significant speed ups in training for the
+            #        default architectures we provide. Using the GPU will be effective
+            #        only for large neural networks with operations that are fast on the
+            #        GPU, e.g., for a CNN or RNN `embedding_net`."""
+            # )
         except (RuntimeError, AssertionError):
             warnings.warn(f"Device {device} not available, falling back to CPU.")
             device = "cpu"
@@ -67,9 +67,7 @@ def merge_leading_dims(x, num_dims):
     if not utils.is_positive_int(num_dims):
         raise TypeError("Number of leading dims must be a positive integer.")
     if num_dims > x.dim():
-        raise ValueError(
-            "Number of leading dims can't be greater than total number of dims."
-        )
+        raise ValueError("Number of leading dims can't be greater than total number of dims.")
     new_shape = torch.Size([-1]) + x.shape[num_dims:]
     return torch.reshape(x, new_shape)
 
@@ -156,9 +154,7 @@ def create_random_binary_mask(features):
     mask = torch.zeros(features).byte()
     weights = torch.ones(features).float()
     num_samples = features // 2 if features % 2 == 0 else features // 2 + 1
-    indices = torch.multinomial(
-        input=weights, num_samples=num_samples, replacement=False
-    )
+    indices = torch.multinomial(input=weights, num_samples=num_samples, replacement=False)
     mask[indices] += 1
     return mask
 
@@ -205,7 +201,10 @@ def gaussian_kde_log_eval(samples, query):
 
 class BoxUniform(Independent):
     def __init__(
-        self, low: ScalarFloat, high: ScalarFloat, reinterpreted_batch_ndims: int = 1,
+        self,
+        low: ScalarFloat,
+        high: ScalarFloat,
+        reinterpreted_batch_ndims: int = 1,
     ):
         """Multidimensional uniform distribution defined on a box.
 
