@@ -31,6 +31,61 @@ from sbi.utils import (
     x_shape_from_simulation,
 )
 
+import pytorch_lightning as pl
+
+class PosteriorEstimationNet(pl.LightningModule):
+    """
+    This is a wrapper class for the neural network defined by pyknos / nflows. It wraps
+    the neural network into a pytorch_lightning module.
+    """
+
+    def __init__(self, args: dict):
+        """
+        Initialize the posterior estimation net.
+        The reason that this is a dict: when listing all arguments separately, pytorch-
+        lightning breaks when one calls `load_from_checkpoint` if the arguments have
+        different types.
+        Args:
+            args: Dict containing `net`, `proposal`, `loss`, lr`, `calibration_kernel`.
+                See below for further explanation.
+            `net`: Neural density estimator.
+            `proposal`: Proposal distribution.
+            `loss`: Loss function.
+            `lr`: Learning rate.
+            `calibration_kernel`: Calibration kernel.
+        """
+
+        super().__init__()
+
+        self.save_hyperparameters()
+
+        self.net = args["net"]
+        self.proposal = args["proposal"]
+        self.loss = args["loss"]
+        self.lr = args["lr"]
+        self.calibration_kernel = args["calibration_kernel"]
+
+    def configure_optimizers(self):
+        optimizer = optim.Adam(list(self.net.parameters()), lr=self.lr)
+        return optimizer
+
+    def training_step(self, batch, batch_idx):
+        theta, x, masks = batch
+        loss = torch.mean(
+            self.loss(theta, x, masks, self.proposal, self.calibration_kernel)
+        )
+        result = pl.TrainResult(loss)
+        return result
+
+    def validation_step(self, batch, batch_idx):
+        theta, x, masks = batch
+        loss = torch.mean(
+            self.loss(theta, x, masks, self.proposal, self.calibration_kernel)
+        )
+        result = pl.EvalResult(checkpoint_on=loss, early_stop_on=loss)
+        result.log("val_loss", loss)
+        return result
+
 
 class PosteriorEstimator(NeuralInference, ABC):
     def __init__(self, prior, density_estimator: Union[str, Callable] = "maf", device: str = "cpu", logging_level: Union[int, str] = "WARNING", summary_writer: Optional[SummaryWriter] = None, show_progress_bars: bool = True, **unused_args):
