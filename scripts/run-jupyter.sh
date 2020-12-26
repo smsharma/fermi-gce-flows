@@ -24,7 +24,7 @@ Step 1 :
 
 If you are working in NYU campus, please open an iTerm window, run command
 
-ssh -N -f -L localhost:$port:localhost:$port $USER@greene.hpc.nyu.edu
+ssh -L $port:localhost:$port $USER@greene.hpc.nyu.edu
 
 If you are working off campus, you should already have ssh tunneling setup through HPC bastion host, 
 that you can directly login to greene with command
