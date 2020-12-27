@@ -209,9 +209,12 @@ class PosteriorEstimator(NeuralInference, ABC):
             calibration_kernel
         )
 
-        model_checkpoint = ModelCheckpoint(monitor='val_loss', save_top_k=3, dirpath="./data/models/", filename="sample-mnist-{epoch:02d}-{val_loss:.2f}", save_last=True)
-        early_stop_callback = EarlyStopping(monitor='val_loss', patience=stop_after_epochs)
+        # Hard code not to save anything
+        model_checkpoint = ModelCheckpoint(monitor='val_loss', save_top_k=3, dirpath="./data/models/", filename="{epoch:02d}-{val_loss:.2f}", save_last=False, save_top_k == 0)
         checkpoint_callback = model_checkpoint
+
+        early_stop_callback = EarlyStopping(monitor='val_loss', patience=stop_after_epochs)
+        
         
         trainer = pl.Trainer(
             logger=self._summary_writer,
