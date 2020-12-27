@@ -76,17 +76,15 @@ class PosteriorEstimationNet(pl.LightningModule):
         loss = torch.mean(
             self.loss(theta, x, self.proposal, self.calibration_kernel)
         )
-        result = pl.TrainResult(loss)
-        return result
+        self.log('train_loss', loss)
+        return loss
 
     def validation_step(self, batch, batch_idx):
         theta, x = batch
         loss = torch.mean(
             self.loss(theta, x, self.proposal, self.calibration_kernel)
         )
-        result = pl.EvalResult(checkpoint_on=loss, early_stop_on=loss)
-        result.log("val_loss", loss)
-        return result
+        self.log('val_loss', loss)
 
 
 class PosteriorEstimator(NeuralInference, ABC):
@@ -211,75 +209,33 @@ class PosteriorEstimator(NeuralInference, ABC):
             calibration_kernel
         )
 
-        model_checkpoint = ModelCheckpoint()
-
-        early_stop_callback=EarlyStopping(patience=stop_after_epochs,)
-        checkpoint_callback=model_checkpoint
-
+        model_checkpoint = ModelCheckpoint(monitor='val_loss', save_top_k=3, dirpath="./data/models/", filename="sample-mnist-{epoch:02d}-{val_loss:.2f}", save_last=True)
+        early_stop_callback = EarlyStopping(monitor='val_loss', patience=stop_after_epochs)
+        checkpoint_callback = model_checkpoint
+        
         trainer = pl.Trainer(
             logger=self._summary_writer,
             callbacks=[early_stop_callback,checkpoint_callback],
             gradient_clip_val=clip_max_norm,
             max_epochs=max_num_epochs,
             progress_bar_refresh_rate=self._show_progress_bars,
-            deterministic=True,
+            deterministic=False,
             gpus=1
         )
+
         trainer.fit(self._model, train_loader, val_loader)
 
         # Load the model that had the best validation log-probability.
         self._best_model = PosteriorEstimationNet.load_from_checkpoint(
-            checkpoint_path=model_checkpoint.best_model_path
+            checkpoint_path=model_checkpoint.best_model_path,
+            net=self._neural_net,
+            proposal=proposal,
+            loss=self._loss,
+            calibration_kernel=calibration_kernel,
         )
 
-        self._summary["best_validation_loss"].append(model_checkpoint.best_model_score)
-
-    #     # Fit posterior using newly aggregated data set.
-    #     self._train(
-    #         train_loader,
-    #         val_loader,
-    #         stop_after_epochs=stop_after_epochs,
-    #         max_num_epochs=cast(int, max_num_epochs),
-    #         clip_max_norm=clip_max_norm,
-    #     )
-
-    # def _train(
-    #     self,
-    #     train_loader,
-    #     val_loader,
-    #     stop_after_epochs: int,
-    #     max_num_epochs: int,
-    #     clip_max_norm: Optional[float],
-    # ) -> None:
-    #     r"""Train the conditional density estimator for the posterior $p(\theta|x)$.
-    #     Update the conditional density estimator weights to maximize the proposal
-    #     posterior using the most recently aggregated bank of $(\theta, x)$ pairs.
-    #     Uses performance on a held-out validation set as a terminating condition (early
-    #     stopping).
-    #     The proposal is only needed for non-atomic SNPE.
-    #     """
-
-    #     model_checkpoint = ModelCheckpoint()
-
-    #     trainer = pl.Trainer(
-    #         logger=self._summary_writer,
-    #         early_stop_callback=EarlyStopping(patience=stop_after_epochs,),
-    #         checkpoint_callback=model_checkpoint,
-    #         gradient_clip_val=clip_max_norm,
-    #         max_epochs=max_num_epochs,
-    #         progress_bar_refresh_rate=self._show_progress_bars,
-    #         deterministic=True,
-    #     )
-    #     trainer.fit(self._model, train_loader, val_loader)
-
-    #     # Load the model that had the best validation log-probability.
-    #     self._best_model = PosteriorEstimationNet.load_from_checkpoint(
-    #         checkpoint_path=model_checkpoint.best_model_path
-    #     )
-
-    #     self._summary["best_validation_loss"].append(model_checkpoint.best_model_score)
-
-    #     # return self._best_model
+        # Return the posterior net corresponding to the best model
+        return self._best_model.net
 
     def build_posterior(
         self,

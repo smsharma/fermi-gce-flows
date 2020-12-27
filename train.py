@@ -17,7 +17,9 @@ from utils import create_mask as cm
 import torch
 
 from sbi import utils
-from sbi.inference import SNPE
+from sbi.inference import PosteriorEstimator
+
+from pytorch_lightning.loggers import TensorBoardLogger
 
 
 def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, device=None):
@@ -49,7 +51,7 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
     # Embedding net (feature extractor)
     sg_embed = SphericalGraphCNN(nside_list, indexes_list)
 
-    # Priors hard-coded for now.
+    # Priors hard-coded for now
     prior = utils.BoxUniform(low=torch.tensor([0.001, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.tensor([0.5, 0.5, 20.0, 1.99, 1.99, 50.0, 4.99]))
     # Embedding net
     sg_embed = SphericalGraphCNN(nside_list, indexes_list)
@@ -57,14 +59,23 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
     # Instantiate the neural density estimator
     neural_classifier = utils.posterior_nn(model="maf", embedding_net=sg_embed, hidden_features=50, num_transforms=4,)
 
+    # TensorBoard logger
+    summary_writer = TensorBoardLogger("{}/logs/{}".format(data_dir, model_filename))
+
     # Setup the inference procedure with the SNPE-C procedure
-    inference_inst = SNPE(prior=prior, density_estimator=neural_classifier, show_progress_bars=True, logging_level="INFO", device=device.type)
+    inference_inst = PosteriorEstimator(prior=prior, density_estimator=neural_classifier, show_progress_bars=True, logging_level="INFO", device=device.type, summary_writer=summary_writer)
 
     x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
     theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)
 
-    density_estimator = inference_inst.train(x=x_filename, theta=theta_filename, proposal=prior, training_batch_size=64, max_num_epochs=40)
+    density_estimator = inference_inst.train(x=x_filename, theta=theta_filename, proposal=prior, training_batch_size=64, max_num_epochs=10)
+
     torch.save(density_estimator, "{}/models/{}.pt".format(data_dir, model_filename))
+
+    density_estimator = torch.load("{}/models/{}.pt".format(data_dir, model_filename), map_location=torch.device('cpu'))
+
+    posterior = inference_inst.build_posterior(density_estimator)
+
 
 
 def parse_args():
