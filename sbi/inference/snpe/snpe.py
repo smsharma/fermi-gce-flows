@@ -32,6 +32,8 @@ from sbi.utils import (
 )
 
 import pytorch_lightning as pl
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+
 
 class PosteriorEstimationNet(pl.LightningModule):
     """
@@ -39,7 +41,7 @@ class PosteriorEstimationNet(pl.LightningModule):
     the neural network into a pytorch_lightning module.
     """
 
-    def __init__(self, args: dict):
+    def __init__(self, net, proposal, loss, lr, calibration_kernel):
         """
         Initialize the posterior estimation net.
         The reason that this is a dict: when listing all arguments separately, pytorch-
@@ -57,30 +59,30 @@ class PosteriorEstimationNet(pl.LightningModule):
 
         super().__init__()
 
-        self.save_hyperparameters()
+        self.save_hyperparameters('lr')
 
-        self.net = args["net"]
-        self.proposal = args["proposal"]
-        self.loss = args["loss"]
-        self.lr = args["lr"]
-        self.calibration_kernel = args["calibration_kernel"]
+        self.net = net
+        self.proposal = proposal
+        self.loss = loss
+        self.lr = lr
+        self.calibration_kernel = calibration_kernel
 
     def configure_optimizers(self):
         optimizer = optim.Adam(list(self.net.parameters()), lr=self.lr)
         return optimizer
 
     def training_step(self, batch, batch_idx):
-        theta, x, masks = batch
+        theta, x = batch
         loss = torch.mean(
-            self.loss(theta, x, masks, self.proposal, self.calibration_kernel)
+            self.loss(theta, x, self.proposal, self.calibration_kernel)
         )
         result = pl.TrainResult(loss)
         return result
 
     def validation_step(self, batch, batch_idx):
-        theta, x, masks = batch
+        theta, x = batch
         loss = torch.mean(
-            self.loss(theta, x, masks, self.proposal, self.calibration_kernel)
+            self.loss(theta, x, self.proposal, self.calibration_kernel)
         )
         result = pl.EvalResult(checkpoint_on=loss, early_stop_on=loss)
         result.log("val_loss", loss)
@@ -142,7 +144,6 @@ class PosteriorEstimator(NeuralInference, ABC):
         max_num_epochs: Optional[int] = None,
         clip_max_norm: Optional[float] = 5.0,
         calibration_kernel: Optional[Callable] = None,
-        exclude_invalid_x: bool = True,
     ) -> DirectPosterior:
         r"""
         Return density estimator that approximates the distribution $p(\theta|x)$.
@@ -200,90 +201,85 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         train_loader, val_loader, num_validation_examples = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
 
-        self._neural_net.to(self._device)
-        optimizer = optim.Adam(
-            list(self._neural_net.parameters()),
-            lr=learning_rate,
+        max_num_epochs=cast(int, max_num_epochs)
+
+        self._model = PosteriorEstimationNet(
+            self._neural_net,
+            proposal,
+            self._loss,
+            learning_rate,
+            calibration_kernel
         )
 
-        epoch, self._val_log_prob = 0, float("-Inf")
+        model_checkpoint = ModelCheckpoint()
 
-        writer = SummaryWriter()
+        early_stop_callback=EarlyStopping(patience=stop_after_epochs,)
+        checkpoint_callback=model_checkpoint
 
-        while epoch <= max_num_epochs and not self._converged(epoch, stop_after_epochs):
+        trainer = pl.Trainer(
+            logger=self._summary_writer,
+            callbacks=[early_stop_callback,checkpoint_callback],
+            gradient_clip_val=clip_max_norm,
+            max_epochs=max_num_epochs,
+            progress_bar_refresh_rate=self._show_progress_bars,
+            deterministic=True,
+            gpus=1
+        )
+        trainer.fit(self._model, train_loader, val_loader)
 
-            # Train for a single epoch.
-            self._neural_net.train()
+        # Load the model that had the best validation log-probability.
+        self._best_model = PosteriorEstimationNet.load_from_checkpoint(
+            checkpoint_path=model_checkpoint.best_model_path
+        )
 
-            loss_train = 0.0
+        self._summary["best_validation_loss"].append(model_checkpoint.best_model_score)
 
-            for batch in train_loader:
-                optimizer.zero_grad()
-                theta_batch, x_batch = (
-                    batch[0].to(self._device),
-                    batch[1].to(self._device),
-                )
+    #     # Fit posterior using newly aggregated data set.
+    #     self._train(
+    #         train_loader,
+    #         val_loader,
+    #         stop_after_epochs=stop_after_epochs,
+    #         max_num_epochs=cast(int, max_num_epochs),
+    #         clip_max_norm=clip_max_norm,
+    #     )
 
-                batch_loss = torch.mean(
-                    self._loss(
-                        theta_batch,
-                        x_batch,
-                        proposal,
-                        calibration_kernel,
-                    )
-                )
-                loss_train += batch_loss
-                batch_loss.backward()
-                if clip_max_norm is not None:
-                    clip_grad_norm_(
-                        self._neural_net.parameters(),
-                        max_norm=clip_max_norm,
-                    )
-                optimizer.step()
+    # def _train(
+    #     self,
+    #     train_loader,
+    #     val_loader,
+    #     stop_after_epochs: int,
+    #     max_num_epochs: int,
+    #     clip_max_norm: Optional[float],
+    # ) -> None:
+    #     r"""Train the conditional density estimator for the posterior $p(\theta|x)$.
+    #     Update the conditional density estimator weights to maximize the proposal
+    #     posterior using the most recently aggregated bank of $(\theta, x)$ pairs.
+    #     Uses performance on a held-out validation set as a terminating condition (early
+    #     stopping).
+    #     The proposal is only needed for non-atomic SNPE.
+    #     """
 
-            loss_train /= len(train_loader)
+    #     model_checkpoint = ModelCheckpoint()
 
-            epoch += 1
+    #     trainer = pl.Trainer(
+    #         logger=self._summary_writer,
+    #         early_stop_callback=EarlyStopping(patience=stop_after_epochs,),
+    #         checkpoint_callback=model_checkpoint,
+    #         gradient_clip_val=clip_max_norm,
+    #         max_epochs=max_num_epochs,
+    #         progress_bar_refresh_rate=self._show_progress_bars,
+    #         deterministic=True,
+    #     )
+    #     trainer.fit(self._model, train_loader, val_loader)
 
-            # Calculate validation performance.
-            self._neural_net.eval()
-            loss_val = 0.0
-            log_prob_sum = 0
-            with torch.no_grad():
-                for batch in val_loader:
-                    theta_batch, x_batch = (
-                        batch[0].to(self._device),
-                        batch[1].to(self._device),
-                    )
+    #     # Load the model that had the best validation log-probability.
+    #     self._best_model = PosteriorEstimationNet.load_from_checkpoint(
+    #         checkpoint_path=model_checkpoint.best_model_path
+    #     )
 
-                    # Take negative loss here to get validation log_prob.
-                    batch_log_prob = -self._loss(
-                        theta_batch,
-                        x_batch,
-                        proposal,
-                        calibration_kernel,
-                    )
-                    loss_val += torch.mean(-batch_log_prob)
-                    log_prob_sum += batch_log_prob.sum().item()
+    #     self._summary["best_validation_loss"].append(model_checkpoint.best_model_score)
 
-            loss_val /= len(val_loader)
-
-            writer.add_scalar("Loss/train", loss_train, epoch)
-            writer.add_scalar("Loss/validation", loss_val, epoch)
-
-            self._val_log_prob = log_prob_sum / num_validation_examples
-            # Log validation log prob for every epoch.
-            self._summary["validation_log_probs"].append(self._val_log_prob)
-
-            self._maybe_show_progress(self._show_progress_bars, epoch)
-
-        self._report_convergence_at_end(epoch, stop_after_epochs, max_num_epochs)
-
-        # Update summary.
-        self._summary["epochs"].append(epoch)
-        self._summary["best_validation_log_probs"].append(self._best_val_log_prob)
-
-        return deepcopy(self._neural_net)
+    #     # return self._best_model
 
     def build_posterior(
         self,

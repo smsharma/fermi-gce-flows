@@ -16,6 +16,8 @@ from sbi.inference.posteriors.base_posterior import NeuralPosterior
 from sbi.utils import get_log_root
 from sbi.utils.torchutils import process_device
 
+from pytorch_lightning.loggers import TensorBoardLogger
+
 
 class NeuralInference(ABC):
     """Abstract base class for neural inference methods."""
@@ -142,12 +144,11 @@ class NeuralInference(ABC):
 
         return converged
 
-    def _default_summary_writer(self) -> SummaryWriter:
+    def _default_summary_writer(self) -> TensorBoardLogger:
         """Return summary writer logging to method- and simulator-specific directory."""
-
         method = self.__class__.__name__
         logdir = Path(get_log_root(), method, datetime.now().isoformat().replace(":", "_"),)
-        return SummaryWriter(logdir)
+        return TensorBoardLogger(logdir)
 
     @staticmethod
     def _ensure_list(num_simulations_per_round: Union[List[int], int], num_rounds: int) -> List[int]:
