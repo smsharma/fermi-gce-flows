@@ -19,7 +19,7 @@ import torch
 from sbi import utils
 from sbi.inference import PosteriorEstimator
 
-from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.loggers import TensorBoardLogger, MLFlowLogger
 
 
 def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, device=None):
@@ -61,14 +61,17 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
 
     # TensorBoard logger
     summary_writer = TensorBoardLogger("{}/logs/{}".format(data_dir, model_filename))
+    mlf_logger = MLFlowLogger(experiment_name="default", tracking_uri="file:{}/logs/mlruns".format(data_dir, model_filename))
+
+    mlf_logger.log_hyperparams({'nside_max': nside_max})
 
     # Setup the inference procedure with the SNPE-C procedure
-    inference_inst = PosteriorEstimator(prior=prior, density_estimator=neural_classifier, show_progress_bars=True, logging_level="INFO", device=device.type, summary_writer=summary_writer)
+    inference_inst = PosteriorEstimator(prior=prior, density_estimator=neural_classifier, show_progress_bars=True, logging_level="INFO", device=device.type, summary_writer=mlf_logger)
 
     x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
     theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)
 
-    density_estimator = inference_inst.train(x=x_filename, theta=theta_filename, proposal=prior, training_batch_size=64, max_num_epochs=10)
+    density_estimator = inference_inst.train(x=x_filename, theta=theta_filename, proposal=prior, training_batch_size=64, max_num_epochs=5)
 
     torch.save(density_estimator, "{}/models/{}.pt".format(data_dir, model_filename))
 

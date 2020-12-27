@@ -27,7 +27,6 @@ from sbi.inference import NeuralInference
 from sbi.inference.posteriors.direct_posterior import DirectPosterior
 from sbi.types import TorchModule
 from sbi.utils import (
-    check_estimator_arg,
     x_shape_from_simulation,
 )
 
@@ -76,7 +75,7 @@ class PosteriorEstimatorNet(pl.LightningModule):
         loss = torch.mean(
             self.loss(theta, x, self.proposal, self.calibration_kernel)
         )
-        self.log('train_loss', loss)
+        self.log('train_loss', loss, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -118,14 +117,8 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         # As detailed in the docstring, `density_estimator` is either a string or
         # a callable. The function creating the neural network is attached to
-        # `_build_neural_net`. It will be called in the first round and receive
-        # thetas and xs as inputs, so that they can be used for shape inference and
-        # potentially for z-scoring.
-        check_estimator_arg(density_estimator)
-        if isinstance(density_estimator, str):
-            self._build_neural_net = utils.posterior_nn(model=density_estimator)
-        else:
-            self._build_neural_net = density_estimator
+        # `_build_neural_net`
+        self._build_neural_net = density_estimator
 
         # Extra SNPE-specific fields summary_writer.
         self._summary.update({"rejection_sampling_acceptance_rates": []})  # type:ignore
@@ -179,7 +172,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         max_num_epochs = 2 ** 31 - 1 if max_num_epochs is None else max_num_epochs
 
-        # Load data from most recent round.
+        # Load data
         theta = self.load_and_check(theta, memmap=False)
         x = self.load_and_check(x, memmap=True)
 
@@ -190,7 +183,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         train_loader, val_loader = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
 
-        num_z_score = 10000  # Z-score using a limited sample for memory reasons
+        num_z_score = 10000  # Z-score using a limited random sample for memory reasons
         theta_z_score, x_z_score = train_loader.dataset[:num_z_score]
 
         logging.info("Z-scoring using {} random training samples for x".format(num_z_score))
