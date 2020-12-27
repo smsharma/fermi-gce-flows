@@ -1,6 +1,7 @@
 # This file is part of sbi, a toolkit for simulation-based inference. sbi is licensed
 # under the Affero General Public License v3, see <https://www.gnu.org/licenses/>.
 
+import logging
 
 from abc import ABC, abstractmethod
 from copy import deepcopy
@@ -27,7 +28,6 @@ from sbi.inference.posteriors.direct_posterior import DirectPosterior
 from sbi.types import TorchModule
 from sbi.utils import (
     check_estimator_arg,
-    test_posterior_net_for_multi_d_x,
     x_shape_from_simulation,
 )
 
@@ -35,7 +35,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
 
-class PosteriorEstimationNet(pl.LightningModule):
+class PosteriorEstimatorNet(pl.LightningModule):
     """
     This is a wrapper class for the neural network defined by pyknos / nflows. It wraps
     the neural network into a pytorch_lightning module.
@@ -186,22 +186,24 @@ class PosteriorEstimator(NeuralInference, ABC):
         data = OrderedDict()
         data["theta"] = theta
         data["x"] = x
-        data_labels, dataset = self.make_dataset(data)
+        dataset = self.make_dataset(data)
 
-        # First round or if retraining from scratch:
-        # Call the `self._build_neural_net` with the rounds' thetas and xs as
-        # arguments, which will build the neural network.
+        train_loader, val_loader = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
+
+        num_z_score = 10000  # Z-score using a limited sample for memory reasons
+        theta_z_score, x_z_score = train_loader.dataset[:num_z_score]
+
+        logging.info("Z-scoring using {} random training samples for x".format(num_z_score))
+
+        # Call the `self._build_neural_net` which will build the neural network.
         # This is passed into NeuralPosterior, to create a neural posterior which
         # can `sample()` and `log_prob()`. The network is accessible via `.net`.
-        self._neural_net = self._build_neural_net(torch.Tensor(theta), torch.Tensor(x))
-        test_posterior_net_for_multi_d_x(self._neural_net, torch.Tensor(theta), torch.Tensor(x))
+        self._neural_net = self._build_neural_net(theta_z_score, torch.Tensor(x))
         self._x_shape = x_shape_from_simulation(torch.Tensor(x))
-
-        train_loader, val_loader, num_validation_examples = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
 
         max_num_epochs=cast(int, max_num_epochs)
 
-        self._model = PosteriorEstimationNet(
+        self._model = PosteriorEstimatorNet(
             self._neural_net,
             proposal,
             self._loss,
@@ -210,11 +212,10 @@ class PosteriorEstimator(NeuralInference, ABC):
         )
 
         # Hard code not to save anything
-        model_checkpoint = ModelCheckpoint(monitor='val_loss', save_top_k=3, dirpath="./data/models/", filename="{epoch:02d}-{val_loss:.2f}", save_last=False, save_top_k == 0)
+        model_checkpoint = ModelCheckpoint(monitor='val_loss', dirpath="./data/models/", filename="{epoch:02d}-{val_loss:.2f}")
         checkpoint_callback = model_checkpoint
 
         early_stop_callback = EarlyStopping(monitor='val_loss', patience=stop_after_epochs)
-        
         
         trainer = pl.Trainer(
             logger=self._summary_writer,
@@ -228,8 +229,8 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         trainer.fit(self._model, train_loader, val_loader)
 
-        # Load the model that had the best validation log-probability.
-        self._best_model = PosteriorEstimationNet.load_from_checkpoint(
+        # Load the model that had the best validation log-probability
+        self._best_model = PosteriorEstimatorNet.load_from_checkpoint(
             checkpoint_path=model_checkpoint.best_model_path,
             net=self._neural_net,
             proposal=proposal,
@@ -335,7 +336,7 @@ class PosteriorEstimator(NeuralInference, ABC):
             data_labels.append(key)
             data_arrays.append(value)
         dataset = NumpyDataset(*data_arrays, dtype=torch.float)  # Should maybe mod dtype
-        return data_labels, dataset
+        return dataset
 
     def make_dataloaders(self, dataset, validation_split, batch_size, seed=None):
         if validation_split is None or validation_split <= 0.0:
@@ -376,9 +377,8 @@ class PosteriorEstimator(NeuralInference, ABC):
                 pin_memory=True,
                 num_workers=8,
             )  ## Run on GPU
-            num_validation_examples = split
 
-        return train_loader, val_loader, num_validation_examples
+        return train_loader, val_loader
 
     def load_and_check(self, filename, memmap=False):
         # Don't load image files > 1 GB into memory

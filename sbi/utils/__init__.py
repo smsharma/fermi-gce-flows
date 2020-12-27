@@ -1,7 +1,6 @@
 # flake8: noqa
 from sbi.user_input.user_input_checks import (
     check_estimator_arg,
-    test_posterior_net_for_multi_d_x,
     validate_theta_and_x,
 )
 from sbi.user_input.user_input_checks_utils import MultipleIndependent
