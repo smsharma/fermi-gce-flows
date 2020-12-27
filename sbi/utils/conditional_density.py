@@ -209,12 +209,12 @@ def _compute_covariance(
     limits = ensure_theta_batched(limits)
 
     # Compute E[X*Y].
-    expected_value_of_joint = _expected_value_f_of_x(probs, limits, f)
+    expected_value_of_joint = _expected_value_f_of_x(probs, torch.flip(limits, [1]), f)
 
     # Compute E[X] * E[Y].
     expected_values_of_marginals = [
         _expected_value_f_of_x(prob.unsqueeze(0), lim.unsqueeze(0))
-        for prob, lim in zip(_calc_marginals(probs, limits), limits)
+        for prob, lim in zip(_calc_marginals(probs, limits), torch.flip(limits, [1]))
     ]
 
     return expected_value_of_joint - f(*expected_values_of_marginals)

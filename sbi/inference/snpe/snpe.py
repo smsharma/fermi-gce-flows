@@ -33,6 +33,7 @@ from sbi.utils import (
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
+import mlflow.pytorch
 
 class PosteriorEstimatorNet(pl.LightningModule):
     """
@@ -120,9 +121,6 @@ class PosteriorEstimator(NeuralInference, ABC):
         # `_build_neural_net`
         self._build_neural_net = density_estimator
 
-        # Extra SNPE-specific fields summary_writer.
-        self._summary.update({"rejection_sampling_acceptance_rates": []})  # type:ignore
-
     def train(
         self,
         x,
@@ -204,7 +202,6 @@ class PosteriorEstimator(NeuralInference, ABC):
             calibration_kernel
         )
 
-        # Hard code not to save anything
         model_checkpoint = ModelCheckpoint(monitor='val_loss', dirpath="./data/models/", filename="{epoch:02d}-{val_loss:.2f}")
         checkpoint_callback = model_checkpoint
 
@@ -220,7 +217,13 @@ class PosteriorEstimator(NeuralInference, ABC):
             gpus=1
         )
 
-        trainer.fit(self._model, train_loader, val_loader)
+        # Auto log all MLflow entities
+        mlflow.set_tracking_uri(self._summary_writer._tracking_uri)
+        mlflow.pytorch.autolog()
+
+        # Train the model
+        with mlflow.start_run(run_id=self._summary_writer.run_id) as run:
+            trainer.fit(self._model, train_loader, val_loader)
 
         # Load the model that had the best validation log-probability
         self._best_model = PosteriorEstimatorNet.load_from_checkpoint(

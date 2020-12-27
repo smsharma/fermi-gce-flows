@@ -152,6 +152,8 @@ venv.bak/
 
 *.pt
 *.ckpt*
+mlruns
+.mlruns
 
 sbi-logs
 psf_dir

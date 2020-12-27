@@ -20,7 +20,7 @@ from sbi import utils
 from sbi.inference import PosteriorEstimator
 
 from pytorch_lightning.loggers import TensorBoardLogger, MLFlowLogger
-
+import mlflow
 
 def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, device=None):
 
@@ -48,37 +48,39 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
         masks_list.append(hp_mask)
         indexes_list.append(np.arange(hp.nside2npix(nside))[~hp_mask])
 
+    # Priors hard-coded for now
+    prior = utils.BoxUniform(low=torch.tensor([0.001, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.tensor([0.5, 0.5, 20.0, 1.99, 1.99, 50.0, 4.99]))
+
     # Embedding net (feature extractor)
     sg_embed = SphericalGraphCNN(nside_list, indexes_list)
 
-    # Priors hard-coded for now
-    prior = utils.BoxUniform(low=torch.tensor([0.001, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.tensor([0.5, 0.5, 20.0, 1.99, 1.99, 50.0, 4.99]))
-    # Embedding net
-    sg_embed = SphericalGraphCNN(nside_list, indexes_list)
-
     # Instantiate the neural density estimator
-    neural_classifier = utils.posterior_nn(model="maf", embedding_net=sg_embed, hidden_features=50, num_transforms=4,)
+    density_estimator = utils.posterior_nn(model="maf", embedding_net=sg_embed, hidden_features=50, num_transforms=4,)
 
-    # TensorBoard logger
-    summary_writer = TensorBoardLogger("{}/logs/{}".format(data_dir, model_filename))
-    mlf_logger = MLFlowLogger(experiment_name="default", tracking_uri="file:{}/logs/mlruns".format(data_dir, model_filename))
-
+    # MLFlow logger
+    tracking_uri = "file:{}/logs/mlruns".format(data_dir)
+    mlf_logger = MLFlowLogger(experiment_name="default", tracking_uri=tracking_uri)
     mlf_logger.log_hyperparams({'nside_max': nside_max})
 
-    # Setup the inference procedure with the SNPE-C procedure
-    inference_inst = PosteriorEstimator(prior=prior, density_estimator=neural_classifier, show_progress_bars=True, logging_level="INFO", device=device.type, summary_writer=mlf_logger)
+    # Setup the inference procedure with (S)NPE
+    posterior_estimator = PosteriorEstimator(prior=prior, density_estimator=density_estimator, show_progress_bars=True, logging_level="INFO", device=device.type, summary_writer=mlf_logger)
 
+    # Specify datasets
     x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
     theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)
 
-    density_estimator = inference_inst.train(x=x_filename, theta=theta_filename, proposal=prior, training_batch_size=64, max_num_epochs=5)
+    # Model training
+    density_estimator = posterior_estimator.train(x=x_filename, theta=theta_filename, proposal=prior, training_batch_size=64, max_num_epochs=5)
 
-    torch.save(density_estimator, "{}/models/{}.pt".format(data_dir, model_filename))
+    # Save density estimator
+    mlflow.set_tracking_uri(tracking_uri)
+    with mlflow.start_run(run_id=mlf_logger.run_id):
+        mlflow.pytorch.log_model(density_estimator, "density_estimator")
 
-    density_estimator = torch.load("{}/models/{}.pt".format(data_dir, model_filename), map_location=torch.device('cpu'))
-
+    # Check to make sure model can be succesfully loaded
+    model_uri = "runs:/{}/density_estimator".format(mlf_logger.run_id)
+    density_estimator = mlflow.pytorch.load_model(model_uri)
     posterior = inference_inst.build_posterior(density_estimator)
-
 
 
 def parse_args():
