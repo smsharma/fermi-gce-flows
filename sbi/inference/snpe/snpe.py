@@ -31,7 +31,7 @@ from sbi.utils import (
 )
 
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
 
 import mlflow.pytorch
 
@@ -41,7 +41,7 @@ class PosteriorEstimatorNet(pl.LightningModule):
     the neural network into a pytorch_lightning module.
     """
 
-    def __init__(self, net, proposal, loss, lr, calibration_kernel):
+    def __init__(self, net, proposal, loss, initial_lr, optimizer, optimizer_kwargs, scheduler, scheduler_kwargs, calibration_kernel):
         """
         Initialize the posterior estimation net.
         The reason that this is a dict: when listing all arguments separately, pytorch-
@@ -59,17 +59,26 @@ class PosteriorEstimatorNet(pl.LightningModule):
 
         super().__init__()
 
-        self.save_hyperparameters('lr')
+        self.save_hyperparameters('initial_lr')
 
         self.net = net
         self.proposal = proposal
         self.loss = loss
-        self.lr = lr
+
+        self.initial_lr = initial_lr
+        self.optimizer = optimizer
+        self.optimizer_kwargs = optimizer_kwargs
+        self.scheduler = scheduler
+        self.scheduler_kwargs = scheduler_kwargs
+
         self.calibration_kernel = calibration_kernel
 
     def configure_optimizers(self):
-        optimizer = optim.Adam(list(self.net.parameters()), lr=self.lr)
-        return optimizer
+        optimizer = self.optimizer(list(self.net.parameters()), lr=self.initial_lr, **self.optimizer_kwargs)
+        scheduler = self.scheduler(optimizer, **self.scheduler_kwargs)
+        # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=5, min_lr=1e-6, verbose=True)
+        # scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50, verbose=True)
+        return {'optimizer': optimizer, 'lr_scheduler': scheduler, 'monitor': 'val_loss'}
 
     def training_step(self, batch, batch_idx):
         theta, x = batch
@@ -89,23 +98,6 @@ class PosteriorEstimatorNet(pl.LightningModule):
 
 class PosteriorEstimator(NeuralInference, ABC):
     def __init__(self, prior, density_estimator: Union[str, Callable] = "maf", device: str = "cpu", logging_level: Union[int, str] = "WARNING", summary_writer: Optional[SummaryWriter] = None, show_progress_bars: bool = True, **unused_args):
-        """Base class for Sequential Neural Posterior Estimation methods.
-
-        Args:
-            density_estimator: If it is a string, use a pre-configured network of the
-                provided type (one of nsf, maf, mdn, made). Alternatively, a function
-                that builds a custom neural network can be provided. The function will
-                be called with the first batch of simulations (theta, x), which can
-                thus be used for shape inference and potentially for z-scoring. It
-                needs to return a PyTorch `nn.Module` implementing the density
-                estimator. The density estimator needs to provide the methods
-                `.log_prob` and `.sample()`.
-            unused_args: Absorbs additional arguments. No entries will be used. If it
-                is not empty, we warn. In future versions, when the new interface of
-                0.14.0 is more mature, we will remove this argument.
-
-        See docstring of `NeuralInference` class for all other arguments.
-        """
 
         super().__init__(
             prior=prior,
@@ -126,43 +118,21 @@ class PosteriorEstimator(NeuralInference, ABC):
         x,
         theta,
         proposal,
+        optimizer=optim.Adam,
+        optimizer_kwargs=None,
+        scheduler=optim.lr_scheduler.CosineAnnealingLR,
+        scheduler_kwargs=None,
         training_batch_size: int = 50,
-        learning_rate: float = 5e-4,
-        validation_fraction: float = 0.1,
+        initial_lr: float = 1e-3,
+        validation_fraction: float = 0.25,
         stop_after_epochs: int = 20,
         max_num_epochs: Optional[int] = None,
-        clip_max_norm: Optional[float] = 5.0,
+        clip_max_norm: Optional[float] = 1.0,
         calibration_kernel: Optional[Callable] = None,
     ) -> DirectPosterior:
-        r"""
-        Return density estimator that approximates the distribution $p(\theta|x)$.
 
-        Args:
-            training_batch_size: Training batch size.
-            learning_rate: Learning rate for Adam optimizer.
-            validation_fraction: The fraction of data to use for validation.
-            stop_after_epochs: The number of epochs to wait for improvement on the
-                validation set before terminating training.
-            max_num_epochs: Maximum number of epochs to run. If reached, we stop
-                training even when the validation loss is still decreasing. If None, we
-                train until validation loss increases (see also `stop_after_epochs`).
-            clip_max_norm: Value at which to clip the total gradient norm in order to
-                prevent exploding gradients. Use None for no clipping.
-            calibration_kernel: A function to calibrate the loss with respect to the
-                simulations `x`. See Lueckmann, Gonçalves et al., NeurIPS 2017.
-            exclude_invalid_x: Whether to exclude simulation outputs `x=NaN` or `x=±∞`
-                during training. Expect errors, silent or explicit, when `False`.
-            discard_prior_samples: Whether to discard samples simulated in round 1, i.e.
-                from the prior. Training may be sped up by ignoring such less targeted
-                samples.
-            retrain_from_scratch_each_round: Whether to retrain the conditional density
-                estimator for the posterior from scratch each round.
-            show_train_summary: Whether to print the number of epochs and validation
-                loss after the training.
-
-        Returns:
-            Density estimator that approximates the distribution $p(\theta|x)$.
-        """
+        optimizer_kwargs = {} if optimizer_kwargs is None else optimizer_kwargs
+        scheduler_kwargs = {'T_max':max_num_epochs} if scheduler_kwargs is None else scheduler_kwargs
 
         # Calibration kernels proposed in Lueckmann, Gonçalves et al., 2017.
         if calibration_kernel is None:
@@ -189,53 +159,62 @@ class PosteriorEstimator(NeuralInference, ABC):
         # Call the `self._build_neural_net` which will build the neural network.
         # This is passed into NeuralPosterior, to create a neural posterior which
         # can `sample()` and `log_prob()`. The network is accessible via `.net`.
-        self._neural_net = self._build_neural_net(theta_z_score, torch.Tensor(x))
-        self._x_shape = x_shape_from_simulation(torch.Tensor(x))
+        self.neural_net = self._build_neural_net(theta_z_score, torch.Tensor(x))
+        self.x_shape = x_shape_from_simulation(torch.Tensor(x))
 
         max_num_epochs=cast(int, max_num_epochs)
 
-        self._model = PosteriorEstimatorNet(
-            self._neural_net,
-            proposal,
-            self._loss,
-            learning_rate,
-            calibration_kernel
+        self.model = PosteriorEstimatorNet(
+            net=self.neural_net,
+            proposal=proposal,
+            loss=self.loss,
+            initial_lr=initial_lr, 
+            optimizer=optimizer, 
+            optimizer_kwargs=optimizer_kwargs, 
+            scheduler=scheduler, 
+            scheduler_kwargs=scheduler_kwargs,
+            calibration_kernel=calibration_kernel
         )
 
         model_checkpoint = ModelCheckpoint(monitor='val_loss', dirpath="./data/models/", filename="{epoch:02d}-{val_loss:.2f}")
         checkpoint_callback = model_checkpoint
+        early_stop_callback = EarlyStopping(monitor='val_loss', patience=stop_after_epochs)        
+        lr_monitor = LearningRateMonitor(logging_interval='epoch')
 
-        early_stop_callback = EarlyStopping(monitor='val_loss', patience=stop_after_epochs)
-        
         trainer = pl.Trainer(
-            logger=self._summary_writer,
-            callbacks=[early_stop_callback,checkpoint_callback],
+            logger=self.summary_writer,
+            callbacks=[early_stop_callback, checkpoint_callback, lr_monitor],
             gradient_clip_val=clip_max_norm,
             max_epochs=max_num_epochs,
             progress_bar_refresh_rate=self._show_progress_bars,
             deterministic=False,
-            gpus=1
+            gpus=1  # Hard-coded
         )
 
         # Auto log all MLflow entities
-        mlflow.set_tracking_uri(self._summary_writer._tracking_uri)
+        mlflow.set_tracking_uri(self.summary_writer._tracking_uri)
         mlflow.pytorch.autolog()
 
         # Train the model
-        with mlflow.start_run(run_id=self._summary_writer.run_id) as run:
-            trainer.fit(self._model, train_loader, val_loader)
+        with mlflow.start_run(run_id=self.summary_writer.run_id) as run:
+            trainer.fit(self.model, train_loader, val_loader)
 
         # Load the model that had the best validation log-probability
-        self._best_model = PosteriorEstimatorNet.load_from_checkpoint(
+        self.best_model = PosteriorEstimatorNet.load_from_checkpoint(
             checkpoint_path=model_checkpoint.best_model_path,
-            net=self._neural_net,
+            net=self.neural_net,
             proposal=proposal,
-            loss=self._loss,
-            calibration_kernel=calibration_kernel,
+            loss=self.loss,
+            initial_lr=initial_lr, 
+            optimizer=optimizer, 
+            optimizer_kwargs=optimizer_kwargs, 
+            scheduler=scheduler, 
+            scheduler_kwargs=scheduler_kwargs,
+            calibration_kernel=calibration_kernel
         )
 
         # Return the posterior net corresponding to the best model
-        return self._best_model.net
+        return self.best_model.net
 
     def build_posterior(
         self,
@@ -245,53 +224,15 @@ class PosteriorEstimator(NeuralInference, ABC):
         mcmc_method: str = "slice_np",
         mcmc_parameters: Optional[Dict[str, Any]] = None,
     ) -> DirectPosterior:
-        r"""
-        Build posterior from the neural density estimator.
-
-        For SNPE, the posterior distribution that is returned here implements the
-        following functionality over the raw neural density estimator:
-
-        - correct the calculation of the log probability such that it compensates for
-            the leakage.
-        - reject samples that lie outside of the prior bounds.
-        - alternatively, if leakage is very high (which can happen for multi-round
-            SNPE), sample from the posterior with MCMC.
-
-        Args:
-            density_estimator: The density estimator that the posterior is based on.
-                If `None`, use the latest neural density estimator that was trained.
-            rejection_sampling_parameters: Dictionary overriding the default parameters
-                for rejection sampling. The following parameters are supported:
-                `max_sampling_batch_size` to set the batch size for drawing new
-                samples from the candidate distribution, e.g., the posterior. Larger
-                batch size speeds up sampling.
-            sample_with_mcmc: Whether to sample with MCMC. MCMC can be used to deal
-                with high leakage.
-            mcmc_method: Method used for MCMC sampling, one of `slice_np`, `slice`,
-                `hmc`, `nuts`. Currently defaults to `slice_np` for a custom numpy
-                implementation of slice sampling; select `hmc`, `nuts` or `slice` for
-                Pyro-based sampling.
-            mcmc_parameters: Dictionary overriding the default parameters for MCMC.
-                The following parameters are supported: `thin` to set the thinning
-                factor for the chain, `warmup_steps` to set the initial number of
-                samples to discard, `num_chains` for the number of chains,
-                `init_strategy` for the initialisation strategy for chains; `prior` will
-                draw init locations from prior, whereas `sir` will use
-                Sequential-Importance-Resampling using `init_strategy_num_candidates`
-                to find init locations.
-
-        Returns:
-            Posterior $p(\theta|x)$  with `.sample()` and `.log_prob()` methods.
-        """
 
         if density_estimator is None:
-            density_estimator = self._neural_net
+            density_estimator = self.neural_net
 
         self._posterior = DirectPosterior(
             method_family="snpe",
             neural_net=density_estimator,
             prior=self._prior,
-            x_shape=self._x_shape,
+            x_shape=self.x_shape,
             rejection_sampling_parameters=rejection_sampling_parameters,
             sample_with_mcmc=sample_with_mcmc,
             mcmc_method=mcmc_method,
@@ -304,7 +245,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         return deepcopy(self._posterior)
 
-    def _loss(
+    def loss(
         self,
         theta: Tensor,
         x: Tensor,
@@ -321,7 +262,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         """
 
         # Use posterior log prob
-        log_prob = self._neural_net.log_prob(theta, x)
+        log_prob = self.neural_net.log_prob(theta, x)
 
         return -(calibration_kernel(x) * log_prob)
 

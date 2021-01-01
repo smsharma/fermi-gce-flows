@@ -70,7 +70,7 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
     theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)
 
     # Model training
-    density_estimator = posterior_estimator.train(x=x_filename, theta=theta_filename, proposal=prior, training_batch_size=64, max_num_epochs=5)
+    density_estimator = posterior_estimator.train(x=x_filename, theta=theta_filename, proposal=prior, training_batch_size=128, max_num_epochs=50)
     
     # Save density estimator
     mlflow.set_tracking_uri(tracking_uri)

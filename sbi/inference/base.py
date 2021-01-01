@@ -72,10 +72,7 @@ class NeuralInference(ABC):
         #     2. `method_family` cannot be resolved only from `self.__class__.__name__`,
         #         since SRE, AALR demand different handling but are both in SRE class.
 
-        self._summary_writer = self._default_summary_writer() if summary_writer is None else summary_writer
-
-        # Logging during training (by SummaryWriter).
-        self._summary = dict(median_observation_distances=[], epochs=[], best_validation_log_probs=[], validation_log_probs=[],)
+        self.summary_writer = self._default_summary_writer() if summary_writer is None else summary_writer
 
     def __call__(self, unused_args):
         """
