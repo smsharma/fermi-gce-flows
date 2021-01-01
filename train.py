@@ -71,7 +71,7 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
 
     # Model training
     density_estimator = posterior_estimator.train(x=x_filename, theta=theta_filename, proposal=prior, training_batch_size=64, max_num_epochs=5)
-
+    
     # Save density estimator
     mlflow.set_tracking_uri(tracking_uri)
     with mlflow.start_run(run_id=mlf_logger.run_id):
@@ -80,7 +80,7 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
     # Check to make sure model can be succesfully loaded
     model_uri = "runs:/{}/density_estimator".format(mlf_logger.run_id)
     density_estimator = mlflow.pytorch.load_model(model_uri)
-    posterior = inference_inst.build_posterior(density_estimator)
+    posterior = posterior_estimator.build_posterior(density_estimator)
 
 
 def parse_args():
