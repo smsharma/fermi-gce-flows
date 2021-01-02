@@ -107,7 +107,7 @@ class NeuralInference(ABC):
         raise NameError(f"Deprecated since sbi 0.14.0. " f"Instead of using this, please use `.append_simulations()`. Please " f"consult release notes to see how you can update your code: " f"https://github.com/mackelab/sbi/releases/tag/v0.14.0" f"More information can be found under the corresponding pull request on " f"github: " f"https://github.com/mackelab/sbi/pull/378" f"and tutorials: " f"https://www.mackelab.org/sbi/tutorial/02_flexible_interface/",)
 
     @abstractmethod
-    def train(self, training_batch_size: int = 50, learning_rate: float = 5e-4, validation_fraction: float = 0.1, stop_after_epochs: int = 20, max_num_epochs: Optional[int] = None, clip_max_norm: Optional[float] = 5.0, calibration_kernel: Optional[Callable] = None, exclude_invalid_x: bool = True, discard_prior_samples: bool = False, retrain_from_scratch_each_round: bool = False, show_train_summary: bool = False,) -> NeuralPosterior:
+    def train(self, training_batch_size: int = 50, learning_rate: float = 5e-4, validation_fraction: float = 0.1, stop_after_epochs: int = 20, max_num_epochs: Optional[int] = None, clip_max_norm: Optional[float] = 5.0, exclude_invalid_x: bool = True, discard_prior_samples: bool = False, retrain_from_scratch_each_round: bool = False, show_train_summary: bool = False,) -> NeuralPosterior:
         raise NotImplementedError
 
     def _converged(self, epoch: int, stop_after_epochs: int) -> bool:

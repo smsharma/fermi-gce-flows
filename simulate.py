@@ -30,7 +30,7 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king"):
 
     # Get ROI mask
     ps_mask = np.load("data/mask_3fgl_0p8deg.npy")
-    roi_mask = cm.make_mask_total(nside=nside, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=25, custom_mask=ps_mask)
+    mask_roi = cm.make_mask_total(nside=nside, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=25, custom_mask=ps_mask)
 
     # Load templates
     temp_gce = np.load("data/fermi_data/template_gce.npy")
@@ -50,6 +50,10 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king"):
 
     # Store and return
     results = {}
+
+    # Poiss and PS templates
+    temps_poiss = [temp_gce, temp_iso, temp_bub, temp_psc, temp_dif]
+    temps_ps = [temp_gce, temp_dsk]
 
     # iso, bub, psc, dif
     prior_poiss = [[0.001, 0.001, 0.001, 11.], [1.5, 1.5, 1.5, 16.]]

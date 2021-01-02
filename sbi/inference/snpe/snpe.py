@@ -41,21 +41,7 @@ class PosteriorEstimatorNet(pl.LightningModule):
     the neural network into a pytorch_lightning module.
     """
 
-    def __init__(self, net, proposal, loss, initial_lr, optimizer, optimizer_kwargs, scheduler, scheduler_kwargs, calibration_kernel):
-        """
-        Initialize the posterior estimation net.
-        The reason that this is a dict: when listing all arguments separately, pytorch-
-        lightning breaks when one calls `load_from_checkpoint` if the arguments have
-        different types.
-        Args:
-            args: Dict containing `net`, `proposal`, `loss`, lr`, `calibration_kernel`.
-                See below for further explanation.
-            `net`: Neural density estimator.
-            `proposal`: Proposal distribution.
-            `loss`: Loss function.
-            `lr`: Learning rate.
-            `calibration_kernel`: Calibration kernel.
-        """
+    def __init__(self, net, proposal, loss, initial_lr, optimizer, optimizer_kwargs, scheduler, scheduler_kwargs):
 
         super().__init__()
 
@@ -71,8 +57,6 @@ class PosteriorEstimatorNet(pl.LightningModule):
         self.scheduler = scheduler
         self.scheduler_kwargs = scheduler_kwargs
 
-        self.calibration_kernel = calibration_kernel
-
     def configure_optimizers(self):
         optimizer = self.optimizer(list(self.net.parameters()), lr=self.initial_lr, **self.optimizer_kwargs)
         scheduler = self.scheduler(optimizer, **self.scheduler_kwargs)
@@ -83,7 +67,7 @@ class PosteriorEstimatorNet(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         theta, x = batch
         loss = torch.mean(
-            self.loss(theta, x, self.proposal, self.calibration_kernel)
+            self.loss(theta, x, self.proposal)
         )
         self.log('train_loss', loss, on_epoch=True)
         return loss
@@ -91,7 +75,7 @@ class PosteriorEstimatorNet(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         theta, x = batch
         loss = torch.mean(
-            self.loss(theta, x, self.proposal, self.calibration_kernel)
+            self.loss(theta, x, self.proposal)
         )
         self.log('val_loss', loss)
 
@@ -128,15 +112,11 @@ class PosteriorEstimator(NeuralInference, ABC):
         stop_after_epochs: int = 20,
         max_num_epochs: Optional[int] = None,
         clip_max_norm: Optional[float] = 1.0,
-        calibration_kernel: Optional[Callable] = None,
     ) -> DirectPosterior:
 
         optimizer_kwargs = {} if optimizer_kwargs is None else optimizer_kwargs
         scheduler_kwargs = {'T_max':max_num_epochs} if scheduler_kwargs is None else scheduler_kwargs
 
-        # Calibration kernels proposed in Lueckmann, Gonçalves et al., 2017.
-        if calibration_kernel is None:
-            calibration_kernel = lambda x: ones([len(x)], device=self._device)
 
         max_num_epochs = 2 ** 31 - 1 if max_num_epochs is None else max_num_epochs
 
@@ -173,7 +153,6 @@ class PosteriorEstimator(NeuralInference, ABC):
             optimizer_kwargs=optimizer_kwargs, 
             scheduler=scheduler, 
             scheduler_kwargs=scheduler_kwargs,
-            calibration_kernel=calibration_kernel
         )
 
         model_checkpoint = ModelCheckpoint(monitor='val_loss', dirpath="./data/models/", filename="{epoch:02d}-{val_loss:.2f}")
@@ -211,7 +190,6 @@ class PosteriorEstimator(NeuralInference, ABC):
             optimizer_kwargs=optimizer_kwargs, 
             scheduler=scheduler, 
             scheduler_kwargs=scheduler_kwargs,
-            calibration_kernel=calibration_kernel
         )
 
         # Return the posterior net corresponding to the best model
@@ -251,21 +229,12 @@ class PosteriorEstimator(NeuralInference, ABC):
         theta: Tensor,
         x: Tensor,
         proposal: Optional[Any],
-        calibration_kernel: Callable,
     ) -> Tensor:
-        """Return loss with proposal correction (`round_>0`) or without it (`round_=0`).
-
-        The loss is the negative log prob. Irrespective of the round or SNPE method
-        (A, B, or C), it can be weighted with a calibration kernel.
-
-        Returns:
-            Calibration kernel-weighted negative log prob.
-        """
-
+ 
         # Use posterior log prob
         log_prob = self.neural_net.log_prob(theta, x)
 
-        return -(calibration_kernel(x) * log_prob)
+        return -log_prob
 
     def make_dataset(self, data):
         data_arrays = []
@@ -283,10 +252,9 @@ class PosteriorEstimator(NeuralInference, ABC):
                 batch_size=batch_size,
                 shuffle=True,
                 pin_memory=True,
-                num_workers=8,
+                num_workers=48,
             )  ## Run on GPU
             val_loader = None
-            num_validation_examples = 0
         else:
             assert 0.0 < validation_split < 1.0, "Wrong validation split: {}".format(validation_split)
 
@@ -306,14 +274,14 @@ class PosteriorEstimator(NeuralInference, ABC):
                 sampler=train_sampler,
                 batch_size=batch_size,
                 pin_memory=True,
-                num_workers=8,
+                num_workers=48,
             )  ## Run on GPU
             val_loader = DataLoader(
                 dataset,
                 sampler=val_sampler,
                 batch_size=batch_size,
                 pin_memory=True,
-                num_workers=8,
+                num_workers=48,
             )  ## Run on GPU
 
         return train_loader, val_loader
