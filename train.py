@@ -52,14 +52,14 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
     prior = utils.BoxUniform(low=torch.tensor([0.001, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.tensor([0.5, 0.5, 20.0, 1.99, 1.99, 50.0, 4.99]))
 
     # Embedding net (feature extractor)
-    sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=4, laplacian_type="combinatorial", fc1_out_dim=2048, fc2_out_dim=512, n_aux_var=1)
+    sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=4, laplacian_type="combinatorial", fc1_out_dim=2048, fc2_out_dim=512, n_aux_var=2)
 
     # Instantiate the neural density estimator
     density_estimator = utils.posterior_nn(model="maf", embedding_net=sg_embed, hidden_features=50, num_transforms=4,)
 
     # MLFlow logger
     tracking_uri = "file:{}/logs/mlruns".format(data_dir)
-    mlf_logger = MLFlowLogger(experiment_name="default", tracking_uri=tracking_uri)
+    mlf_logger = MLFlowLogger(experiment_name=model_filename, tracking_uri=tracking_uri)
     mlf_logger.log_hyperparams({'nside_max': nside_max})
 
     # Setup the inference procedure with (S)NPE
@@ -73,13 +73,13 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
     density_estimator = posterior_estimator.train(x=x_filename, 
                                 theta=theta_filename, 
                                 proposal=prior, 
-                                training_batch_size=128, 
-                                max_num_epochs=50, 
-                                stop_after_epochs=10, 
+                                training_batch_size=64, 
+                                max_num_epochs=30, 
+                                stop_after_epochs=5, 
                                 clip_max_norm=1.,
-                                validation_fraction=0.25,
+                                validation_fraction=0.2,
                                 initial_lr=1e-3,
-                                optimizer_kwargs={'weight_decay':1e-6})
+                                optimizer_kwargs={'weight_decay': 0})
     
     # Save density estimator
     mlflow.set_tracking_uri(tracking_uri)

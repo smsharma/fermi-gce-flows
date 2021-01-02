@@ -35,7 +35,8 @@ class SphericalGraphCNN(nn.Module):
             setattr(self, "layer_{}".format(i), layer)
             self.cnn_layers.append(layer)
 
-        self.fc1 = nn.Linear(256 + n_aux_var, fc1_out_dim)
+        # Feed auxiliary variables into fully-connected part
+        self.fc1 = nn.Linear(256 + self.n_aux_var, fc1_out_dim)
         self.fc2 = nn.Linear(fc1_out_dim, fc2_out_dim)
 
     def forward(self, x):
@@ -48,21 +49,24 @@ class SphericalGraphCNN(nn.Module):
             :obj:`torch.Tensor`: output
         """
 
+        # Initialize tensor
         x = x.view(-1, 16384 + self.n_aux_var, 1)
 
         # Extract auxiliary variable
-        x_aux = x[:, -1, :]
-        x_aux = x_aux.view(-1, 1, 1)
-
+        x_aux = x[:, -self.n_aux_var:, :]
+        x_aux = x_aux.view(-1, 1, self.n_aux_var)
+        
         # Extract map to input into convolutional layers
-        x = x[:, :-1, :]
+        x = x[:, :-self.n_aux_var, :]
 
+        # Convolutional layers
         for layer in self.cnn_layers:
             x = layer(x)
 
         # Concatenate auxiliary variable along last dimension
         x = torch.cat([x, x_aux], -1)
 
+        # FC layers
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
 

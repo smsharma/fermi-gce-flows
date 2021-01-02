@@ -245,15 +245,15 @@ class PosteriorEstimator(NeuralInference, ABC):
         dataset = NumpyDataset(*data_arrays, dtype=torch.float)  # Should maybe mod dtype
         return dataset
 
-    def make_dataloaders(self, dataset, validation_split, batch_size, seed=None):
+    def make_dataloaders(self, dataset, validation_split, batch_size, num_workers=8, pin_memory=False, seed=None):
         if validation_split is None or validation_split <= 0.0:
             train_loader = DataLoader(
                 dataset,
                 batch_size=batch_size,
                 shuffle=True,
-                pin_memory=True,
-                num_workers=48,
-            )  ## Run on GPU
+                pin_memory=pin_memory,
+                num_workers=num_workers,
+            ) 
             val_loader = None
         else:
             assert 0.0 < validation_split < 1.0, "Wrong validation split: {}".format(validation_split)
@@ -273,16 +273,16 @@ class PosteriorEstimator(NeuralInference, ABC):
                 dataset,
                 sampler=train_sampler,
                 batch_size=batch_size,
-                pin_memory=True,
-                num_workers=48,
-            )  ## Run on GPU
+                pin_memory=pin_memory,
+                num_workers=num_workers,
+            ) 
             val_loader = DataLoader(
                 dataset,
                 sampler=val_sampler,
                 batch_size=batch_size,
-                pin_memory=True,
-                num_workers=48,
-            )  ## Run on GPU
+                pin_memory=pin_memory,
+                num_workers=num_workers,
+            )  
 
         return train_loader, val_loader
 
