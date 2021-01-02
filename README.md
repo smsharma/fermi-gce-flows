@@ -12,3 +12,4 @@
     - [X] Output should be unnormalized; make sure Z-scoring takes care of that?
     - [X] Output variance as auxiliary variable? 
 - [ ] Perform experiments with complex simulator
+- [ ] Better treatment of priors (save with simulator)

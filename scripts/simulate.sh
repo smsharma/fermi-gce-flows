@@ -1,3 +1,4 @@
+  
 #!/bin/bash
 
 #SBATCH --job-name=simulate
@@ -12,3 +13,4 @@ source ~/.bashrc
 conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi/
 python -u simulate.py -n 1000 --name train_float_all_${SLURM_ARRAY_TASK_ID} --dir /scratch/sm8383/sbi-fermi/
+

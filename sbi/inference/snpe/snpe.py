@@ -10,6 +10,7 @@ from warnings import warn
 import six
 from collections import OrderedDict
 import os
+from pathlib import Path
 
 import torch
 from torch import Tensor, ones, optim
@@ -92,9 +93,6 @@ class PosteriorEstimator(NeuralInference, ABC):
             **unused_args,
         )
 
-        # As detailed in the docstring, `density_estimator` is either a string or
-        # a callable. The function creating the neural network is attached to
-        # `_build_neural_net`
         self._build_neural_net = density_estimator
 
     def train(
@@ -155,8 +153,13 @@ class PosteriorEstimator(NeuralInference, ABC):
             scheduler_kwargs=scheduler_kwargs,
         )
 
-        model_checkpoint = ModelCheckpoint(monitor='val_loss', dirpath="./data/models/", filename="{epoch:02d}-{val_loss:.2f}")
+        checkpoint_path = "{}/{}/{}/artifacts/checkpoints/".format(self.summary_writer.save_dir, self.summary_writer.experiment_id, self.summary_writer.run_id)
+        path = Path(checkpoint_path)
+        path.mkdir(parents=True, exist_ok=True)
+
+        model_checkpoint = ModelCheckpoint(monitor='val_loss', dirpath=checkpoint_path, filename="{epoch:02d}-{val_loss:.2f}")
         checkpoint_callback = model_checkpoint
+
         early_stop_callback = EarlyStopping(monitor='val_loss', patience=stop_after_epochs)        
         lr_monitor = LearningRateMonitor(logging_interval='epoch')
 
@@ -173,7 +176,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         # Auto log all MLflow entities
         mlflow.set_tracking_uri(self.summary_writer._tracking_uri)
-        mlflow.pytorch.autolog()
+        mlflow.pytorch.autolog(log_models=False)
 
         # Train the model
         with mlflow.start_run(run_id=self.summary_writer.run_id) as run:

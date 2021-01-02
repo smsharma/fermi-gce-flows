@@ -1,3 +1,4 @@
+  
 #!/bin/bash
 
 #SBATCH --job-name=combine_samples
@@ -12,3 +13,4 @@ source ~/.bashrc
 conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi
 ./combine_samples.py --regex train_float_all 'train_float_all_\d+' --dir /scratch/sm8383/sbi-fermi/
+
