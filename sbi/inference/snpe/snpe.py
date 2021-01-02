@@ -139,8 +139,8 @@ class PosteriorEstimator(NeuralInference, ABC):
         # Call the `self._build_neural_net` which will build the neural network.
         # This is passed into NeuralPosterior, to create a neural posterior which
         # can `sample()` and `log_prob()`. The network is accessible via `.net`.
-        self.neural_net = self._build_neural_net(theta_z_score, torch.Tensor(x))
-        self.x_shape = x_shape_from_simulation(torch.Tensor(x))
+        self.neural_net = self._build_neural_net(theta_z_score, x_z_score)
+        self.x_shape = x_shape_from_simulation(x_z_score)
 
         max_num_epochs=cast(int, max_num_epochs)
 
@@ -245,7 +245,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         dataset = NumpyDataset(*data_arrays, dtype=torch.float)  # Should maybe mod dtype
         return dataset
 
-    def make_dataloaders(self, dataset, validation_split, batch_size, num_workers=8, pin_memory=False, seed=None):
+    def make_dataloaders(self, dataset, validation_split, batch_size, num_workers=32, pin_memory=True, seed=None):
         if validation_split is None or validation_split <= 0.0:
             train_loader = DataLoader(
                 dataset,
