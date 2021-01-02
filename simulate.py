@@ -28,8 +28,17 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king"):
     # Get mask corresponding to nside=128
     mask_sim = hp.ud_grade(hp_mask_nside1, nside)
 
+    # Get ROI mask
+    ps_mask = np.load("data/mask_3fgl_0p8deg.npy")
+    roi_mask = cm.make_mask_total(nside=nside, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=25, custom_mask=ps_mask)
+
+    # Load templates
     temp_gce = np.load("data/fermi_data/template_gce.npy")
     temp_dif = np.load("data/fermi_data/template_dif.npy")
+    temp_psc = np.load("data/fermi_data/template_psc.npy")
+    temp_iso = np.load("data/fermi_data/template_iso.npy")
+    temp_dsk = np.load("data/fermi_data/template_dsk.npy")
+    temp_bub = np.load("data/fermi_data/template_bub.npy")
 
     # King PSF hard-coded for now
     if psf == "king":
@@ -42,13 +51,20 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king"):
     # Store and return
     results = {}
 
+    # iso, bub, psc, dif
+    prior_poiss = [[0.001, 0.001, 0.001, 11.], [1.5, 1.5, 1.5, 16.]]
+
+    # gce, dsk
+    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [0.5, 20.0, 1.99, 1.99, 50.0, 4.99, 0.5, 20.0, 1.99, 1.99, 50.0, 4.99]]
+
     # Generate simulation parameter points. Priors hard-coded for now.
-    prior = utils.BoxUniform(low=torch.tensor([0.001, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.tensor([0.5, 0.5, 20.0, 1.99, 1.99, 50.0, 4.99]))
+    # prior = utils.BoxUniform(low=torch.tensor([0.001, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.tensor([0.5, 0.5, 20.0, 1.99, 1.99, 50.0, 4.99]))
+    prior = utils.BoxUniform(low=torch.tensor([0.001] + prior_poiss[0] + prior_ps[0]), high=torch.tensor([0.5] + prior_poiss[1] + prior_ps[1]))
     thetas = prior.sample((n,))
     results["theta"] = thetas
 
     # Generate maps
-    x = [simulator(theta.detach().numpy(), mask_sim, temp_gce, kp.psf_fermi_r, temp_dif) for theta in tqdm(thetas)]
+    x = [simulator(theta.detach().numpy(), temps_poiss, temps_ps, mask_sim, mask_roi, kp.psf_fermi_r) for theta in tqdm(thetas)]
     results["x"] = x
 
     return results

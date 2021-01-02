@@ -13,7 +13,7 @@ class SphericalGraphCNN(nn.Module):
     """Spherical GCNN Autoencoder.
     """
 
-    def __init__(self, nside_list, indexes_list, kernel_size=4, laplacian_type="combinatorial"):
+    def __init__(self, nside_list, indexes_list, kernel_size=4, laplacian_type="combinatorial", fc1_out_dim=2048, fc2_out_dim=512, n_aux_var=1):
         """Initialization.
 
         Args:
@@ -25,6 +25,8 @@ class SphericalGraphCNN(nn.Module):
         self.kernel_size = kernel_size
         self.pooling_class = Healpix(mode="max")
 
+        self.n_aux_var = n_aux_var
+
         self.laps = get_healpix_laplacians(nside_list=nside_list, laplacian_type=laplacian_type, indexes_list=indexes_list)
         self.cnn_layers = []
 
@@ -33,8 +35,8 @@ class SphericalGraphCNN(nn.Module):
             setattr(self, "layer_{}".format(i), layer)
             self.cnn_layers.append(layer)
 
-        self.fc1 = nn.Linear(257, 2048)  # +1 for auxiliary variable
-        self.fc2 = nn.Linear(2048, 512)
+        self.fc1 = nn.Linear(256 + n_aux_var, fc1_out_dim)
+        self.fc2 = nn.Linear(fc1_out_dim, fc2_out_dim)
 
     def forward(self, x):
         """Forward Pass.
@@ -46,7 +48,7 @@ class SphericalGraphCNN(nn.Module):
             :obj:`torch.Tensor`: output
         """
 
-        x = x.view(-1, 16385, 1)
+        x = x.view(-1, 16384 + self.n_aux_var, 1)
 
         # Extract auxiliary variable
         x_aux = x[:, -1, :]

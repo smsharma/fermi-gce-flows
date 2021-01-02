@@ -52,7 +52,7 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
     prior = utils.BoxUniform(low=torch.tensor([0.001, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1]), high=torch.tensor([0.5, 0.5, 20.0, 1.99, 1.99, 50.0, 4.99]))
 
     # Embedding net (feature extractor)
-    sg_embed = SphericalGraphCNN(nside_list, indexes_list)
+    sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=4, laplacian_type="combinatorial", fc1_out_dim=2048, fc2_out_dim=512, n_aux_var=1)
 
     # Instantiate the neural density estimator
     density_estimator = utils.posterior_nn(model="maf", embedding_net=sg_embed, hidden_features=50, num_transforms=4,)
@@ -70,7 +70,16 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, devi
     theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)
 
     # Model training
-    density_estimator = posterior_estimator.train(x=x_filename, theta=theta_filename, proposal=prior, training_batch_size=128, max_num_epochs=50)
+    density_estimator = posterior_estimator.train(x=x_filename, 
+                                theta=theta_filename, 
+                                proposal=prior, 
+                                training_batch_size=128, 
+                                max_num_epochs=50, 
+                                stop_after_epochs=10, 
+                                clip_max_norm=1.,
+                                validation_fraction=0.25,
+                                initial_lr=1e-3,
+                                optimizer_kwargs={'weight_decay':1e-6})
     
     # Save density estimator
     mlflow.set_tracking_uri(tracking_uri)
@@ -89,9 +98,7 @@ def parse_args():
     # Main options
     parser.add_argument("--sample", type=str, help='Sample name, like "train".')
     parser.add_argument("--name", type=str, help="Model name. Defaults to the name of the method.")
-    parser.add_argument(
-        "--dir", type=str, default=".", help="Directory. Training data will be loaded from the data/samples subfolder, the model saved in the " "data/models subfolder.",
-    )
+    parser.add_argument("--dir", type=str, default=".", help="Directory. Training data will be loaded from the data/samples subfolder, the model saved in the " "data/models subfolder.")
 
     # Training option
     return parser.parse_args()
