@@ -22,7 +22,8 @@ from sbi.inference import PosteriorEstimator
 from pytorch_lightning.loggers import TensorBoardLogger, MLFlowLogger
 import mlflow
 
-def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc1_out_dim=2048, fc2_out_dim=512, n_aux_var=2, maf_hidden_features=128, maf_num_transforms=10, batch_size=64, max_num_epochs=50, stop_after_epochs=10, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}):
+
+def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc1_out_dim=2048, fc2_out_dim=512, n_aux_var=2, maf_hidden_features=128, maf_num_transforms=10, batch_size=64, max_num_epochs=30, stop_after_epochs=5, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}):
 
     # Cache hyperparameters to log
     params_to_log = locals()

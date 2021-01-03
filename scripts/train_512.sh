@@ -10,5 +10,5 @@
 source ~/.bashrc
 conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi/
-python -u train.py --sample train_float_all_1M --name gce_float_all_1M --batch_size 64
+python -u train.py --sample train_float_all_1M --name gce_float_all_1M --batch_size 512
 
