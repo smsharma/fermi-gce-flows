@@ -100,7 +100,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         x,
         theta,
         proposal,
-        optimizer=optim.Adam,
+        optimizer=optim.AdamW,
         optimizer_kwargs=None,
         scheduler=optim.lr_scheduler.CosineAnnealingLR,
         scheduler_kwargs=None,
@@ -129,7 +129,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         train_loader, val_loader = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
 
-        num_z_score = 10000  # Z-score using a limited random sample for memory reasons
+        num_z_score = 50000  # Z-score using a limited random sample for memory reasons
         theta_z_score, x_z_score = train_loader.dataset[:num_z_score]
 
         logging.info("Z-scoring using {} random training samples for x".format(num_z_score))
