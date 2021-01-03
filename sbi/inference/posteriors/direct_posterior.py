@@ -39,7 +39,7 @@ class DirectPosterior(NeuralPosterior):
         method_family: str,
         neural_net: nn.Module,
         prior,
-        # x_shape: torch.Size,
+        x_shape: torch.Size,
         rejection_sampling_parameters: Optional[Dict[str, Any]] = None,
         sample_with_mcmc: bool = True,
         mcmc_method: str = "slice_np",

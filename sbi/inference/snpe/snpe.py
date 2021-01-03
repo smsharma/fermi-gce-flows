@@ -214,7 +214,7 @@ class PosteriorEstimator(NeuralInference, ABC):
             method_family="snpe",
             neural_net=density_estimator,
             prior=self._prior,
-            # x_shape=self.x_shape,
+            x_shape=self.x_shape,
             rejection_sampling_parameters=rejection_sampling_parameters,
             sample_with_mcmc=sample_with_mcmc,
             mcmc_method=mcmc_method,
