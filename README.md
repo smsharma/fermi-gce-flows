@@ -14,5 +14,5 @@
 - [X] Perform experiments with complex simulator
 - [ ] Better treatment of priors (save with simulator)
 - [X] More simulator options---wider priors and add Model O etc
-- [ ] More flexible specification of FC layers
+- [X] More flexible specification of FC layers
 - [ ] Speed up PS simulation
