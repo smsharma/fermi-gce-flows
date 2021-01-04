@@ -13,12 +13,10 @@ class SphericalGraphCNN(nn.Module):
     """Spherical GCNN Autoencoder.
     """
 
-    def __init__(self, nside_list, indexes_list, kernel_size=4, laplacian_type="combinatorial", fc1_out_dim=2048, fc2_out_dim=512, n_aux_var=1):
+    def __init__(self, nside_list, indexes_list, kernel_size=4, laplacian_type="combinatorial", fc_dims = [[-1, 2048], [2048, 512], [512, 96]], n_aux_var=1):
         """Initialization.
 
         Args:
-            pooling_class (obj): One of three classes of pooling methods
-            N (int): Number of pixels in the input image
             kernel_size (int): chebychev polynomial degree
         """
         super().__init__()
@@ -26,6 +24,8 @@ class SphericalGraphCNN(nn.Module):
         self.pooling_class = Healpix(mode="max")
 
         self.n_aux_var = n_aux_var
+
+        # Specify convolutional part
 
         self.laps = get_healpix_laplacians(nside_list=nside_list, laplacian_type=laplacian_type, indexes_list=indexes_list)
         self.cnn_layers = []
@@ -35,9 +35,14 @@ class SphericalGraphCNN(nn.Module):
             setattr(self, "layer_{}".format(i), layer)
             self.cnn_layers.append(layer)
 
-        # Feed auxiliary variables into fully-connected part
-        self.fc1 = nn.Linear(256 + self.n_aux_var, fc1_out_dim)
-        self.fc2 = nn.Linear(fc1_out_dim, fc2_out_dim)
+        # Set first input into FC layers to correspond to output of conv layers + aux variables
+        fc_dims[0][0] = 256 + self.n_aux_var
+        
+        # Specify fully-connected part
+        self.fc_layers = []
+        for (in_ch, out_ch) in fc_dims:
+            layer = nn.Sequential(nn.Linear(in_ch, out_ch), nn.ReLU())
+            self.fc_layers.append(layer)
 
     def forward(self, x):
         """Forward Pass.
@@ -67,7 +72,11 @@ class SphericalGraphCNN(nn.Module):
         x = torch.cat([x, x_aux], -1)
 
         # FC layers
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
+        for layer in self.fc_layers:
+            x = layer(x)
+
+        # # FC layers
+        # x = F.relu(self.fc1(x))
+        # x = F.relu(self.fc2(x))
 
         return x[:, 0, :]
