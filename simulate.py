@@ -18,7 +18,7 @@ from utils import create_mask as cm
 from models.psf import KingPSF
 
 
-def simulate(n=10000, r_outer=25, nside=128, psf="king"):
+def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO"):
     """ High-level simulation script
     """
 
@@ -40,6 +40,9 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king"):
     temp_dsk = np.load("data/fermi_data/template_dsk.npy")
     temp_bub = np.load("data/fermi_data/template_bub.npy")
 
+    temp_mO_pibrem = np.load('data/fermi_data/ModelO_r25_q1_pibrem.npy')
+    temp_mO_ics = np.load('data/fermi_data/ModelO_r25_q1_ics.npy')
+
     # King PSF hard-coded for now
     if psf == "king":
         kp = KingPSF()
@@ -52,17 +55,25 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king"):
     results = {}
 
     # Poiss and PS templates
-    temps_poiss = [temp_gce, temp_iso, temp_bub, temp_psc, temp_dif]
+
+    if dif == "ModelO":
+        temps_poiss = [temp_gce, temp_iso, temp_bub, temp_psc, temp_mO_pibrem, temp_mO_ics]
+        # iso, bub, psc, dif_pibrem, dif_ics
+        prior_poiss = [[0.001, 0.001, 0.001, 6., 1.], [1.5, 1.5, 1.5, 12., 6.]]
+    elif dif == "p6v11":
+        temps_poiss = [temp_gce, temp_iso, temp_bub, temp_psc, temp_dif]
+        # iso, bub, psc, dif
+        prior_poiss = [[0.001, 0.001, 0.001, 11.], [1.5, 1.5, 1.5, 16.]]
+    else:
+        raise NotImplementedError
+
     temps_ps = [temp_gce, temp_dsk]
 
-    # iso, bub, psc, dif
-    prior_poiss = [[0.001, 0.001, 0.001, 11.], [1.5, 1.5, 1.5, 16.]]
-
     # gce, dsk
-    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [0.5, 20.0, 1.99, 1.99, 50.0, 4.99, 0.5, 20.0, 1.99, 1.99, 50.0, 4.99]]
+    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [2., 20.0, 1.99, 1.99, 50.0, 4.99, 2., 20.0, 1.99, 1.99, 50.0, 4.99]]
 
     # Generate simulation parameter points. Priors hard-coded for now.
-    prior = utils.BoxUniform(low=torch.tensor([0.001] + prior_poiss[0] + prior_ps[0]), high=torch.tensor([0.5] + prior_poiss[1] + prior_ps[1]))
+    prior = utils.BoxUniform(low=torch.tensor([0.001] + prior_poiss[0] + prior_ps[0]), high=torch.tensor([2.] + prior_poiss[1] + prior_ps[1]))
     thetas = prior.sample((n,))
     results["theta"] = thetas
 
@@ -99,6 +110,7 @@ def parse_args():
     parser.add_argument(
         "-n", type=int, default=10000, help="Number of samples to generate. Default is 10k.",
     )
+    parser.add_argument("--dif", type=str, default="ModelO", help='Diffuse model to simulate, wither "ModelO" (default) or "p6"')
     parser.add_argument("--name", type=str, default=None, help='Sample name, like "train" or "test".')
     parser.add_argument("--dir", type=str, default=".", help="Base directory. Results will be saved in the data/samples subfolder.")
     parser.add_argument("--debug", action="store_true", help="Prints debug output.")
@@ -116,7 +128,7 @@ if __name__ == "__main__":
     logger.info("Hi!")
 
     name = "train" if args.name is None else args.name
-    results = simulate(args.n)
+    results = simulate(n=args.n, dif=args.dif)
     save(args.dir, name, results)
 
     logger.info("All done! Have a nice day!")

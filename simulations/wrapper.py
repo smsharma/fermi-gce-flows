@@ -24,7 +24,7 @@ def simulator(theta, temps_poiss, temps_ps, mask_sim, mask_roi, psf_r_func, norm
         dnds_ary = []
         idx_theta_ps = len(temps_poiss)
         for temp_ps in temps_ps:
-            dnds_ary_temp = dnds(s_ary, theta[idx_theta_ps:idx_theta_ps+6])
+            dnds_ary_temp = dnds(s_ary, theta[idx_theta_ps:idx_theta_ps + 6])
             s_exp = np.trapz(s_ary * dnds_ary_temp, s_ary)
             temp_ratio = np.sum(temp_ps[np.where(~mask_sim)]) / np.sum(temp_ps)
             dnds_ary_temp *= theta[idx_theta_ps] * np.sum(~mask_sim) / s_exp / temp_ratio
