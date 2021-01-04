@@ -16,3 +16,4 @@
 - [X] More simulator options---wider priors and add Model O etc
 - [X] More flexible specification of FC layers
 - [ ] Speed up PS simulation
+- [ ] Better experiment management (run specific combinations of hyperparameters)

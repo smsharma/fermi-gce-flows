@@ -3,6 +3,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import sys, os
+import json
 
 sys.path.append("./")
 
@@ -23,7 +24,7 @@ from pytorch_lightning.loggers import TensorBoardLogger, MLFlowLogger
 import mlflow
 
 
-def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc1_out_dim=2048, fc2_out_dim=512, n_aux_var=2, maf_hidden_features=128, maf_num_transforms=8, batch_size=64, max_num_epochs=30, stop_after_epochs=5, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}):
+def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux_var=2, maf_hidden_features=128, maf_num_transforms=8, batch_size=256, max_num_epochs=50, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}):
 
     # Cache hyperparameters to log
     params_to_log = locals()
@@ -55,24 +56,24 @@ def train(data_dir, model_filename, sample_name, nside_max=128, r_outer=25, kern
 
     # Priors hard-coded for now
 
-    # iso, bub, psc, dif
-    prior_poiss = [[0.001, 0.001, 0.001, 11.], [1.5, 1.5, 1.5, 16.]]
+    # iso, bub, psc, dif_pibrem, dif_ics
+    prior_poiss = [[0.001, 0.001, 0.001, 6., 1.], [1.5, 1.5, 1.5, 12., 6.]]
 
     # gce, dsk
-    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [0.5, 20.0, 1.99, 1.99, 50.0, 4.99, 0.5, 20.0, 1.99, 1.99, 50.0, 4.99]]
+    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [2., 20.0, 1.99, 1.99, 50.0, 4.99, 2., 20.0, 1.99, 1.99, 50.0, 4.99]]
 
     # Combine priors
-    prior = utils.BoxUniform(low=torch.tensor([0.001] + prior_poiss[0] + prior_ps[0]), high=torch.tensor([0.5] + prior_poiss[1] + prior_ps[1]))
+    prior = utils.BoxUniform(low=torch.tensor([0.001] + prior_poiss[0] + prior_ps[0]), high=torch.tensor([2.] + prior_poiss[1] + prior_ps[1]))
 
     # Embedding net (feature extractor)
-    sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc1_out_dim=fc1_out_dim, fc2_out_dim=fc2_out_dim, n_aux_var=n_aux_var)
+    sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux_var=n_aux_var)
 
     # Instantiate the neural density estimator
     density_estimator = utils.posterior_nn(model="maf", embedding_net=sg_embed, hidden_features=maf_hidden_features, num_transforms=maf_num_transforms,)
 
     # MLFlow logger
     tracking_uri = "file:{}/logs/mlruns".format(data_dir)
-    mlf_logger = MLFlowLogger(experiment_name=model_filename, tracking_uri=tracking_uri)
+    mlf_logger = MLFlowLogger(experiment_name=experiment_name, tracking_uri=tracking_uri)
     mlf_logger.log_hyperparams(params_to_log)
 
     # Setup the inference procedure with NPE
@@ -110,8 +111,10 @@ def parse_args():
 
     # Main options
     parser.add_argument("--sample", type=str, help='Sample name, like "train".')
-    parser.add_argument("--name", type=str, help="Model name. Defaults to the name of the method.")
-    parser.add_argument("--batch_size", type=int, default=64, help="Training batch size.")
+    parser.add_argument("--name", type=str, help="Experiment name")
+    parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 512], [512, 96]]", help="Specification of fully-connected embedding layers")
+    parser.add_argument("--maf_num_transforms", type=int, default=8, help="Number of MAF blocks")
+    parser.add_argument("--batch_size", type=int, default=256, help="Training batch size.")
     parser.add_argument("--dir", type=str, default=".", help="Directory. Training data will be loaded from the data/samples subfolder, the model saved in the " "data/models subfolder.")
 
     # Training option
@@ -126,6 +129,6 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, model_filename=args.name, batch_size=args.batch_size)
+    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms)
 
     logging.info("All done! Have a nice day!")

@@ -13,7 +13,7 @@ class SphericalGraphCNN(nn.Module):
     """Spherical GCNN Autoencoder.
     """
 
-    def __init__(self, nside_list, indexes_list, kernel_size=4, laplacian_type="combinatorial", fc_dims = [[-1, 2048], [2048, 512], [512, 96]], n_aux_var=1):
+    def __init__(self, nside_list, indexes_list, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux_var=1):
         """Initialization.
 
         Args:
@@ -35,13 +35,14 @@ class SphericalGraphCNN(nn.Module):
             setattr(self, "layer_{}".format(i), layer)
             self.cnn_layers.append(layer)
 
-        # Set first input into FC layers to correspond to output of conv layers + aux variables
+        # Set shape of first input of FC layers to correspond to output of conv layers + aux variables
         fc_dims[0][0] = 256 + self.n_aux_var
         
         # Specify fully-connected part
         self.fc_layers = []
-        for (in_ch, out_ch) in fc_dims:
+        for i, (in_ch, out_ch) in enumerate(fc_dims):
             layer = nn.Sequential(nn.Linear(in_ch, out_ch), nn.ReLU())
+            setattr(self, "layer_fc_{}".format(i), layer)
             self.fc_layers.append(layer)
 
     def forward(self, x):
