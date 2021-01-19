@@ -53,7 +53,7 @@ class SNRE_A(RatioEstimator):
         super().__init__(**kwargs, **unused_args)
 
     def train(
-        self, theta, x,
+        self, theta, x, x_aux,
         training_batch_size: int = 50,
         learning_rate: float = 5e-4,
         validation_fraction: float = 0.1,
@@ -98,7 +98,7 @@ class SNRE_A(RatioEstimator):
         kwargs = del_entries(locals(), entries=("self", "__class__"))
         return super().train(**kwargs, num_atoms=2)
 
-    def _loss(self, theta: Tensor, x: Tensor, num_atoms: int) -> Tensor:
+    def _loss(self, theta: Tensor, x: Tensor, x_aux: Tensor, num_atoms: int) -> Tensor:
         """
         Returns the binary cross-entropy loss for the trained classifier.
 
@@ -110,7 +110,7 @@ class SNRE_A(RatioEstimator):
         assert theta.shape[0] == x.shape[0], "Batch sizes for theta and x must match."
         batch_size = theta.shape[0]
 
-        logits = self._classifier_logits(theta, x, num_atoms)
+        logits = self._classifier_logits(theta, x, x_aux, num_atoms)
         likelihood = torch.sigmoid(logits).squeeze()
 
         # Alternating pairs where there is one sampled from the joint and one

@@ -6,7 +6,7 @@ from models.scd import dnds
 
 def simulator(theta, temps_poiss, temps_ps, mask_sim, mask_roi, psf_r_func, norm=False):
 
-    the_map = np.zeros(np.sum(~mask_sim) + 2)
+    the_map = np.zeros(np.sum(~mask_sim))
     s_ary = np.logspace(-1, 2, 100)
 
     good_map = False
@@ -32,19 +32,20 @@ def simulator(theta, temps_poiss, temps_ps, mask_sim, mask_roi, psf_r_func, norm
         sm = SimulateMap(temps_poiss, [norm_gce] + list(norms_poiss), [s_ary] * len(temps_ps), dnds_ary, temps_ps, psf_r_func)
         the_map_temp = sm.create_map()
         the_map_temp[mask_roi] = 0.
-        the_map[:-2] = the_map_temp[~mask_sim].astype(np.float32)
+        the_map = the_map_temp[~mask_sim].astype(np.float32)
 
         mean_map = np.mean(the_map)
         var_map = np.var(the_map)
 
         if norm:
-            the_map[:-1] /= mean_map
+            the_map /= mean_map
 
-        # Append auxiliary variables to data array
-        the_map[-2] = np.log(mean_map)
-        the_map[-1] = np.log(np.sqrt(var_map))
+        # # Append auxiliary variables to data array
+        # the_map[-2] = np.log(mean_map)
+        # the_map[-1] = np.log(np.sqrt(var_map))
 
         the_map = the_map.reshape((1, -1))
+        aux_vars = np.array([np.log(mean_map), np.log(np.sqrt(var_map))]).reshape((1, -1))
 
         # Resimulate if map is crap
         if (np.sum(the_map) == 0) or np.sum(np.isnan(the_map)) or np.sum(np.isinf(the_map)):
@@ -52,4 +53,4 @@ def simulator(theta, temps_poiss, temps_ps, mask_sim, mask_roi, psf_r_func, norm
         else:
             good_map = True
 
-    return the_map
+    return the_map, aux_vars

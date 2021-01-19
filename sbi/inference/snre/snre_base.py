@@ -114,7 +114,7 @@ class RatioEstimator(NeuralInference, ABC):
         return self
 
     def train(
-        self, theta, x, 
+        self, theta, x, x_aux,
         num_atoms: int = 10,
         training_batch_size: int = 50,
         learning_rate: float = 5e-4,
@@ -156,12 +156,12 @@ class RatioEstimator(NeuralInference, ABC):
         # This is passed into NeuralPosterior, to create a neural posterior which
         # can `sample()` and `log_prob()`. The network is accessible via `.net`.
         if self._neural_net is None or retrain_from_scratch_each_round:
-            self._neural_net = self._build_neural_net(theta, x)
+            self._neural_net = self._build_neural_net(theta, x, x_aux)
             self._x_shape = x_shape_from_simulation(x)
-            assert len(self._x_shape) < 3, (
-                "For now, SNRE cannot handle multi-dimensional simulator output, see "
-                "issue #360."
-            )
+            # assert len(self._x_shape) < 3, (
+            #     "For now, SNRE cannot handle multi-dimensional simulator output, see "
+            #     "issue #360."
+            # )
 
         # Starting index for the training set (1 = discard round-0 samples).
         start_idx = int(discard_prior_samples and self._round > 0)
@@ -186,7 +186,7 @@ class RatioEstimator(NeuralInference, ABC):
         )
 
         # Dataset is shared for training and validation loaders.
-        dataset = data.TensorDataset(theta, x)
+        dataset = data.TensorDataset(theta, x, x_aux)
 
         # Create neural net and validation loaders using a subset sampler.
         train_loader = data.DataLoader(
@@ -214,11 +214,12 @@ class RatioEstimator(NeuralInference, ABC):
             self._neural_net.train()
             for batch in train_loader:
                 optimizer.zero_grad()
-                theta_batch, x_batch = (
+                theta_batch, x_batch, x_aux_batch = (
                     batch[0].to(self._device),
                     batch[1].to(self._device),
+                    batch[2].to(self._device),
                 )
-                loss = self._loss(theta_batch, x_batch, num_atoms)
+                loss = self._loss(theta_batch, x_batch, x_aux_batch, num_atoms)
                 loss.backward()
                 if clip_max_norm is not None:
                     clip_grad_norm_(
@@ -233,11 +234,12 @@ class RatioEstimator(NeuralInference, ABC):
             log_prob_sum = 0
             with torch.no_grad():
                 for batch in val_loader:
-                    theta_batch, x_batch = (
+                    theta_batch, x_batch, x_aux_batch = (
                         batch[0].to(self._device),
                         batch[1].to(self._device),
+                        batch[2].to(self._device),
                     )
-                    log_prob = self._loss(theta_batch, x_batch, num_atoms)
+                    log_prob = self._loss(theta_batch, x_batch, x_aux_batch, num_atoms)
                     log_prob_sum -= log_prob.sum().item()
                 self._val_log_prob = log_prob_sum / num_validation_examples
                 # Log validation log prob for every epoch.
@@ -327,14 +329,16 @@ class RatioEstimator(NeuralInference, ABC):
 
         return deepcopy(self._posterior)
 
-    def _classifier_logits(self, theta: Tensor, x: Tensor, num_atoms: int) -> Tensor:
+    def _classifier_logits(self, theta: Tensor, x: Tensor, x_aux: Tensor, num_atoms: int) -> Tensor:
         """Return logits obtained through classifier forward pass.
 
         The logits are obtained from atomic sets of (theta,x) pairs.
         """
         batch_size = theta.shape[0]
-        repeated_x = utils.repeat_rows(x, num_atoms)
 
+        repeated_x = utils.repeat_rows(x, num_atoms)
+        repeated_x_aux = utils.repeat_rows(x_aux, num_atoms)
+        
         # Choose `1` or `num_atoms - 1` thetas from the rest of the batch for each x.
         probs = ones(batch_size, batch_size) * (1 - eye(batch_size)) / (batch_size - 1)
 
@@ -346,9 +350,8 @@ class RatioEstimator(NeuralInference, ABC):
             batch_size * num_atoms, -1
         )
 
-        theta_and_x = torch.cat((atomic_theta, repeated_x), dim=1)
-
-        return self._neural_net(theta_and_x)
+        # return self._neural_net(theta_and_x)
+        return self._neural_net(repeated_x, repeated_x_aux, atomic_theta)
 
     @abstractmethod
     def _loss(self, theta: Tensor, x: Tensor, num_atoms: int) -> Tensor:

@@ -13,7 +13,7 @@ class SphericalGraphCNN(nn.Module):
     """Spherical GCNN Autoencoder.
     """
 
-    def __init__(self, nside_list, indexes_list, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux_var=1):
+    def __init__(self, nside_list, indexes_list, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=0, n_params=0):
         """Initialization.
 
         Args:
@@ -23,7 +23,8 @@ class SphericalGraphCNN(nn.Module):
         self.kernel_size = kernel_size
         self.pooling_class = Healpix(mode="max")
 
-        self.n_aux_var = n_aux_var
+        self.n_aux = n_aux
+        self.n_params = n_params
 
         # Specify convolutional part
 
@@ -36,7 +37,7 @@ class SphericalGraphCNN(nn.Module):
             self.cnn_layers.append(layer)
 
         # Set shape of first input of FC layers to correspond to output of conv layers + aux variables
-        fc_dims[0][0] = 256 + self.n_aux_var
+        fc_dims[0][0] = 256 + self.n_aux + self.n_params
         
         # Specify fully-connected part
         self.fc_layers = []
@@ -45,7 +46,7 @@ class SphericalGraphCNN(nn.Module):
             setattr(self, "layer_fc_{}".format(i), layer)
             self.fc_layers.append(layer)
 
-    def forward(self, x):
+    def forward(self, x, x_aux=None, theta=None):
         """Forward Pass.
 
         Args:
@@ -56,28 +57,23 @@ class SphericalGraphCNN(nn.Module):
         """
 
         # Initialize tensor
-        x = x.view(-1, 16384 + self.n_aux_var, 1)
-
-        # Extract auxiliary variable
-        x_aux = x[:, -self.n_aux_var:, :]
-        x_aux = x_aux.view(-1, 1, self.n_aux_var)
-        
-        # Extract map to input into convolutional layers
-        x = x[:, :-self.n_aux_var, :]
+        x = x.view(-1, 16384, 1)
 
         # Convolutional layers
         for layer in self.cnn_layers:
             x = layer(x)
 
         # Concatenate auxiliary variable along last dimension
-        x = torch.cat([x, x_aux], -1)
+        if x_aux is not None:
+            x_aux = x_aux.view(-1, 1, self.n_aux)
+            x = torch.cat([x, x_aux], -1)
+
+        if theta is not None:
+            theta = theta.view(-1, 1, self.n_params)
+            x = torch.cat([x, theta], -1)
 
         # FC layers
         for layer in self.fc_layers:
             x = layer(x)
-
-        # # FC layers
-        # x = F.relu(self.fc1(x))
-        # x = F.relu(self.fc2(x))
 
         return x[:, 0, :]
