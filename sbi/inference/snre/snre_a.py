@@ -53,7 +53,7 @@ class SNRE_A(RatioEstimator):
         super().__init__(**kwargs, **unused_args)
 
     def train(
-        self,
+        self, theta, x,
         training_batch_size: int = 50,
         learning_rate: float = 5e-4,
         validation_fraction: float = 0.1,

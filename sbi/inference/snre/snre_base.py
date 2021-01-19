@@ -79,7 +79,7 @@ class RatioEstimator(NeuralInference, ABC):
             self._build_neural_net = classifier
 
         # Ratio-based-specific summary_writer fields.
-        self._summary.update({"mcmc_times": []})  # type: ignore
+        # self._summary.update({"mcmc_times": []})  # type: ignore
 
     def append_simulations(
         self, theta: Tensor, x: Tensor, from_round: int = 0,
@@ -114,7 +114,7 @@ class RatioEstimator(NeuralInference, ABC):
         return self
 
     def train(
-        self,
+        self, theta, x, 
         num_atoms: int = 10,
         training_batch_size: int = 50,
         learning_rate: float = 5e-4,
@@ -148,7 +148,7 @@ class RatioEstimator(NeuralInference, ABC):
 
         # Load data from most recent round.
         self._round = max(self._data_round_index)
-        theta, x, _ = self.get_simulations(self._round, exclude_invalid_x, False)
+        # theta, x, _ = self.get_simulations(self._round, exclude_invalid_x, False)
 
         # First round or if retraining from scratch:
         # Call the `self._build_neural_net` with the rounds' thetas and xs as
@@ -165,7 +165,7 @@ class RatioEstimator(NeuralInference, ABC):
 
         # Starting index for the training set (1 = discard round-0 samples).
         start_idx = int(discard_prior_samples and self._round > 0)
-        theta, x, _ = self.get_simulations(start_idx, exclude_invalid_x)
+        # theta, x, _ = self.get_simulations(start_idx, exclude_invalid_x)
 
         # Get total number of training examples.
         num_examples = len(theta)
@@ -241,24 +241,24 @@ class RatioEstimator(NeuralInference, ABC):
                     log_prob_sum -= log_prob.sum().item()
                 self._val_log_prob = log_prob_sum / num_validation_examples
                 # Log validation log prob for every epoch.
-                self._summary["validation_log_probs"].append(self._val_log_prob)
+                # self._summary["validation_log_probs"].append(self._val_log_prob)
 
             self._maybe_show_progress(self._show_progress_bars, epoch)
 
         self._report_convergence_at_end(epoch, stop_after_epochs, max_num_epochs)
 
-        # Update summary.
-        self._summary["epochs"].append(epoch)
-        self._summary["best_validation_log_probs"].append(self._best_val_log_prob)
+        # # Update summary.
+        # self._summary["epochs"].append(epoch)
+        # self._summary["best_validation_log_probs"].append(self._best_val_log_prob)
 
-        # Update TensorBoard and summary dict.
-        self._summarize(
-            round_=self._round, x_o=None, theta_bank=theta, x_bank=x,
-        )
+        # # Update TensorBoard and summary dict.
+        # self._summarize(
+        #     round_=self._round, x_o=None, theta_bank=theta, x_bank=x,
+        # )
 
-        # Update description for progress bar.
-        if show_train_summary:
-            print(self._describe_round(self._round, self._summary))
+        # # Update description for progress bar.
+        # if show_train_summary:
+        #     print(self._describe_round(self._round, self._summary))
 
         return deepcopy(self._neural_net)
 
