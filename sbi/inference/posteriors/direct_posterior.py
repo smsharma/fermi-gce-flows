@@ -150,6 +150,7 @@ class DirectPosterior(NeuralPosterior):
         self,
         theta: Tensor,
         x: Optional[Tensor] = None,
+        x_aux: Optional[Tensor] = None,
         norm_posterior: bool = True,
         track_gradients: bool = False,
     ) -> Tensor:
@@ -186,7 +187,7 @@ class DirectPosterior(NeuralPosterior):
         with torch.set_grad_enabled(track_gradients):
 
             # Evaluate on device, move back to cpu for comparison with prior.
-            unnorm_log_prob = self.net.log_prob(theta, x)
+            unnorm_log_prob = self.net.log_prob(theta, x, x_aux)
             # unnorm_log_prob = self.net.log_prob(theta.to(self._device), x.to(self._device)).cpu()
 
             # Force probability to be zero outside prior support.

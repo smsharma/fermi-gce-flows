@@ -66,17 +66,17 @@ class PosteriorEstimatorNet(pl.LightningModule):
         return {'optimizer': optimizer, 'lr_scheduler': scheduler, 'monitor': 'val_loss'}
 
     def training_step(self, batch, batch_idx):
-        theta, x = batch
+        theta, x, x_aux = batch
         loss = torch.mean(
-            self.loss(theta, x, self.proposal)
+            self.loss(theta, x, x_aux, self.proposal)
         )
         self.log('train_loss', loss, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
-        theta, x = batch
+        theta, x, x_aux = batch
         loss = torch.mean(
-            self.loss(theta, x, self.proposal)
+            self.loss(theta, x, x_aux, self.proposal)
         )
         self.log('val_loss', loss)
 
@@ -98,6 +98,7 @@ class PosteriorEstimator(NeuralInference, ABC):
     def train(
         self,
         x,
+        x_aux,
         theta,
         proposal,
         optimizer=optim.AdamW,
@@ -121,10 +122,12 @@ class PosteriorEstimator(NeuralInference, ABC):
         # Load data
         theta = self.load_and_check(theta, memmap=False)
         x = self.load_and_check(x, memmap=True)
+        x_aux = self.load_and_check(x_aux, memmap=False)
 
         data = OrderedDict()
         data["theta"] = theta
         data["x"] = x
+        data["x_aux"] = x_aux
         dataset = self.make_dataset(data)
 
         train_loader, val_loader = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
@@ -231,11 +234,12 @@ class PosteriorEstimator(NeuralInference, ABC):
         self,
         theta: Tensor,
         x: Tensor,
+        x_aux: Tensor,
         proposal: Optional[Any],
     ) -> Tensor:
  
         # Use posterior log prob
-        log_prob = self.neural_net.log_prob(theta, x)
+        log_prob = self.neural_net.log_prob(theta, x, x_aux)
 
         return -log_prob
 
