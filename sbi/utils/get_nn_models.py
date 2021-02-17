@@ -6,12 +6,7 @@ from typing import Callable
 
 from torch import nn
 
-from sbi.neural_nets.classifier import (
-    build_linear_classifier,
-    build_mlp_classifier,
-    build_resnet_classifier,
-    build_mlp_mixed_classifier,
-)
+from sbi.neural_nets.classifier import build_mlp_mixed_classifier
 from sbi.neural_nets.flow import build_made, build_maf, build_nsf
 from sbi.neural_nets.mdn import build_mdn
 
@@ -64,18 +59,8 @@ def classifier_nn(
     )
 
     def build_fn(batch_theta, batch_x, batch_x_aux=None):
-        if model == "linear":
-            return build_linear_classifier(
-                batch_x=batch_theta, batch_y=batch_x, **kwargs
-            )
-        if model == "mlp":
-            return build_mlp_classifier(batch_x=batch_theta, batch_y=batch_x, **kwargs)
         if model == "mlp_mixed":
             return build_mlp_mixed_classifier(batch_x=batch_x, batch_x_aux=batch_x_aux, batch_y=batch_theta, **kwargs)
-        if model == "resnet":
-            return build_resnet_classifier(
-                batch_x=batch_theta, batch_y=batch_x, **kwargs
-            )
         else:
             raise NotImplementedError
 
