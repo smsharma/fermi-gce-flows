@@ -246,7 +246,7 @@ class RatioEstimator(NeuralInference, ABC):
             device = next(density_estimator.parameters()).device
 
         self._posterior = RatioBasedPosterior(
-            method_family=self.__class__.__name__.lower(),
+            method_family="snre_a",
             neural_net=density_estimator,
             prior=self._prior,
             x_shape=self._x_shape,
