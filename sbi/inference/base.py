@@ -59,16 +59,18 @@ class EstimatorNet(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         theta, x, x_aux = batch
+        x_and_aux = torch.cat([x, x_aux], -1)
         loss = torch.mean(
-            self.loss(theta, x, x_aux, self.proposal)
+            self.loss(theta, x_and_aux, self.proposal)
         )
         self.log('train_loss', loss, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         theta, x, x_aux = batch
+        x_and_aux = torch.cat([x, x_aux], -1)
         loss = torch.mean(
-            self.loss(theta, x, x_aux, self.proposal)
+            self.loss(theta, x_and_aux, self.proposal)
         )
         self.log('val_loss', loss)
 
@@ -97,6 +99,8 @@ class NeuralInference(ABC):
                 is not empty, we warn. In future versions, when the new interface of
                 0.14.0 is more mature, we will remove this argument.
         """
+
+        self._device = process_device(device)
 
         self._prior = prior
         self._posterior = None
@@ -175,7 +179,6 @@ class NeuralInference(ABC):
         else:
             data = np.load(filename)
         return data
-
 
 class NumpyDataset(Dataset):
     """ Dataset for numpy arrays with explicit memmap support """

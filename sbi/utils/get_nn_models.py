@@ -45,8 +45,8 @@ def classifier_nn(
                 "z_score_x",
                 "z_score_y",
                 "hidden_features",
-                "embedding_net_x",
                 "embedding_net_y",
+                "embedding_net_x",
             ),
             (
                 z_score_x,
@@ -58,9 +58,9 @@ def classifier_nn(
         )
     )
 
-    def build_fn(batch_theta, batch_x, batch_x_aux=None):
+    def build_fn(batch_theta, batch_x):
         if model == "mlp_mixed":
-            return build_mlp_mixed_classifier(batch_x=batch_x, batch_x_aux=batch_x_aux, batch_y=batch_theta, **kwargs)
+            return build_mlp_mixed_classifier(batch_x=batch_theta, batch_y=batch_x, **kwargs)
         else:
             raise NotImplementedError
 

@@ -1,7 +1,7 @@
 # This file is part of sbi, a toolkit for simulation-based inference. sbi is licensed
 # under the Affero General Public License v3, see <https://www.gnu.org/licenses/>.
 
-
+import torch
 from torch import Tensor, nn
 
 from sbi.utils.sbiutils import standardizing_net
@@ -27,14 +27,16 @@ class StandardizeInputs(nn.Module):
             self.standardizing_net_y = nn.Identity()
 
 
-    def forward(self, x, x_aux, theta):
+    def forward(self, x, theta):
         
-        x = self.standardizing_net_x(x)
+        x = self.standardizing_net_y(x)
 
-        theta = self.standardizing_net_y(theta)
-        theta = self.embedding_net_y(theta)
+        theta = self.standardizing_net_x(theta)
+        theta = self.embedding_net_x(theta)
+
+        x_and_theta = torch.cat([x, theta.unsqueeze(1)], -1)
         
-        x = self.embedding_net_x(x, x_aux, theta)
+        x = self.embedding_net_y(x_and_theta)
         
         return x
 
@@ -48,7 +50,7 @@ class SequentialMulti(nn.Sequential):
         return inputs
 
 
-def build_mlp_mixed_classifier(batch_x: Tensor = None, batch_x_aux: Tensor = None, batch_y: Tensor = None, z_score_x: bool = True, z_score_y: bool = True, hidden_features: int = 50, embedding_net_x: nn.Module = nn.Identity(), embedding_net_y: nn.Module = nn.Identity(), additional_layers: bool = True) -> nn.Module:
+def build_mlp_mixed_classifier(batch_x: Tensor = None, batch_y: Tensor = None, z_score_x: bool = True, z_score_y: bool = True, hidden_features: int = 50, embedding_net_x: nn.Module = nn.Identity(), embedding_net_y: nn.Module = nn.Identity(), additional_layers: bool = True) -> nn.Module:
     """Builds MLP classifier.
 
     In SNRE, the classifier will receive batches of thetas and xs.
@@ -65,9 +67,11 @@ def build_mlp_mixed_classifier(batch_x: Tensor = None, batch_x_aux: Tensor = Non
     Returns:
         Neural network.
     """
+    
+    batch_x_and_theta = torch.cat([batch_x.unsqueeze(1), batch_y], -1)
 
     # Infer the output dimensionalities of the embedding_net by making a forward pass.
-    x_numel = embedding_net_x(batch_x[:1], batch_x_aux[:1], batch_y[:1]).numel()
+    x_numel = embedding_net_y(batch_x_and_theta[:1]).numel()
 
     if additional_layers:
         neural_net = nn.Sequential(nn.Linear(x_numel, hidden_features), nn.BatchNorm1d(hidden_features), nn.ReLU(), nn.Linear(hidden_features, hidden_features), nn.BatchNorm1d(hidden_features), nn.ReLU(), nn.Linear(hidden_features, 1),)
@@ -75,7 +79,6 @@ def build_mlp_mixed_classifier(batch_x: Tensor = None, batch_x_aux: Tensor = Non
         neural_net = nn.Sequential(nn.ReLU(), nn.Linear(x_numel, 1),)
 
     input_layer = StandardizeInputs(embedding_net_x, embedding_net_y, batch_x, batch_y, z_score_x=z_score_x, z_score_y=z_score_y)
-
     neural_net = SequentialMulti(input_layer, neural_net)
 
     return neural_net

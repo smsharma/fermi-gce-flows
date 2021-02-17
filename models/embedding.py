@@ -46,7 +46,7 @@ class SphericalGraphCNN(nn.Module):
             setattr(self, "layer_fc_{}".format(i), layer)
             self.fc_layers.append(layer)
 
-    def forward(self, x, x_aux=None, theta=None):
+    def forward(self, x):
         """Forward Pass.
 
         Args:
@@ -57,23 +57,21 @@ class SphericalGraphCNN(nn.Module):
         """
 
         # Initialize tensor
-        x = x.view(-1, 16384, 1)
+        x = x.view(-1, 16384 + self.n_aux + self.n_params, 1)
+        x_map = x[:, :16384, :]
 
         # Convolutional layers
         for layer in self.cnn_layers:
-            x = layer(x)
+            x_map = layer(x_map)
 
         # Concatenate auxiliary variable along last dimension
-        if x_aux is not None:
-            x_aux = x_aux.view(-1, 1, self.n_aux)
-            x = torch.cat([x, x_aux], -1)
-
-        if theta is not None:
+        if (self.n_aux != 0) or (self.n_params != 0):
+            theta = x[:, 16384:16384 + self.n_aux + self.n_params, :]
             theta = theta.view(-1, 1, self.n_params)
-            x = torch.cat([x, theta], -1)
+            x_map = torch.cat([x_map, theta], -1)
 
         # FC layers
         for layer in self.fc_layers:
-            x = layer(x)
+            x_map = layer(x_map)
 
-        return x[:, 0, :]
+        return x_map[:, 0, :]

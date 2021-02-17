@@ -1,1 +1,1 @@
-from sbi.inference.snre.snre_a import SNRE_A
+from sbi.inference.snre.snre import RatioEstimator

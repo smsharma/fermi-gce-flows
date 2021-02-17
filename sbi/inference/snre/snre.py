@@ -25,17 +25,17 @@ from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data.sampler import SubsetRandomSampler
 
 from abc import ABC
-from sbi.inference.posteriors.base_posterior import NeuralPosterior, EstimatorNet
+from sbi.inference.posteriors.base_posterior import NeuralPosterior
 from sbi.types import TensorboardSummaryWriter
 from torch.utils.tensorboard import SummaryWriter
 from sbi.utils import del_entries
 
 from sbi import utils as utils
-from sbi.inference import NeuralInference
+from sbi.inference import NeuralInference, EstimatorNet
 from sbi.inference.posteriors.ratio_based_posterior import RatioBasedPosterior
 from sbi.inference.posteriors.direct_posterior import DirectPosterior
 from sbi.types import TorchModule
-from sbi.utils import x_shape_from_simulation,
+from sbi.utils import x_shape_from_simulation
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
@@ -48,6 +48,7 @@ class RatioEstimator(NeuralInference, ABC):
         self,
         prior,
         classifier: Union[str, Callable] = "resnet",
+        device: str = "cpu",
         logging_level: Union[int, str] = "warning",
         summary_writer: Optional[SummaryWriter] = None,
         show_progress_bars: bool = True,
@@ -80,6 +81,7 @@ class RatioEstimator(NeuralInference, ABC):
 
         super().__init__(
             prior=prior,
+            device=device,
             logging_level=logging_level,
             summary_writer=summary_writer,
             show_progress_bars=show_progress_bars,
@@ -126,15 +128,17 @@ class RatioEstimator(NeuralInference, ABC):
         train_loader, val_loader = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
 
         num_z_score = 50000  # Z-score using a limited random sample for memory reasons
-        theta_z_score, x_z_score = train_loader.dataset[:num_z_score]
+        theta_z_score, x_z_score, x_aux_z_score = train_loader.dataset[:num_z_score]
 
         logging.info("Z-scoring using {} random training samples for x".format(num_z_score))
+
+        x_and_aux_z_score = torch.cat([x_z_score, x_aux_z_score], -1)
 
         # Call the `self._build_neural_net` which will build the neural network.
         # This is passed into NeuralPosterior, to create a neural posterior which
         # can `sample()` and `log_prob()`. The network is accessible via `.net`.
-        self.neural_net = self._build_neural_net(theta_z_score, x_z_score)
-        self.x_shape = x_shape_from_simulation(x_z_score)
+        self.neural_net = self._build_neural_net(theta_z_score, x_and_aux_z_score)
+        self.x_shape = x_shape_from_simulation(x_and_aux_z_score)
 
         max_num_epochs=cast(int, max_num_epochs)
 
@@ -166,7 +170,7 @@ class RatioEstimator(NeuralInference, ABC):
             max_epochs=max_num_epochs,
             progress_bar_refresh_rate=self._show_progress_bars,
             deterministic=False,
-            gpus=[0],  # Hard-coded
+            gpus=None,  # Hard-coded
             num_sanity_val_steps=10,
         )
 
@@ -259,15 +263,13 @@ class RatioEstimator(NeuralInference, ABC):
 
         return deepcopy(self._posterior)
 
-    def classifier_logits(self, theta: Tensor, x: Tensor, x_aux: Tensor, num_atoms: int) -> Tensor:
+    def classifier_logits(self, theta: Tensor, x: Tensor, num_atoms: int) -> Tensor:
         """Return logits obtained through classifier forward pass.
 
         The logits are obtained from atomic sets of (theta,x) pairs.
         """
         batch_size = theta.shape[0]
-
         repeated_x = utils.repeat_rows(x, num_atoms)
-        repeated_x_aux = utils.repeat_rows(x_aux, num_atoms)
         
         # Choose `1` or `num_atoms - 1` thetas from the rest of the batch for each x.
         probs = ones(batch_size, batch_size) * (1 - eye(batch_size)) / (batch_size - 1)
@@ -280,10 +282,9 @@ class RatioEstimator(NeuralInference, ABC):
             batch_size * num_atoms, -1
         )
 
-        # return self._neural_net(theta_and_x)
-        return self._neural_net(repeated_x, repeated_x_aux, atomic_theta)
+        return self.neural_net(repeated_x, atomic_theta)
 
-    def loss(self, theta: Tensor, x: Tensor, x_aux: Tensor, num_atoms: int) -> Tensor:
+    def loss(self, theta: Tensor, x: Tensor, proposal: Optional[Any],) -> Tensor:
         """
         Returns the binary cross-entropy loss for the trained classifier.
 
@@ -295,7 +296,9 @@ class RatioEstimator(NeuralInference, ABC):
         assert theta.shape[0] == x.shape[0], "Batch sizes for theta and x must match."
         batch_size = theta.shape[0]
 
-        logits = self.classifier_logits(theta, x, x_aux, num_atoms)
+        num_atoms = 2
+
+        logits = self.classifier_logits(theta, x, num_atoms)
         likelihood = torch.sigmoid(logits).squeeze()
 
         # Alternating pairs where there is one sampled from the joint and one

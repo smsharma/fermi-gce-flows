@@ -18,13 +18,13 @@ from utils import create_mask as cm
 import torch
 
 from sbi import utils
-from sbi.inference import PosteriorEstimator
+from sbi.inference import PosteriorEstimator, RatioEstimator
 
 from pytorch_lightning.loggers import TensorBoardLogger, MLFlowLogger
 import mlflow
 
 
-def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux_var=2, maf_hidden_features=128, maf_num_transforms=8, batch_size=256, max_num_epochs=50, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}):
+def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=2, maf_hidden_features=128, maf_num_transforms=8, batch_size=256, max_num_epochs=50, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}):
 
     # Cache hyperparameters to log
     params_to_log = locals()
@@ -65,56 +65,97 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     # Combine priors
     prior = utils.BoxUniform(low=torch.tensor([0.001] + prior_poiss[0] + prior_ps[0]), high=torch.tensor([2.] + prior_poiss[1] + prior_ps[1]))
 
-    # Embedding net (feature extractor)
-    sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux_var=n_aux_var)
 
-    # Instantiate the neural density estimator
-    density_estimator = utils.posterior_nn(model="maf", embedding_net=sg_embed, hidden_features=maf_hidden_features, num_transforms=maf_num_transforms,)
 
     # MLFlow logger
     tracking_uri = "file:{}/logs/mlruns".format(data_dir)
     mlf_logger = MLFlowLogger(experiment_name=experiment_name, tracking_uri=tracking_uri)
     mlf_logger.log_hyperparams(params_to_log)
 
-    # Setup the inference procedure with NPE
-    posterior_estimator = PosteriorEstimator(prior=prior, density_estimator=density_estimator, show_progress_bars=True, logging_level="INFO", device=device.type, summary_writer=mlf_logger)
+    method = "NRE"
 
     # Specify datasets
     x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
+    x_aux_filename = "{}/samples/x_aux_{}.npy".format(data_dir, sample_name)
     theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)
 
-    # Model training
-    density_estimator = posterior_estimator.train(x=x_filename, 
-                                theta=theta_filename, 
-                                proposal=prior, 
-                                training_batch_size=batch_size, 
-                                max_num_epochs=max_num_epochs, 
-                                stop_after_epochs=stop_after_epochs, 
-                                clip_max_norm=clip_max_norm,
-                                validation_fraction=validation_fraction,
-                                initial_lr=initial_lr,
-                                optimizer_kwargs=optimizer_kwargs)
-    
-    # Save density estimator
-    mlflow.set_tracking_uri(tracking_uri)
-    with mlflow.start_run(run_id=mlf_logger.run_id):
-        mlflow.pytorch.log_model(density_estimator, "density_estimator")
+    if method == "NPE":
+        
+        # Embedding net (feature extractor)
+        sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux=n_aux)
 
-    # Check to make sure model can be succesfully loaded
-    model_uri = "runs:/{}/density_estimator".format(mlf_logger.run_id)
-    density_estimator = mlflow.pytorch.load_model(model_uri)
-    posterior = posterior_estimator.build_posterior(density_estimator)
+        # Instantiate the neural density estimator
+        density_estimator = utils.posterior_nn(model="maf", embedding_net=sg_embed, hidden_features=maf_hidden_features, num_transforms=maf_num_transforms,)
 
+        # Setup the inference procedure with NPE
+        posterior_estimator = PosteriorEstimator(prior=prior, density_estimator=density_estimator, show_progress_bars=True, logging_level="INFO", device=device.type, summary_writer=mlf_logger)
+
+        # Model training
+        density_estimator = posterior_estimator.train(x=x_filename, 
+                                    x_aux=x_aux_filename, 
+                                    theta=theta_filename, 
+                                    proposal=prior, 
+                                    training_batch_size=batch_size, 
+                                    max_num_epochs=max_num_epochs, 
+                                    stop_after_epochs=stop_after_epochs, 
+                                    clip_max_norm=clip_max_norm,
+                                    validation_fraction=validation_fraction,
+                                    initial_lr=initial_lr,
+                                    optimizer_kwargs=optimizer_kwargs)
+        
+        # Save density estimator
+        mlflow.set_tracking_uri(tracking_uri)
+        with mlflow.start_run(run_id=mlf_logger.run_id):
+            mlflow.pytorch.log_model(density_estimator, "density_estimator")
+
+        # Check to make sure model can be succesfully loaded
+        model_uri = "runs:/{}/density_estimator".format(mlf_logger.run_id)
+        density_estimator = mlflow.pytorch.load_model(model_uri)
+        posterior = posterior_estimator.build_posterior(density_estimator)
+
+    elif method == "NRE":
+
+        # Embedding net (feature extractor)
+        sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux=n_aux, n_params=18)
+
+        # Instantiate the neural density estimator
+        neural_classifier = utils.classifier_nn(model="mlp_mixed", embedding_net_x=sg_embed)
+
+        # Setup the inference procedure with NPE
+        posterior_estimator = RatioEstimator(prior=prior, classifier=neural_classifier, show_progress_bars=True, logging_level="INFO", device=device.type, summary_writer=mlf_logger)
+
+        # Model training
+        density_estimator = posterior_estimator.train(x=x_filename, 
+                                    x_aux=x_aux_filename, 
+                                    theta=theta_filename, 
+                                    proposal=prior, 
+                                    training_batch_size=batch_size, 
+                                    max_num_epochs=max_num_epochs, 
+                                    stop_after_epochs=stop_after_epochs, 
+                                    clip_max_norm=clip_max_norm,
+                                    validation_fraction=validation_fraction,
+                                    initial_lr=initial_lr,
+                                    optimizer_kwargs=optimizer_kwargs)
+        
+        # Save density estimator
+        mlflow.set_tracking_uri(tracking_uri)
+        with mlflow.start_run(run_id=mlf_logger.run_id):
+            mlflow.pytorch.log_model(density_estimator, "density_estimator")
+
+        # Check to make sure model can be succesfully loaded
+        model_uri = "runs:/{}/density_estimator".format(mlf_logger.run_id)
+        density_estimator = mlflow.pytorch.load_model(model_uri)
+        posterior = posterior_estimator.build_posterior(density_estimator)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="High-level script for the training of the neural likelihood ratio estimators")
 
     # Main options
     parser.add_argument("--sample", type=str, help='Sample name, like "train".')
-    parser.add_argument("--name", type=str, help="Experiment name")
+    parser.add_argument("--name", type=str, default='test', help="Experiment name")
     parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 512], [512, 96]]", help="Specification of fully-connected embedding layers")
-    parser.add_argument("--maf_num_transforms", type=int, default=8, help="Number of MAF blocks")
-    parser.add_argument("--batch_size", type=int, default=256, help="Training batch size.")
+    parser.add_argument("--maf_num_transforms", type=int, default=4, help="Number of MAF blocks")
+    parser.add_argument("--batch_size", type=int, default=64, help="Training batch size.")
     parser.add_argument("--dir", type=str, default=".", help="Directory. Training data will be loaded from the data/samples subfolder, the model saved in the " "data/models subfolder.")
 
     # Training option
