@@ -1,6 +1,3 @@
-# This file is part of sbi, a toolkit for simulation-based inference. sbi is licensed
-# under the Affero General Public License v3, see <https://www.gnu.org/licenses/>.
-
 import logging
 
 from abc import ABC, abstractmethod
@@ -12,6 +9,12 @@ from collections import OrderedDict
 import os
 from pathlib import Path
 
+from typing import Any, Callable, Dict, Optional, Union
+
+import torch
+from torch import Tensor, eye, ones, optim
+from torch import Tensor, nn, ones
+
 import torch
 from torch import Tensor, ones, optim
 from torch.nn.utils import clip_grad_norm_
@@ -21,10 +24,16 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data.sampler import SubsetRandomSampler
 
-import numpy as np
+from abc import ABC
+from sbi.inference.posteriors.base_posterior import NeuralPosterior
+from sbi.inference.snre.snre_base import RatioEstimator
+from sbi.types import TensorboardSummaryWriter
+from torch.utils.tensorboard import SummaryWriter
+from sbi.utils import del_entries
 
 from sbi import utils as utils
 from sbi.inference import NeuralInference
+from sbi.inference.posteriors.ratio_based_posterior import RatioBasedPosterior
 from sbi.inference.posteriors.direct_posterior import DirectPosterior
 from sbi.types import TorchModule
 from sbi.utils import x_shape_from_simulation,
@@ -34,7 +43,7 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, Learning
 
 import mlflow.pytorch
 
-class PosteriorEstimatorNet(pl.LightningModule):
+class RatioEstimatorNet(pl.LightningModule):
     """
     This is a wrapper class for the neural network defined by pyknos / nflows. It wraps
     the neural network into a pytorch_lightning module.
@@ -79,8 +88,41 @@ class PosteriorEstimatorNet(pl.LightningModule):
         self.log('val_loss', loss)
 
 
-class PosteriorEstimator(NeuralInference, ABC):
-    def __init__(self, prior, density_estimator: Union[str, Callable] = "maf", device: str = "cpu", logging_level: Union[int, str] = "WARNING", summary_writer: Optional[SummaryWriter] = None, show_progress_bars: bool = True, **unused_args):
+class RatioEstimator(NeuralInference, ABC):
+    def __init__(
+        self,
+        prior,
+        classifier: Union[str, Callable] = "resnet",
+        device: str = "cpu",
+        logging_level: Union[int, str] = "warning",
+        summary_writer: Optional[SummaryWriter] = None,
+        show_progress_bars: bool = True,
+        **unused_args
+    ):
+        r"""Sequential Neural Ratio Estimation.
+
+        We implement two inference methods in the respective subclasses.
+
+        - SNRE_A / AALR is limited to `num_atoms=2`, but allows for density evaluation
+          when training for one round.
+        - SNRE_B / SRE can use more than two atoms, potentially boosting performance,
+          but allows for posterior evaluation **only up to a normalizing constant**,
+          even when training only one round.
+
+        Args:
+            classifier: Classifier trained to approximate likelihood ratios. If it is
+                a string, use a pre-configured network of the provided type (one of
+                linear, mlp, resnet). Alternatively, a function that builds a custom
+                neural network can be provided. The function will be called with the
+                first batch of simulations (theta, x), which can thus be used for shape
+                inference and potentially for z-scoring. It needs to return a PyTorch
+                `nn.Module` implementing the classifier.
+            unused_args: Absorbs additional arguments. No entries will be used. If it
+                is not empty, we warn. In future versions, when the new interface of
+                0.14.0 is more mature, we will remove this argument.
+
+        See docstring of `NeuralInference` class for all other arguments.
+        """
 
         super().__init__(
             prior=prior,
@@ -88,10 +130,10 @@ class PosteriorEstimator(NeuralInference, ABC):
             logging_level=logging_level,
             summary_writer=summary_writer,
             show_progress_bars=show_progress_bars,
-            **unused_args,
+            **unused_args
         )
 
-        self._build_neural_net = density_estimator
+        self._build_neural_net = classifier
 
     def train(
         self,
@@ -109,7 +151,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         stop_after_epochs: int = 20,
         max_num_epochs: Optional[int] = None,
         clip_max_norm: Optional[float] = 1.0,
-    ) -> DirectPosterior:
+    ) -> RatioBasedPosterior:
 
         optimizer_kwargs = {} if optimizer_kwargs is None else optimizer_kwargs
         scheduler_kwargs = {'T_max':max_num_epochs} if scheduler_kwargs is None else scheduler_kwargs
@@ -143,7 +185,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         max_num_epochs=cast(int, max_num_epochs)
 
-        self.model = PosteriorEstimatorNet(
+        self.model = RatioEstimatorNet(
             net=self.neural_net,
             proposal=proposal,
             loss=self.loss,
@@ -184,7 +226,7 @@ class PosteriorEstimator(NeuralInference, ABC):
             trainer.fit(self.model, train_loader, val_loader)
 
         # Load the model that had the best validation log-probability
-        self.best_model = PosteriorEstimatorNet.load_from_checkpoint(
+        self.best_model = RatioEstimatorNet.load_from_checkpoint(
             checkpoint_path=model_checkpoint.best_model_path,
             net=self.neural_net,
             proposal=proposal,
@@ -202,135 +244,113 @@ class PosteriorEstimator(NeuralInference, ABC):
     def build_posterior(
         self,
         density_estimator: Optional[TorchModule] = None,
-        rejection_sampling_parameters: Optional[Dict[str, Any]] = None,
-        sample_with_mcmc: bool = False,
         mcmc_method: str = "slice_np",
         mcmc_parameters: Optional[Dict[str, Any]] = None,
-    ) -> DirectPosterior:
+    ) -> RatioBasedPosterior:
+        r"""
+        Build posterior from the neural density estimator.
+
+        SNRE trains a neural network to approximate likelihood ratios, which in turn
+        can be used obtain an unnormalized posterior
+        $p(\theta|x) \propto p(x|\theta) \cdot p(\theta)$. The posterior returned here
+        wraps the trained network such that one can directly evaluate the unnormalized
+        posterior log-probability $p(\theta|x) \propto p(x|\theta) \cdot p(\theta)$ and
+        draw samples from the posterior with MCMC. Note that, in the case of
+        single-round SNRE_A / AALR, it is possible to evaluate the log-probability of
+        the **normalized** posterior, but sampling still requires MCMC.
+
+        Args:
+            density_estimator: The density estimator that the posterior is based on.
+                If `None`, use the latest neural density estimator that was trained.
+            mcmc_method: Method used for MCMC sampling, one of `slice_np`, `slice`,
+                `hmc`, `nuts`. Currently defaults to `slice_np` for a custom numpy
+                implementation of slice sampling; select `hmc`, `nuts` or `slice` for
+                Pyro-based sampling.
+            mcmc_parameters: Dictionary overriding the default parameters for MCMC.
+                The following parameters are supported: `thin` to set the thinning
+                factor for the chain, `warmup_steps` to set the initial number of
+                samples to discard, `num_chains` for the number of chains,
+                `init_strategy` for the initialisation strategy for chains; `prior` will
+                draw init locations from prior, whereas `sir` will use
+                Sequential-Importance-Resampling using `init_strategy_num_candidates`
+                to find init locations.
+
+        Returns:
+            Posterior $p(\theta|x)$  with `.sample()` and `.log_prob()` methods
+            (the returned log-probability is unnormalized).
+        """
 
         if density_estimator is None:
-            density_estimator = self.neural_net
+            density_estimator = self._neural_net
+            # If internal net is used device is defined.
+            device = self._device
+        else:
+            # Otherwise, infer it from the device of the net parameters.
+            device = next(density_estimator.parameters()).device
 
-        self._posterior = DirectPosterior(
-            method_family="snpe",
+        self._posterior = RatioBasedPosterior(
+            method_family=self.__class__.__name__.lower(),
             neural_net=density_estimator,
             prior=self._prior,
-            x_shape=self.x_shape,
-            rejection_sampling_parameters=rejection_sampling_parameters,
-            sample_with_mcmc=sample_with_mcmc,
+            x_shape=self._x_shape,
             mcmc_method=mcmc_method,
             mcmc_parameters=mcmc_parameters,
-            device=self._device,
+            device=device,
         )
 
-        # Posterior in eval mode
-        self._posterior.net.eval()
+        self._posterior._num_trained_rounds = self._round + 1
+
+        # Store models at end of each round.
+        self._model_bank.append(deepcopy(self._posterior))
+        self._model_bank[-1].net.eval()
 
         return deepcopy(self._posterior)
 
-    def loss(
-        self,
-        theta: Tensor,
-        x: Tensor,
-        x_aux: Tensor,
-        proposal: Optional[Any],
-    ) -> Tensor:
- 
-        # Use posterior log prob
-        log_prob = self.neural_net.log_prob(theta, x, x_aux)
+    def classifier_logits(self, theta: Tensor, x: Tensor, x_aux: Tensor, num_atoms: int) -> Tensor:
+        """Return logits obtained through classifier forward pass.
 
-        return -log_prob
+        The logits are obtained from atomic sets of (theta,x) pairs.
+        """
+        batch_size = theta.shape[0]
 
-    def make_dataset(self, data):
-        data_arrays = []
-        data_labels = []
-        for key, value in six.iteritems(data):
-            data_labels.append(key)
-            data_arrays.append(value)
-        dataset = NumpyDataset(*data_arrays, dtype=torch.float)  # Should maybe mod dtype
-        return dataset
+        repeated_x = utils.repeat_rows(x, num_atoms)
+        repeated_x_aux = utils.repeat_rows(x_aux, num_atoms)
+        
+        # Choose `1` or `num_atoms - 1` thetas from the rest of the batch for each x.
+        probs = ones(batch_size, batch_size) * (1 - eye(batch_size)) / (batch_size - 1)
 
-    def make_dataloaders(self, dataset, validation_split, batch_size, num_workers=46, pin_memory=True, seed=None):
-        if validation_split is None or validation_split <= 0.0:
-            train_loader = DataLoader(
-                dataset,
-                batch_size=batch_size,
-                shuffle=True,
-                pin_memory=pin_memory,
-                num_workers=num_workers,
-            ) 
-            val_loader = None
-        else:
-            assert 0.0 < validation_split < 1.0, "Wrong validation split: {}".format(validation_split)
+        choices = torch.multinomial(probs, num_samples=num_atoms - 1, replacement=False)
 
-            n_samples = len(dataset)
-            indices = list(range(n_samples))
-            split = int(np.floor(validation_split * n_samples))
-            if seed is not None:
-                np.random.seed(seed)
-            np.random.shuffle(indices)
-            train_idx, valid_idx = indices[split:], indices[:split]
+        contrasting_theta = theta[choices]
 
-            train_sampler = SubsetRandomSampler(train_idx)
-            val_sampler = SubsetRandomSampler(valid_idx)
+        atomic_theta = torch.cat((theta[:, None, :], contrasting_theta), dim=1).reshape(
+            batch_size * num_atoms, -1
+        )
 
-            train_loader = DataLoader(
-                dataset,
-                sampler=train_sampler,
-                batch_size=batch_size,
-                pin_memory=pin_memory,
-                num_workers=num_workers,
-            ) 
-            val_loader = DataLoader(
-                dataset,
-                sampler=val_sampler,
-                batch_size=batch_size,
-                pin_memory=pin_memory,
-                num_workers=num_workers,
-            )  
+        # return self._neural_net(theta_and_x)
+        return self._neural_net(repeated_x, repeated_x_aux, atomic_theta)
 
-        return train_loader, val_loader
+    def loss(self, theta: Tensor, x: Tensor, x_aux: Tensor, num_atoms: int) -> Tensor:
+        """
+        Returns the binary cross-entropy loss for the trained classifier.
 
-    def load_and_check(self, filename, memmap=False):
-        # Don't load image files > 1 GB into memory
-        if memmap and os.stat(filename).st_size > 1.0 * 1024 ** 3:
-            data = np.load(filename, mmap_mode="c")
-        else:
-            data = np.load(filename)
-        return data
+        The classifier takes as input a $(\theta,x)$ pair. It is trained to predict 1
+        if the pair was sampled from the joint $p(\theta,x)$, and to predict 0 if the
+        pair was sampled from the marginals $p(\theta)p(x)$.
+        """
 
+        assert theta.shape[0] == x.shape[0], "Batch sizes for theta and x must match."
+        batch_size = theta.shape[0]
 
-class NumpyDataset(Dataset):
-    """ Dataset for numpy arrays with explicit memmap support """
+        logits = self.classifier_logits(theta, x, x_aux, num_atoms)
+        likelihood = torch.sigmoid(logits).squeeze()
 
-    def __init__(self, *arrays, dtype=torch.float):
-        self.dtype = dtype
-        self.memmap = []
-        self.data = []
-        self.n = None
+        # Alternating pairs where there is one sampled from the joint and one
+        # sampled from the marginals. The first element is sampled from the
+        # joint p(theta, x) and is labelled 1. The second element is sampled
+        # from the marginals p(theta)p(x) and is labelled 0. And so on.
+        labels = ones(2 * batch_size)  # two atoms
+        labels[1::2] = 0.0
 
-        for array in arrays:
-            if self.n is None:
-                self.n = array.shape[0]
-            assert array.shape[0] == self.n
-
-            if isinstance(array, np.memmap):
-                self.memmap.append(True)
-                self.data.append(array)
-            else:
-                self.memmap.append(False)
-                tensor = torch.from_numpy(array).to(self.dtype)
-                self.data.append(tensor)
-
-    def __getitem__(self, index):
-        items = []
-        for memmap, array in zip(self.memmap, self.data):
-            if memmap:
-                tensor = np.array(array[index])
-                items.append(torch.from_numpy(tensor).to(self.dtype))
-            else:
-                items.append(array[index])
-        return tuple(items)
-
-    def __len__(self):
-        return self.n
+        # Binary cross entropy to learn the likelihood (AALR-specific)
+        return nn.BCELoss()(likelihood, labels)
