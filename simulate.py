@@ -125,15 +125,11 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="fi
 
     # Grab maps and aux variables
     x = torch.Tensor(list(map(itemgetter(0), x_and_aux)))
-    aux = torch.Tensor(list(map(itemgetter(1), x_and_aux)))
+    x_aux = torch.Tensor(list(map(itemgetter(1), x_and_aux)))
 
     results["x"] = x
-    results["aux"] = aux
+    results["x_aux"] = x_aux
     results["theta"] = thetas
-
-    print(x.shape)
-    print(aux.shape)
-    print(thetas.shape)
 
     return results
 
@@ -154,7 +150,6 @@ def save(data_dir, name, data):
     for key, value in data.items():
         np.save("{}/data/samples/{}_{}.npy".format(data_dir, key, name), value)
 
-
 def parse_args():
     """ Parse command line arguments
     """
@@ -165,7 +160,7 @@ def parse_args():
         "-n", type=int, default=10000, help="Number of samples to generate. Default is 10k.",
     )
     parser.add_argument("--dif", type=str, default="ModelO", help='Diffuse model to simulate, wither "ModelO" (default) or "p6"')
-    parser.add_argument("--gamma", type=str, default="fix", help='Whether to float NFW index gamma. "fix" (default, fixes to gamma=1.2), "float", or "float_both"')
+    parser.add_argument("--gamma", type=str, default="fix", help='Whether to float NFW index gamma. "fix" (default, fixes to gamma=1.2), "float" (float both gammas), or "float_both" (float PS and poiss gammas separately)')
     parser.add_argument("--name", type=str, default=None, help='Sample name, like "train" or "test".')
     parser.add_argument("--dir", type=str, default=".", help="Base directory. Results will be saved in the data/samples subfolder.")
     parser.add_argument("--debug", action="store_true", help="Prints debug output.")

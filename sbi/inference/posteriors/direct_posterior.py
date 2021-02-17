@@ -186,9 +186,7 @@ class DirectPosterior(NeuralPosterior):
 
         with torch.set_grad_enabled(track_gradients):
 
-            # Evaluate on device, move back to cpu for comparison with prior.
             unnorm_log_prob = self.net.log_prob(theta, x, x_aux)
-            # unnorm_log_prob = self.net.log_prob(theta.to(self._device), x.to(self._device)).cpu()
 
             # Force probability to be zero outside prior support.
             is_prior_finite = torch.isfinite(self._prior.log_prob(theta))
