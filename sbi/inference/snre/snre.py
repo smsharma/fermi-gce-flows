@@ -25,8 +25,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data.sampler import SubsetRandomSampler
 
 from abc import ABC
-from sbi.inference.posteriors.base_posterior import NeuralPosterior
-from sbi.inference.snre.snre_base import RatioEstimator
+from sbi.inference.posteriors.base_posterior import NeuralPosterior, EstimatorNet
 from sbi.types import TensorboardSummaryWriter
 from torch.utils.tensorboard import SummaryWriter
 from sbi.utils import del_entries
@@ -43,57 +42,12 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, Learning
 
 import mlflow.pytorch
 
-class RatioEstimatorNet(pl.LightningModule):
-    """
-    This is a wrapper class for the neural network defined by pyknos / nflows. It wraps
-    the neural network into a pytorch_lightning module.
-    """
-
-    def __init__(self, net, proposal, loss, initial_lr, optimizer, optimizer_kwargs, scheduler, scheduler_kwargs):
-
-        super().__init__()
-
-        self.save_hyperparameters('initial_lr')
-
-        self.net = net
-        self.proposal = proposal
-        self.loss = loss
-
-        self.initial_lr = initial_lr
-        self.optimizer = optimizer
-        self.optimizer_kwargs = optimizer_kwargs
-        self.scheduler = scheduler
-        self.scheduler_kwargs = scheduler_kwargs
-
-    def configure_optimizers(self):
-        optimizer = self.optimizer(list(self.net.parameters()), lr=self.initial_lr, **self.optimizer_kwargs)
-        scheduler = self.scheduler(optimizer, **self.scheduler_kwargs)
-        # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=5, min_lr=1e-6, verbose=True)
-        # scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50, verbose=True)
-        return {'optimizer': optimizer, 'lr_scheduler': scheduler, 'monitor': 'val_loss'}
-
-    def training_step(self, batch, batch_idx):
-        theta, x, x_aux = batch
-        loss = torch.mean(
-            self.loss(theta, x, x_aux, self.proposal)
-        )
-        self.log('train_loss', loss, on_epoch=True)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        theta, x, x_aux = batch
-        loss = torch.mean(
-            self.loss(theta, x, x_aux, self.proposal)
-        )
-        self.log('val_loss', loss)
-
 
 class RatioEstimator(NeuralInference, ABC):
     def __init__(
         self,
         prior,
         classifier: Union[str, Callable] = "resnet",
-        device: str = "cpu",
         logging_level: Union[int, str] = "warning",
         summary_writer: Optional[SummaryWriter] = None,
         show_progress_bars: bool = True,
@@ -126,7 +80,6 @@ class RatioEstimator(NeuralInference, ABC):
 
         super().__init__(
             prior=prior,
-            device=device,
             logging_level=logging_level,
             summary_writer=summary_writer,
             show_progress_bars=show_progress_bars,
@@ -185,7 +138,7 @@ class RatioEstimator(NeuralInference, ABC):
 
         max_num_epochs=cast(int, max_num_epochs)
 
-        self.model = RatioEstimatorNet(
+        self.model = EstimatorNet(
             net=self.neural_net,
             proposal=proposal,
             loss=self.loss,
@@ -226,7 +179,7 @@ class RatioEstimator(NeuralInference, ABC):
             trainer.fit(self.model, train_loader, val_loader)
 
         # Load the model that had the best validation log-probability
-        self.best_model = RatioEstimatorNet.load_from_checkpoint(
+        self.best_model = EstimatorNet.load_from_checkpoint(
             checkpoint_path=model_checkpoint.best_model_path,
             net=self.neural_net,
             proposal=proposal,

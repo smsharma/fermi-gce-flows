@@ -24,7 +24,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 import numpy as np
 
 from sbi import utils as utils
-from sbi.inference import NeuralInference
+from sbi.inference import NeuralInference, EstimatorNet
 from sbi.inference.posteriors.direct_posterior import DirectPosterior
 from sbi.types import TorchModule
 from sbi.utils import x_shape_from_simulation,
@@ -34,57 +34,12 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, Learning
 
 import mlflow.pytorch
 
-class PosteriorEstimatorNet(pl.LightningModule):
-    """
-    This is a wrapper class for the neural network defined by pyknos / nflows. It wraps
-    the neural network into a pytorch_lightning module.
-    """
-
-    def __init__(self, net, proposal, loss, initial_lr, optimizer, optimizer_kwargs, scheduler, scheduler_kwargs):
-
-        super().__init__()
-
-        self.save_hyperparameters('initial_lr')
-
-        self.net = net
-        self.proposal = proposal
-        self.loss = loss
-
-        self.initial_lr = initial_lr
-        self.optimizer = optimizer
-        self.optimizer_kwargs = optimizer_kwargs
-        self.scheduler = scheduler
-        self.scheduler_kwargs = scheduler_kwargs
-
-    def configure_optimizers(self):
-        optimizer = self.optimizer(list(self.net.parameters()), lr=self.initial_lr, **self.optimizer_kwargs)
-        scheduler = self.scheduler(optimizer, **self.scheduler_kwargs)
-        # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=5, min_lr=1e-6, verbose=True)
-        # scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50, verbose=True)
-        return {'optimizer': optimizer, 'lr_scheduler': scheduler, 'monitor': 'val_loss'}
-
-    def training_step(self, batch, batch_idx):
-        theta, x, x_aux = batch
-        loss = torch.mean(
-            self.loss(theta, x, x_aux, self.proposal)
-        )
-        self.log('train_loss', loss, on_epoch=True)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        theta, x, x_aux = batch
-        loss = torch.mean(
-            self.loss(theta, x, x_aux, self.proposal)
-        )
-        self.log('val_loss', loss)
-
 
 class PosteriorEstimator(NeuralInference, ABC):
-    def __init__(self, prior, density_estimator: Union[str, Callable] = "maf", device: str = "cpu", logging_level: Union[int, str] = "WARNING", summary_writer: Optional[SummaryWriter] = None, show_progress_bars: bool = True, **unused_args):
+    def __init__(self, prior, density_estimator: Union[str, Callable] = "maf", logging_level: Union[int, str] = "WARNING", summary_writer: Optional[SummaryWriter] = None, show_progress_bars: bool = True, **unused_args):
 
         super().__init__(
             prior=prior,
-            device=device,
             logging_level=logging_level,
             summary_writer=summary_writer,
             show_progress_bars=show_progress_bars,
@@ -143,7 +98,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         max_num_epochs=cast(int, max_num_epochs)
 
-        self.model = PosteriorEstimatorNet(
+        self.model = EstimatorNet(
             net=self.neural_net,
             proposal=proposal,
             loss=self.loss,
@@ -184,7 +139,7 @@ class PosteriorEstimator(NeuralInference, ABC):
             trainer.fit(self.model, train_loader, val_loader)
 
         # Load the model that had the best validation log-probability
-        self.best_model = PosteriorEstimatorNet.load_from_checkpoint(
+        self.best_model = EstimatorNet.load_from_checkpoint(
             checkpoint_path=model_checkpoint.best_model_path,
             net=self.neural_net,
             proposal=proposal,
@@ -240,97 +195,3 @@ class PosteriorEstimator(NeuralInference, ABC):
         log_prob = self.neural_net.log_prob(theta, x, x_aux)
 
         return -log_prob
-
-    def make_dataset(self, data):
-        data_arrays = []
-        data_labels = []
-        for key, value in six.iteritems(data):
-            data_labels.append(key)
-            data_arrays.append(value)
-        dataset = NumpyDataset(*data_arrays, dtype=torch.float)  # Should maybe mod dtype
-        return dataset
-
-    def make_dataloaders(self, dataset, validation_split, batch_size, num_workers=46, pin_memory=True, seed=None):
-        if validation_split is None or validation_split <= 0.0:
-            train_loader = DataLoader(
-                dataset,
-                batch_size=batch_size,
-                shuffle=True,
-                pin_memory=pin_memory,
-                num_workers=num_workers,
-            ) 
-            val_loader = None
-        else:
-            assert 0.0 < validation_split < 1.0, "Wrong validation split: {}".format(validation_split)
-
-            n_samples = len(dataset)
-            indices = list(range(n_samples))
-            split = int(np.floor(validation_split * n_samples))
-            if seed is not None:
-                np.random.seed(seed)
-            np.random.shuffle(indices)
-            train_idx, valid_idx = indices[split:], indices[:split]
-
-            train_sampler = SubsetRandomSampler(train_idx)
-            val_sampler = SubsetRandomSampler(valid_idx)
-
-            train_loader = DataLoader(
-                dataset,
-                sampler=train_sampler,
-                batch_size=batch_size,
-                pin_memory=pin_memory,
-                num_workers=num_workers,
-            ) 
-            val_loader = DataLoader(
-                dataset,
-                sampler=val_sampler,
-                batch_size=batch_size,
-                pin_memory=pin_memory,
-                num_workers=num_workers,
-            )  
-
-        return train_loader, val_loader
-
-    def load_and_check(self, filename, memmap=False):
-        # Don't load image files > 1 GB into memory
-        if memmap and os.stat(filename).st_size > 1.0 * 1024 ** 3:
-            data = np.load(filename, mmap_mode="c")
-        else:
-            data = np.load(filename)
-        return data
-
-
-class NumpyDataset(Dataset):
-    """ Dataset for numpy arrays with explicit memmap support """
-
-    def __init__(self, *arrays, dtype=torch.float):
-        self.dtype = dtype
-        self.memmap = []
-        self.data = []
-        self.n = None
-
-        for array in arrays:
-            if self.n is None:
-                self.n = array.shape[0]
-            assert array.shape[0] == self.n
-
-            if isinstance(array, np.memmap):
-                self.memmap.append(True)
-                self.data.append(array)
-            else:
-                self.memmap.append(False)
-                tensor = torch.from_numpy(array).to(self.dtype)
-                self.data.append(tensor)
-
-    def __getitem__(self, index):
-        items = []
-        for memmap, array in zip(self.memmap, self.data):
-            if memmap:
-                tensor = np.array(array[index])
-                items.append(torch.from_numpy(tensor).to(self.dtype))
-            else:
-                items.append(array[index])
-        return tuple(items)
-
-    def __len__(self):
-        return self.n
