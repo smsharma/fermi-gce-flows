@@ -1,4 +1,4 @@
 artifact_location: file:./data//logs/mlruns/0
 experiment_id: '0'
 lifecycle_stage: active
-name: gce_float_all_ModelO
+name: test

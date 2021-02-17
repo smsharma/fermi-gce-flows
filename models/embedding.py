@@ -66,9 +66,9 @@ class SphericalGraphCNN(nn.Module):
 
         # Concatenate auxiliary variable along last dimension
         if (self.n_aux != 0) or (self.n_params != 0):
-            theta = x[:, 16384:16384 + self.n_aux + self.n_params, :]
-            theta = theta.view(-1, 1, self.n_params)
-            x_map = torch.cat([x_map, theta], -1)
+            x_aux = x[:, 16384:16384 + self.n_aux + self.n_params, :]
+            x_aux = x_aux.view(-1, 1, self.n_aux + self.n_params)
+            x_map = torch.cat([x_map, x_aux], -1)
 
         # FC layers
         for layer in self.fc_layers:
