@@ -17,16 +17,18 @@ cd /scratch/sm8383/sbi-fermi/
 batch_size_list = [64, 256]
 fc_dims_list = [[[-1, 2048], [2048, 512], [512, 96]], 
                 [[-1, 2048], [2048, 512]]]
-maf_num_transforms_list = [2, 8]
+maf_num_transforms_list = [4]
+methods = ["snpe", "snre"]
 
 for maf_num_transforms in maf_num_transforms_list:
     for batch_size in batch_size_list:
         for fc_dims in fc_dims_list:
-            batchn = batch + "\n"
-            batchn += "python -u train.py --sample train_float_all_ModelO --name gce_float_all_ModelO --maf_num_transforms {} --fc_dims '{}' --batch_size {}".format(maf_num_transforms, fc_dims, batch_size)
-            fname = "batch/submit.batch"
-            f = open(fname, "w")
-            f.write(batchn)
-            f.close()
-            os.system("chmod +x " + fname)
-            os.system("sbatch " + fname)
+            for method in methods:
+                batchn = batch + "\n"
+                batchn += "python -u train.py --sample train_ModelO_gamma_fix --name gce_ModelO_gamma_fix --method {} --maf_num_transforms {} --fc_dims '{}' --batch_size {}".format(method, maf_num_transforms, fc_dims, batch_size)
+                fname = "batch/submit.batch"
+                f = open(fname, "w")
+                f.write(batchn)
+                f.close()
+                os.system("chmod +x " + fname)
+                os.system("sbatch " + fname)

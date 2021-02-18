@@ -12,11 +12,9 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Union
 
 import torch
-from torch import Tensor, eye, ones, optim
+from torch import Tensor, eye, optim
 from torch import Tensor, nn, ones
 
-import torch
-from torch import Tensor, ones, optim
 from torch.nn.utils import clip_grad_norm_
 from torch.utils import data
 from torch.utils.data import Dataset, DataLoader
@@ -170,7 +168,7 @@ class RatioEstimator(NeuralInference, ABC):
             max_epochs=max_num_epochs,
             progress_bar_refresh_rate=self._show_progress_bars,
             deterministic=False,
-            gpus=None,  # Hard-coded
+            gpus=[0],  # Hard-coded
             num_sanity_val_steps=10,
         )
 
@@ -305,8 +303,9 @@ class RatioEstimator(NeuralInference, ABC):
         # sampled from the marginals. The first element is sampled from the
         # joint p(theta, x) and is labelled 1. The second element is sampled
         # from the marginals p(theta)p(x) and is labelled 0. And so on.
-        labels = ones(2 * batch_size)  # two atoms
+        labels = torch.ones(2 * batch_size).type_as(likelihood)  # two atoms
         labels[1::2] = 0.0
-
+        
         # Binary cross entropy to learn the likelihood (AALR-specific)
         return nn.BCELoss()(likelihood, labels)
+        

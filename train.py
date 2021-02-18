@@ -24,7 +24,7 @@ from pytorch_lightning.loggers import TensorBoardLogger, MLFlowLogger
 import mlflow
 
 
-def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=2, maf_hidden_features=128, maf_num_transforms=8, batch_size=256, max_num_epochs=5, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}):
+def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=2, maf_hidden_features=128, maf_num_transforms=8, batch_size=256, max_num_epochs=50, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe"):
 
     # Cache hyperparameters to log
     params_to_log = locals()
@@ -70,14 +70,12 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     mlf_logger = MLFlowLogger(experiment_name=experiment_name, tracking_uri=tracking_uri)
     mlf_logger.log_hyperparams(params_to_log)
 
-    method = "NRE"
-
     # Specify datasets
     x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
     x_aux_filename = "{}/samples/x_aux_{}.npy".format(data_dir, sample_name)
     theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)
 
-    if method == "NPE":
+    if method == "snpe":
         
         # Embedding net (feature extractor)
         sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux=n_aux)
@@ -111,7 +109,7 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
         density_estimator = mlflow.pytorch.load_model(model_uri)
         posterior = posterior_estimator.build_posterior(density_estimator)
 
-    elif method == "NRE":
+    elif method == "snre":
 
         # Embedding net (feature extractor)
         sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux=n_aux, n_params=18)
@@ -150,15 +148,15 @@ def parse_args():
 
     # Main options
     parser.add_argument("--sample", type=str, help='Sample name, like "train".')
-    parser.add_argument("--name", type=str, default='test', help="Experiment name")
-    parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 512], [512, 96]]", help="Specification of fully-connected embedding layers")
+    parser.add_argument("--name", type=str, default='test', help='Experiment name.')
+    parser.add_argument("--method", type=str, default='snpe', help='SBI method; "snpe" or "snre".')
+    parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 512], [512, 96]]", help='Specification of fully-connected embedding layers')
     parser.add_argument("--maf_num_transforms", type=int, default=4, help="Number of MAF blocks")
     parser.add_argument("--batch_size", type=int, default=64, help="Training batch size.")
     parser.add_argument("--dir", type=str, default=".", help="Directory. Training data will be loaded from the data/samples subfolder, the model saved in the " "data/models subfolder.")
 
     # Training option
     return parser.parse_args()
-
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -168,6 +166,6 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms)
+    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, method=args.method)
 
     logging.info("All done! Have a nice day!")

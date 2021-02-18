@@ -129,7 +129,7 @@ class PosteriorEstimator(NeuralInference, ABC):
             max_epochs=max_num_epochs,
             progress_bar_refresh_rate=self._show_progress_bars,
             deterministic=False,
-            gpus=None,  # Hard-coded
+            gpus=[0],  # Hard-coded
             num_sanity_val_steps=10,
         )
 
