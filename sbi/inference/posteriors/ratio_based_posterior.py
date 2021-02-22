@@ -340,7 +340,8 @@ class PotentialFunctionProvider:
               concatenated with theta."""
         with torch.set_grad_enabled(False):
             log_ratio = (
-                self.classifier(torch.cat((theta.to(self.x.device), x_repeated), dim=1))
+                # self.classifier(torch.cat((theta.to(self.x.device), x_repeated), dim=1))
+                self.classifier(x_repeated, theta.to(self.x.device))
                 .reshape(-1)
                 .cpu()
             )
@@ -366,8 +367,7 @@ class PotentialFunctionProvider:
         theta = ensure_theta_batched(theta)
         x = ensure_x_batched(self.x)
 
-        log_ratio = self.classifier(
-            torch.cat((theta.to(x.device), x), dim=1).reshape(1, -1)
-        ).cpu()
+        # log_ratio = self.classifier(torch.cat((theta.to(x.device), x), dim=1).reshape(1, -1)).cpu()
+        log_ratio = self.classifier(x, theta.to(x.device)).cpu()
 
         return -(log_ratio + self.prior.log_prob(theta))
