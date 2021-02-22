@@ -36,7 +36,7 @@ class EstimatorNet(pl.LightningModule):
     the neural network into a pytorch_lightning module.
     """
 
-    def __init__(self, net, proposal, loss, initial_lr, optimizer, optimizer_kwargs, scheduler, scheduler_kwargs):
+    def __init__(self, net, proposal, loss, initial_lr, optimizer, optimizer_kwargs, scheduler, scheduler_kwargs, summary=False):
 
         super().__init__()
 
@@ -51,6 +51,7 @@ class EstimatorNet(pl.LightningModule):
         self.optimizer_kwargs = optimizer_kwargs
         self.scheduler = scheduler
         self.scheduler_kwargs = scheduler_kwargs
+        self.summary = summary
 
     def configure_optimizers(self):
         optimizer = self.optimizer(list(self.net.parameters()), lr=self.initial_lr, **self.optimizer_kwargs)
@@ -60,18 +61,18 @@ class EstimatorNet(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         theta, x, x_aux = batch
         x_and_aux = torch.cat([x, x_aux], -1)
-        loss = torch.mean(
-            self.loss(theta, x_and_aux, self.proposal)
-        )
+        if self.summary:
+            x_and_aux = torch.squeeze(x_and_aux, 1)
+        loss = torch.mean(self.loss(theta, x_and_aux, self.proposal))
         self.log('train_loss', loss, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         theta, x, x_aux = batch
         x_and_aux = torch.cat([x, x_aux], -1)
-        loss = torch.mean(
-            self.loss(theta, x_and_aux, self.proposal)
-        )
+        if self.summary:
+            x_and_aux = torch.squeeze(x_and_aux, 1)
+        loss = torch.mean(self.loss(theta, x_and_aux, self.proposal))
         self.log('val_loss', loss)
 
 class NeuralInference(ABC):

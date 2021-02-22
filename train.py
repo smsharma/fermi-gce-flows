@@ -16,6 +16,7 @@ from models.embedding import SphericalGraphCNN
 from utils import create_mask as cm
 
 import torch
+from torch import nn
 
 from sbi import utils
 from sbi.inference import PosteriorEstimator, RatioEstimator
@@ -24,7 +25,7 @@ from pytorch_lightning.loggers import TensorBoardLogger, MLFlowLogger
 import mlflow
 
 
-def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=2, maf_hidden_features=128, maf_num_transforms=8, batch_size=256, max_num_epochs=50, stop_after_epochs=4, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe"):
+def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=2, maf_hidden_features=128, maf_num_transforms=8, batch_size=256, max_num_epochs=50, stop_after_epochs=4, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe", summary=None):
 
     # Cache hyperparameters to log
     params_to_log = locals()
@@ -71,7 +72,12 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     mlf_logger.log_hyperparams(params_to_log)
 
     # Specify datasets
-    x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
+
+    if summary is None:
+        x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
+    else:
+        x_filename = "{}/samples/x_{}_{}.npy".format(data_dir, summary, sample_name)  # If using a summary
+
     x_aux_filename = "{}/samples/x_aux_{}.npy".format(data_dir, sample_name)
     theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)
 
@@ -79,6 +85,10 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
         
         # Embedding net (feature extractor)
         sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux=n_aux)
+
+        # If using a summary stat, don't use (overwrite) feature extractor
+        if summary is not None:
+            sg_embed = nn.Identity()
 
         # Instantiate the neural density estimator
         density_estimator = utils.posterior_nn(model="maf", embedding_net=sg_embed, hidden_features=maf_hidden_features, num_transforms=maf_num_transforms,)
@@ -97,7 +107,8 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
                                     clip_max_norm=clip_max_norm,
                                     validation_fraction=validation_fraction,
                                     initial_lr=initial_lr,
-                                    optimizer_kwargs=optimizer_kwargs)
+                                    optimizer_kwargs=optimizer_kwargs,
+                                    summary=summary)
         
         # Save density estimator
         mlflow.set_tracking_uri(tracking_uri)
@@ -113,6 +124,10 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
 
         # Embedding net (feature extractor)
         sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux=n_aux, n_params=18)
+
+        # If using a summary stat, don't use (overwrite) feature extractor
+        if summary is not None:
+            sg_embed = nn.Identity()
 
         # Instantiate the neural density estimator
         neural_classifier = utils.classifier_nn(model="mlp_mixed", embedding_net_x=sg_embed)
@@ -148,6 +163,7 @@ def parse_args():
 
     # Main options
     parser.add_argument("--sample", type=str, help='Sample name, like "train".')
+    parser.add_argument("--summary", type=str, default=None, help='Whether using a summary statistic')
     parser.add_argument("--name", type=str, default='test', help='Experiment name.')
     parser.add_argument("--method", type=str, default='snpe', help='SBI method; "snpe" or "snre".')
     parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 512], [512, 96]]", help='Specification of fully-connected embedding layers')
@@ -166,6 +182,6 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, method=args.method)
+    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, method=args.method, summary=args.summary)
 
     logging.info("All done! Have a nice day!")

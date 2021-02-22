@@ -41,7 +41,7 @@ incremental_pca = joblib.load(model_filename)  # Load model to make sure that it
 
 # Do PCA decomposition
 
-for i in tqdm(range(n_files)):
+for i_file in tqdm(range(n_files)):
 
     filename = "data/samples/x_{}_{}.npy".format(sample, i_file)
     if not Path(filename).is_file():

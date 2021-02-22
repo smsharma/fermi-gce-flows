@@ -65,6 +65,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         stop_after_epochs: int = 20,
         max_num_epochs: Optional[int] = None,
         clip_max_norm: Optional[float] = 1.0,
+        summary=False,
     ) -> DirectPosterior:
 
         optimizer_kwargs = {} if optimizer_kwargs is None else optimizer_kwargs
@@ -93,6 +94,9 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         x_and_aux_z_score = torch.cat([x_z_score, x_aux_z_score], -1)
 
+        if summary:
+            x_and_aux_z_score = torch.squeeze(x_and_aux_z_score, 1)
+
         # Call the `self._build_neural_net` which will build the neural network.
         # This is passed into NeuralPosterior, to create a neural posterior which
         # can `sample()` and `log_prob()`. The network is accessible via `.net`.
@@ -110,6 +114,7 @@ class PosteriorEstimator(NeuralInference, ABC):
             optimizer_kwargs=optimizer_kwargs, 
             scheduler=scheduler, 
             scheduler_kwargs=scheduler_kwargs,
+            summary=summary
         )
 
         checkpoint_path = "{}/{}/{}/artifacts/checkpoints/".format(self.summary_writer.save_dir, self.summary_writer.experiment_id, self.summary_writer.run_id)
