@@ -27,7 +27,7 @@ def shuffle_and_combine(dir, input_samples, output_sample, regex=False):
 
     # Path and filenames
     folder = "{}/data/samples/".format(dir)
-    filenames = ["theta", "x", "x_aux"]
+    filenames = ["theta", "x", "x_aux", "x_pca_96"]
 
     # Parse regular expressions
     if regex:
