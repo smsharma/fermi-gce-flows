@@ -9,5 +9,5 @@
 source ~/.bashrc
 conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi/
-python -u summarize.py --sample train_ModelO_gamma_fix --n_files 500
+python -u summarize.py --sample train_ModelO_gamma_fix --n_files 500 --do_histogram --do_power_spectrum
 
