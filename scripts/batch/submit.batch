@@ -1,13 +1,14 @@
 #!/bin/bash
 
-#SBATCH --job-name=summarize
+#SBATCH --job-name=train
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=4GB
-#SBATCH --time=12:59:00
+#SBATCH --mem=40GB
+#SBATCH --time=30:59:00
+#SBATCH --gres=gpu:rtx8000
 
 source ~/.bashrc
 conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi/
 
-python -u summarize.py --sample train_ModelO_gamma_fix --n_files '[480, 500]' --do_power_spectrum
+python -u train.py --sample train_ModelO_gamma_fix --name gce_ModelO_gamma_fix --maf_num_transforms 4 --batch_size 256 --summary pspec_4
