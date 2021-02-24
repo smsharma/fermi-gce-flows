@@ -25,7 +25,7 @@ from pytorch_lightning.loggers import TensorBoardLogger, MLFlowLogger
 import mlflow
 
 
-def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=2, maf_hidden_features=128, maf_num_transforms=8, batch_size=256, max_num_epochs=50, stop_after_epochs=4, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe", summary=None):
+def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=2, maf_hidden_features=128, maf_num_transforms=8, batch_size=256, max_num_epochs=50, stop_after_epochs=4, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe", summary=None, summary_range=None):
 
     # Cache hyperparameters to log
     params_to_log = locals()
@@ -108,7 +108,8 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
                                     validation_fraction=validation_fraction,
                                     initial_lr=initial_lr,
                                     optimizer_kwargs=optimizer_kwargs,
-                                    summary=summary)
+                                    summary=summary,
+                                    summary_range=summary_range)
         
         # Save density estimator
         mlflow.set_tracking_uri(tracking_uri)
@@ -164,6 +165,7 @@ def parse_args():
     # Main options
     parser.add_argument("--sample", type=str, help='Sample name, like "train".')
     parser.add_argument("--summary", type=str, default=None, help='Whether using a summary statistic')
+    parser.add_argument("--summary_range", type=str, default="None", help='Whether to use only a subset of the summary stats')
     parser.add_argument("--name", type=str, default='test', help='Experiment name.')
     parser.add_argument("--method", type=str, default='snpe', help='SBI method; "snpe" or "snre".')
     parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 512], [512, 96]]", help='Specification of fully-connected embedding layers')
@@ -182,6 +184,11 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, method=args.method, summary=args.summary)
+    if args.summary_range != "None":
+        args.summary_range = list(json.loads(args.summary_range))
+    else:
+        args.summary_range = None
+
+    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, method=args.method, summary=args.summary, summary_range=args.summary_range)
 
     logging.info("All done! Have a nice day!")

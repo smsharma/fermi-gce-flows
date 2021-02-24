@@ -2,6 +2,7 @@ from pathlib import Path
 import argparse
 import joblib
 import logging
+import json
 
 import numpy as np
 from sklearn.decomposition import PCA, IncrementalPCA
@@ -19,7 +20,7 @@ def do_pca(sample, n_files, n_components):
 
     incremental_pca = IncrementalPCA(n_components=n_components)
 
-    for i_file in tqdm(range(n_files)):
+    for i_file in tqdm(range(*n_files)):
 
         filename = "data/samples/x_{}_{}.npy".format(sample, i_file)
         if not Path(filename).is_file():
@@ -37,7 +38,7 @@ def do_pca(sample, n_files, n_components):
 
     # Do PCA decomposition
 
-    for i_file in tqdm(range(n_files)):
+    for i_file in tqdm(range(*n_files)):
 
         filename = "data/samples/x_{}_{}.npy".format(sample, i_file)
         if not Path(filename).is_file():
@@ -51,7 +52,7 @@ def do_histogram(sample, n_files, n_max_bins):
 
     # Construct counts histograms
 
-    for i_file in tqdm(range(n_files)):
+    for i_file in tqdm(range(*n_files)):
 
         filename = "data/samples/x_{}_{}.npy".format(sample, i_file)
         if not Path(filename).is_file():
@@ -77,14 +78,14 @@ def do_power_spectrum(sample, n_files, ells_per_bandpower):
 
     # Construct power spectrum
 
-    for i_file in tqdm(range(n_files)):
+    for i_file in tqdm(range(*n_files)):
 
         filename = "data/samples/x_{}_{}.npy".format(sample, i_file)
         if not Path(filename).is_file():
             continue
         X = np.load(filename)
         X_pspec = construct_power_spectrum(X, mask_sim, mask_roi, ells_per_bandpower)
-        print(X_pspec.shape)
+
         np.save("data/samples/x_pspec_{}_{}_{}.npy".format(ells_per_bandpower, sample, i_file), X_pspec)
 
 def parse_args():
@@ -102,7 +103,7 @@ def parse_args():
     parser.add_argument("--n_components", type=int, default=96, help="Number of PCA dimensions",)
     parser.add_argument("--n_max_bins", type=int, default=96, help="Maximum bin edge of histogram",)
     parser.add_argument("--ells_per_bandpower", type=int, default=4, help="Multipole binning in power spectrum",)
-    parser.add_argument("--n_files", type=int, default=500, help="Number of files to act on",)
+    parser.add_argument("--n_files", type=str, default="[0,500]", help='Which files to act on')
 
     return parser.parse_args()
 
@@ -113,6 +114,8 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)-5.5s %(name)-20.20s %(levelname)-7.7s %(message)s", datefmt="%H:%M", level=logging.DEBUG if args.debug else logging.INFO,)
 
     logger.info("Hi!")
+
+    args.n_files = list(json.loads(args.n_files))
 
     if args.do_pca:
         logger.info("Doing PCA decomposition")
