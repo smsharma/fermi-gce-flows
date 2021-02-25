@@ -4,11 +4,11 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=40GB
-#SBATCH --time=30:59:00
+#SBATCH --time=48:59:00
 #SBATCH --gres=gpu:rtx8000
 
 source ~/.bashrc
 conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi/
 
-python -u train.py --sample train_ModelO_gamma_fix --name gce_ModelO_gamma_fix --maf_num_transforms 8 --batch_size 256 --summary pca_96
+python -u train.py --sample train_ModelO_gamma_fix --name gce_ModelO_gamma_fix_v2 --method snpe --maf_num_transforms 6 --fc_dims '[[-1, 2048], [2048, 128]]' --batch_size 256

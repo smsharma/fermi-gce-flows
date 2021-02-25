@@ -66,6 +66,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         max_num_epochs: Optional[int] = None,
         clip_max_norm: Optional[float] = 1.0,
         summary=False,
+        summary_range=None
     ) -> DirectPosterior:
 
         optimizer_kwargs = {} if optimizer_kwargs is None else optimizer_kwargs
@@ -73,15 +74,22 @@ class PosteriorEstimator(NeuralInference, ABC):
 
 
         max_num_epochs = 2 ** 31 - 1 if max_num_epochs is None else max_num_epochs
+        
+        memmap_x = True
+        if summary:
+            memmap_x = False
 
         # Load data
         theta = self.load_and_check(theta, memmap=False)
-        x = self.load_and_check(x, memmap=True)
+        x = self.load_and_check(x, memmap=memmap_x)
         x_aux = self.load_and_check(x_aux, memmap=False)
 
         data = OrderedDict()
         data["theta"] = theta
-        data["x"] = x
+        if summary_range is None:
+            data["x"] = x
+        else:
+            data["x"] = x[:,:,summary_range[0]:summary_range[1]]
         data["x_aux"] = x_aux
         dataset = self.make_dataset(data)
 
@@ -89,6 +97,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         num_z_score = 50000  # Z-score using a limited random sample for memory reasons
         theta_z_score, x_z_score, x_aux_z_score = train_loader.dataset[:num_z_score]
+
 
         logging.info("Z-scoring using {} random training samples for x".format(num_z_score))
 
@@ -157,6 +166,7 @@ class PosteriorEstimator(NeuralInference, ABC):
             optimizer_kwargs=optimizer_kwargs, 
             scheduler=scheduler, 
             scheduler_kwargs=scheduler_kwargs,
+            summary=summary
         )
 
         # Return the posterior net corresponding to the best model
