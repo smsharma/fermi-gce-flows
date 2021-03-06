@@ -86,7 +86,7 @@ class NPRegression:
         
         return u
 
-    def run_dynesty(self, nlive=400, n_cpus=4):
+    def run_dynesty(self, nlive=200, n_cpus=4):
 
         n_dim = self.n_params
 
@@ -102,34 +102,36 @@ class NPRegression:
         return sampler.results.samples, samples_weighted
 
 def load_psf():
-    # Define parameters that specify the Fermi-LAT PSF at 2 GeV
-    fcore = 0.748988248179
-    score = 0.428653790656
-    gcore = 7.82363229341
-    stail = 0.715962650769
-    gtail = 3.61883748683
-    spe = 0.00456544262478
+    # # Define parameters that specify the Fermi-LAT PSF at 2 GeV
+    # fcore = 0.748988248179
+    # score = 0.428653790656
+    # gcore = 7.82363229341
+    # stail = 0.715962650769
+    # gtail = 3.61883748683
+    # spe = 0.00456544262478
 
-    # Define the full PSF in terms of two King functions
-    def king_fn(x, sigma, gamma):
-        return 1./(2.*np.pi*sigma**2.)*(1.-1./gamma)*(1.+(x**2./(2.*gamma*sigma**2.)))**(-gamma)
+    # # Define the full PSF in terms of two King functions
+    # def king_fn(x, sigma, gamma):
+    #     return 1./(2.*np.pi*sigma**2.)*(1.-1./gamma)*(1.+(x**2./(2.*gamma*sigma**2.)))**(-gamma)
 
-    def Fermi_PSF(r):
-        return fcore*king_fn(r/spe,score,gcore) + (1-fcore)*king_fn(r/spe,stail,gtail)
+    # def Fermi_PSF(r):
+    #     return fcore*king_fn(r/spe,score,gcore) + (1-fcore)*king_fn(r/spe,stail,gtail)
 
-    # Modify the relevant parameters in pc_inst and then make or load the PSF
-    pc_inst = PSFCorrection(delay_compute=True)
-    pc_inst.psf_r_func = lambda r: Fermi_PSF(r)
-    pc_inst.sample_psf_max = 10.*spe*(score+stail)/2.
-    pc_inst.psf_samples = 10000
-    pc_inst.psf_tag = 'Fermi_PSF_2GeV'
-    pc_inst.make_or_load_psf_corr()
+    # # Modify the relevant parameters in pc_inst and then make or load the PSF
+    # pc_inst = PSFCorrection(delay_compute=True)
+    # pc_inst.psf_r_func = lambda r: Fermi_PSF(r)
+    # pc_inst.sample_psf_max = 10.*spe*(score+stail)/2.
+    # pc_inst.psf_samples = 10000
+    # pc_inst.psf_tag = 'Fermi_PSF_2GeV'
+    # pc_inst.make_or_load_psf_corr()
 
-    # Extract f_ary and df_rho_div_f_ary as usual
-    f_ary = pc_inst.f_ary
-    df_rho_div_f_ary = pc_inst.df_rho_div_f_ary
+    # # Extract f_ary and df_rho_div_f_ary as usual
+    # f_ary = pc_inst.f_ary
+    # df_rho_div_f_ary = pc_inst.df_rho_div_f_ary
 
-    return f_ary, df_rho_div_f_ary
+    pc_inst = PSFCorrection(psf_sigma_deg=0.1812)
+
+    return pc_inst.f_ary, pc_inst.df_rho_div_f_ary
 
 def parse_args():
 
@@ -138,9 +140,9 @@ def parse_args():
     parser.add_argument("--n_cpus", action="store", default=36, type=int)
     parser.add_argument("--n_live", action="store", default=500, type=int)
     parser.add_argument("--sample_name", action="store", default="runs", type=str)
-    parser.add_argument("--sampler", action="store", default="emcee", type=str)
-    parser.add_argument("--save_dir", action="store", default="data/samples/", type=str)
-    parser.add_argument("--r_outer", action="store", default=25., type=float)
+    parser.add_argument("--sampler", action="store", default="dynesty", type=str)
+    parser.add_argument("--save_dir", action="store", default="data/nptfit_samples/", type=str)
+    parser.add_argument("--r_outer", action="store", default=30., type=float)
     parser.add_argument("--ps_mask_type", action="store", default="0.8", type=str)
     parser.add_argument("--transform_prior_on_s", action="store", default=0, type=int)
     parser.add_argument("--diffuse", action="store", default="ModelO", type=str)
@@ -181,18 +183,32 @@ if __name__ == "__main__":
     
     if args.diffuse == "ModelO":
         temps_poiss = [temp_gce, temp_iso, temp_bub, temp_psc, temp_mO_pibrem, temp_mO_ics]
-        priors_poiss = [[0., 0.001, 0.001, 0.001, 6., 1.], [3.5, 1.5, 1.5, 1.5, 12., 6.]]
+        # priors_poiss = [[-3., 0.001, 0.001, 0.001, 6., 1.], 
+        #                 [1., 1.5, 1.5, 1.5, 12., 6.]]
+        # params_log_poiss = [1, 0, 0, 0, 0, 0]
+        priors_poiss = [[0., 0.001, 0.001, 0.001, 6., 1.], 
+                        [2., 1.5, 1.5, 1.5, 12., 6.]]
+        params_log_poiss = [0, 0, 0, 0, 0, 0]
     elif args.diffuse == "p6":
-        temps_poiss = [temp_gce, temp_iso, temp_bub, temp_psc, temp_mO_pibrem, temp_mO_ics]
-        priors_poiss = [[0., 0.001, 0.001, 0.001, 10.], [3.5, 1.5, 1.5, 1.5, 20.]]
+        temps_poiss = [temp_gce, temp_iso, temp_bub, temp_psc, temp_dif]
+        # priors_poiss = [[-3., 0.001, 0.001, 0.001, 10.], 
+        #                 [1., 1.5, 1.5, 1.5, 20.]]
+        # params_log_poiss = [1, 0, 0, 0, 0]
+        priors_poiss = [[0., 0.001, 0.001, 0.001, 10.], 
+                        [2., 1.5, 1.5, 1.5, 20.]]
+        params_log_poiss = [0, 0, 0, 0, 0]
     else:
         raise NotImplementedError
-
-    temps_ps = [temp_gce / (fermi_exp / np.mean(fermi_exp)), temp_dsk / (fermi_exp / np.mean(fermi_exp))]
+    
+    rescale = (fermi_exp / np.mean(fermi_exp))
+    temps_ps = [temp_gce / rescale, temp_dsk / rescale]
+    # priors_ps = [[-6., 10.0, 1.1, -10.0, 5.0, 0.1, -6., 10.0, 1.1, -10.0, 5.0, 0.1], 
+                # [1., 20.0, 1.99, 1.99, 50.0, 4.99, 1., 20.0, 1.99, 1.99, 50.0, 4.99]]
     priors_ps = [[0., 10.0, 1.1, -10.0, 5.0, 0.1, 0., 10.0, 1.1, -10.0, 5.0, 0.1], 
-                [3.5, 20.0, 1.99, 1.99, 50.0, 4.99, 3.5, 20.0, 1.99, 1.99, 50.0, 4.99]]
+                [2., 20.0, 1.99, 1.99, 50.0, 4.99, 2., 20.0, 1.99, 1.99, 50.0, 4.99]]
 
-    param_log = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0 ,0, 0])
+    # param_log = np.array(params_log_poiss + [1, 0, 0, 0, 0, 0, 1 ,0 ,0 ,0 ,0, 0])
+    param_log = np.array(params_log_poiss + [0, 0, 0, 0, 0, 0, 1 ,0 ,0 ,0 ,0, 0])
 
     param_log = param_log.astype(np.bool)
 
@@ -200,7 +216,7 @@ if __name__ == "__main__":
 
     # Sample using chosen sampler
     if args.sampler == "dynesty":
-        samples, samples_thinned_flattened = npr.run_dynesty()
+        samples, samples_thinned_flattened = npr.run_dynesty(nlive=args.n_live, n_cpus=args.n_cpus)
     else:
         raise NotImplementedError
     
