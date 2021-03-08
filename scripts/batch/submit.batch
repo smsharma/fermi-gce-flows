@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -N 1   # node count
-#SBATCH --ntasks-per-node=36
+#SBATCH --ntasks-per-node=24
 #SBATCH -t 23:59:00
 #SBATCH --mem=24GB
 ##SBATCH --mail-type=begin
@@ -12,4 +12,4 @@ conda activate sbi-fermi
 
 cd /scratch/sm8383/sbi-fermi
 
-python nptfit.py --diffuse p6 --transform_prior_on_s 1 --ps_mask_type 0.8 --sample_name runs_25_p6_1_0.8 --n_cpus 36 --r_outer 25 --ps_mask_type default --n_live 400
+python nptfit.py --diffuse ModelO --transform_prior_on_s 1 --ps_mask_type 0.8 --sample_name runs_25_ModelO_1_0.8 --n_cpus 24 --r_outer 25 --ps_mask_type default --n_live 500
