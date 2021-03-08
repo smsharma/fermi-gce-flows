@@ -20,12 +20,18 @@ from NPTFit import npll
 
 
 class NPRegression:
-    def __init__(self, temps_poiss, temps_ps, priors_poiss, data, priors_ps=None, f_ary=[1.], df_rho_div_f_ary=[1.], roi_mask=None, param_log=None, transform_prior_on_s=True):
+    def __init__(self, temps_poiss, temps_ps, priors_poiss, data, priors_ps=None, f_ary=[1.], df_rho_div_f_ary=[1.], roi_mask=None, param_log=None, transform_prior_on_s=True, roi_counts_normalize=None):
         
         self.transform_prior_on_s = transform_prior_on_s
         
+        if roi_counts_normalize is None:
+            self.roi_counts_normalize = roi_mask
+        else:
+            self.roi_counts_normalize = roi_counts_normalize
+
         self.temps_poiss= temps_poiss
         self.temps_ps = temps_ps
+        self.temps_ps_og = temps_ps
         self.priors_poiss = priors_poiss
         self.priors_ps = priors_ps
         self.data = data.astype(np.int32)
@@ -68,7 +74,7 @@ class NPRegression:
             for i_ps in torch.arange(self.n_ps):
 
                 s_ary = torch.logspace(-2, 2, 100)
-                s_exp_temp = theta_ps[i_ps][0]
+                s_exp_temp = theta_ps[i_ps][0] * np.mean(self.temps_ps[i_ps]) / np.mean(self.temps_ps_og[i_ps][~self.roi_counts_normalize])
                 theta_ps[i_ps][0] = 1.
                 dnds_ary_temp = dnds(s_ary, theta_ps[i_ps])
                 s_exp = np.mean(self.temps_ps[i_ps]) * np.trapz(s_ary * dnds_ary_temp, s_ary)
@@ -144,7 +150,8 @@ def parse_args():
     parser.add_argument("--sample_name", action="store", default="runs", type=str)
     parser.add_argument("--sampler", action="store", default="dynesty", type=str)
     parser.add_argument("--save_dir", action="store", default="data/nptfit_samples/", type=str)
-    parser.add_argument("--r_outer", action="store", default=30., type=float)
+    parser.add_argument("--r_outer", action="store", default=25., type=float)
+    parser.add_argument("--r_outer_normalize", action="store", default=25., type=float)
     parser.add_argument("--ps_mask_type", action="store", default="0.8", type=str)
     parser.add_argument("--transform_prior_on_s", action="store", default=0, type=int)
     parser.add_argument("--diffuse", action="store", default="ModelO", type=str)
@@ -157,7 +164,8 @@ if __name__ == "__main__":
     args = parse_args()
 
     # Load templates
-    temp_gce = np.load("data/fermi_data/template_gce.npy") # get_NFW2_template(gamma=1.2)
+    # temp_gce = np.load("data/fermi_data/template_gce.npy") 
+    temp_gce = get_NFW2_template(gamma=1.2)
     temp_dif = np.load("data/fermi_data/template_dif.npy")
     temp_psc = np.load("data/fermi_data/template_psc.npy")
     temp_iso = np.load("data/fermi_data/template_iso.npy")
@@ -182,17 +190,19 @@ if __name__ == "__main__":
 
     roi_mask = cm.make_mask_total(nside=128, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=args.r_outer, custom_mask=ps_mask)
 
+    roi_counts_normalize = cm.make_mask_total(nside=128, band_mask = True, band_mask_range = 2, mask_ring = True, inner = 0, outer=args.r_outer_normalize)
+
     f_ary, df_rho_div_f_ary = load_psf(psf_type=args.psf)
     
     if args.diffuse == "ModelO":
         temps_poiss = [temp_gce, temp_iso, temp_bub, temp_psc, temp_mO_pibrem, temp_mO_ics]
         priors_poiss = [[0., 0.001, 0.001, 0.001, 6., 1.], 
-                        [2., 1.5, 1.5, 1.5, 12., 6.]]
+                        [2.5, 1.5, 1.5, 1.5, 12., 6.]]
         params_log_poiss = [0, 0, 0, 0, 0, 0]
     elif args.diffuse == "p6":
         temps_poiss = [temp_gce, temp_iso, temp_bub, temp_psc, temp_dif]
         priors_poiss = [[0., 0.001, 0.001, 0.001, 10.], 
-                        [2., 1.5, 1.5, 1.5, 20.]]
+                        [2.5, 1.5, 1.5, 1.5, 20.]]
         params_log_poiss = [0, 0, 0, 0, 0]
     else:
         raise NotImplementedError
@@ -200,13 +210,13 @@ if __name__ == "__main__":
     rescale = (fermi_exp / np.mean(fermi_exp))
     temps_ps = [temp_gce / rescale, temp_dsk / rescale]
     priors_ps = [[0., 10.0, 1.1, -10.0, 5.0, 0.1, 0., 10.0, 1.1, -10.0, 5.0, 0.1], 
-                [2., 20.0, 1.99, 0.99, 50.0, 4.99, 2., 20.0, 1.99, 0.99, 50.0, 4.99]]
+                [2.5, 20.0, 1.99, 0.99, 50.0, 4.99, 2., 20.0, 1.99, 0.99, 50.0, 4.99]]
 
     param_log = np.array(params_log_poiss + [0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0 ,0, 0])
 
     param_log = param_log.astype(np.bool)
 
-    npr = NPRegression(temps_poiss, temps_ps, priors_poiss, fermi_data, priors_ps, f_ary, df_rho_div_f_ary, roi_mask=roi_mask, param_log=param_log, transform_prior_on_s=args.transform_prior_on_s)
+    npr = NPRegression(temps_poiss, temps_ps, priors_poiss, fermi_data, priors_ps, f_ary, df_rho_div_f_ary, roi_mask=roi_mask, param_log=param_log, transform_prior_on_s=args.transform_prior_on_s, roi_counts_normalize=roi_counts_normalize)
 
     # Sample using chosen sampler
     if args.sampler == "dynesty":
