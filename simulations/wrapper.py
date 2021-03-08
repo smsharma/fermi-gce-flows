@@ -7,7 +7,7 @@ from simulations.simulate_ps import SimulateMap
 from models.scd import dnds
 
 
-def simulator(theta, temps_poiss, temps_ps, mask_sim, mask_roi, psf_r_func):
+def simulator(theta, temps_poiss, temps_ps, mask_sim, mask_normalize_counts, mask_roi, psf_r_func):
 
     the_map = np.zeros(np.sum(~mask_sim))
     aux_vars = np.zeros(2)
@@ -31,8 +31,8 @@ def simulator(theta, temps_poiss, temps_ps, mask_sim, mask_roi, psf_r_func):
         for temp_ps in temps_ps:
             dnds_ary_temp = dnds(s_ary, theta[idx_theta_ps:idx_theta_ps + 6])
             s_exp = np.trapz(s_ary * dnds_ary_temp, s_ary)
-            temp_ratio = np.sum(temp_ps[np.where(~mask_sim)]) / np.sum(temp_ps)
-            dnds_ary_temp *= theta[idx_theta_ps] * np.sum(~mask_sim) / s_exp / temp_ratio
+            temp_ratio = np.sum(temp_ps[np.where(~mask_normalize_counts)]) / np.sum(temp_ps)
+            dnds_ary_temp *= theta[idx_theta_ps] * np.sum(~mask_normalize_counts) / s_exp / temp_ratio
             dnds_ary.append(dnds_ary_temp)
             idx_theta_ps += 6
 
