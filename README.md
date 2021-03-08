@@ -2,8 +2,6 @@
 
 ## TODO
 
-- [ ] Ability to use multiple summarize (with memmap)
-
 
 <!-- - [X] Add more training options (optimization, early stopping)
 - [X] More embedding net options
@@ -19,4 +17,5 @@
 - [X] More simulator options---wider priors and add Model O etc
 - [X] More flexible specification of FC layers
 - [ ] Speed up PS simulation
+- [ ] Ability to use multiple summarize (with memmap)
 - [X] Better experiment management (run specific combinations of hyperparameters) -->
