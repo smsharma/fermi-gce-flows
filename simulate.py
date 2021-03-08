@@ -30,6 +30,9 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="fi
     # Get mask corresponding to nside=128
     mask_sim = hp.ud_grade(hp_mask_nside1, nside)
 
+    # ROi to normalize counts over
+    mask_normalize_counts = cm.make_mask_total(nside=nside, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=25.)
+
     # Get ROI mask
     ps_mask = np.load("data/mask_3fgl_0p8deg.npy")
     mask_roi = cm.make_mask_total(nside=nside, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=r_outer, custom_mask=ps_mask)
@@ -69,7 +72,7 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="fi
         raise NotImplementedError
 
     # gce, dsk PS priors
-    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [2., 20.0, 1.99, 1.99, 50.0, 4.99, 2., 20.0, 1.99, 1.99, 50.0, 4.99]]
+    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [2.5, 20.0, 1.99, 1.99, 50.0, 4.99, 2.5, 20.0, 1.99, 1.99, 50.0, 4.99]]
 
     # Poiss priors
 
@@ -121,7 +124,7 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="fi
 
     logger.info("Generating maps...")
     
-    x_and_aux = [simulator(theta.detach().numpy(), [temp_gce_poiss] + temps_poiss, [temp_gce_ps] + temps_ps, mask_sim, mask_roi, kp.psf_fermi_r) for (theta, temp_gce_poiss, temp_gce_ps) in tqdm(zip(thetas, temps_gce_poiss, temps_gce_ps))]
+    x_and_aux = [simulator(theta.detach().numpy(), [temp_gce_poiss] + temps_poiss, [temp_gce_ps] + temps_ps, mask_sim, mask_normalize_counts, mask_roi, kp.psf_fermi_r) for (theta, temp_gce_poiss, temp_gce_ps) in tqdm(zip(thetas, temps_gce_poiss, temps_gce_ps))]
 
     # Grab maps and aux variables
     x = torch.Tensor(list(map(itemgetter(0), x_and_aux)))
