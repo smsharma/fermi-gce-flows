@@ -18,7 +18,7 @@ def simulator(theta, temps_poiss, temps_ps, mask_sim, mask_normalize_counts, mas
     while not good_map:
         
         # Normalize poiss DM norm to get correct counts/pix in ROI
-        norm_gce = theta[0] / np.mean(temps_poiss[0][~mask_sim]) #/ np.mean(temps_poiss[0][~mask_normalize_counts])
+        norm_gce = theta[0] / np.mean(temps_poiss[0][~mask_normalize_counts])
 
         # Grab the rest of the poiss norms
         norms_poiss =  theta[1:len(temps_poiss)]
