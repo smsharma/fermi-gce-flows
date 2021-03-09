@@ -60,7 +60,7 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     # iso, bub, psc, dif_pibrem, dif_ics
     prior_poiss = [[0.001, 0.001, 0.001, 6., 1.], [1.5, 1.5, 1.5, 12., 6.]]
 
-    # gce, dsk
+    # gce, dsk PS priors
     prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [2., 20.0, 1.99, 1.99, 50.0, 4.99, 2., 20.0, 1.99, 1.99, 50.0, 4.99]]
 
     # Combine priors
@@ -163,15 +163,17 @@ def parse_args():
     parser = argparse.ArgumentParser(description="High-level script for the training of the neural likelihood ratio estimators")
 
     # Main options
-    parser.add_argument("--sample", type=str, help='Sample name, like "train".')
+    parser.add_argument("--sample", type=str, help='Sample name, like "train"')
     parser.add_argument("--summary", type=str, default=None, help='Whether using a summary statistic')
     parser.add_argument("--summary_range", type=str, default="None", help='Whether to use only a subset of the summary stats')
-    parser.add_argument("--name", type=str, default='test', help='Experiment name.')
-    parser.add_argument("--method", type=str, default='snpe', help='SBI method; "snpe" or "snre".')
+    parser.add_argument("--name", type=str, default='test', help='Experiment name')
+    parser.add_argument("--method", type=str, default='snpe', help='SBI method; "snpe" or "snre"')
     parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 512], [512, 96]]", help='Specification of fully-connected embedding layers')
-    parser.add_argument("--activation", type=str, default='relu', help='Nonlinearity, "relu" or "selu".')
+    parser.add_argument("--activation", type=str, default='relu', help='Nonlinearity, "relu" or "selu"')
     parser.add_argument("--maf_num_transforms", type=int, default=4, help="Number of MAF blocks")
-    parser.add_argument("--batch_size", type=int, default=64, help="Training batch size.")
+    parser.add_argument("--maf_hidden_features", type=int, default=128, help="Nodes in a MAF layer")
+    parser.add_argument("--kernel_size", type=int, default=4, help="GNN  kernel size")
+    parser.add_argument("--batch_size", type=int, default=64, help="Training batch size")
     parser.add_argument("--dir", type=str, default=".", help="Directory. Training data will be loaded from the data/samples subfolder, the model saved in the " "data/models subfolder.")
 
     # Training option
@@ -190,6 +192,6 @@ if __name__ == "__main__":
     else:
         args.summary_range = None
 
-    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation)
+    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size)
 
     logging.info("All done! Have a nice day!")

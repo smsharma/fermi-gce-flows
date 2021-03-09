@@ -4,7 +4,7 @@
 #SBATCH --output=combine.log
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=200GB
+#SBATCH --mem=120GB
 #SBATCH --time=02:59:00
 # #SBATCH --gres=gpu:1
 
