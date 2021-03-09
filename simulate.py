@@ -30,7 +30,7 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="fi
     # Get mask corresponding to nside=128
     mask_sim = hp.ud_grade(hp_mask_nside1, nside)
 
-    # ROi to normalize counts over
+    # ROI to normalize counts over
     mask_normalize_counts = cm.make_mask_total(nside=nside, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=25.)
 
     # Get ROI mask

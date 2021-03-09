@@ -10,7 +10,7 @@ class SphericalChebBNPool(nn.Module):
     """Building Block with a pooling/unpooling, a calling the SphericalChebBN block.
     """
 
-    def __init__(self, in_channels, out_channels, lap, pooling, kernel_size):
+    def __init__(self, in_channels, out_channels, lap, pooling, kernel_size, activation="relu"):
         """Initialization.
 
         Args:
@@ -25,6 +25,13 @@ class SphericalChebBNPool(nn.Module):
         self.pooling = pooling
         self.batchnorm = nn.BatchNorm1d(out_channels)
 
+        if activation == "relu":
+            self.activation_function = F.relu
+        elif activation == "selu":
+            self.activation_function = F.selu
+        else:
+            raise NotImplementedError
+
     def forward(self, x):
         """Forward Pass.
 
@@ -36,6 +43,6 @@ class SphericalChebBNPool(nn.Module):
         """
         x = self.spherical_cheb(x)
         x = self.batchnorm(x.permute(0, 2, 1))
-        x = F.relu(x.permute(0, 2, 1))
+        x = self.activation_function(x.permute(0, 2, 1))
         x = self.pooling(x)
         return x

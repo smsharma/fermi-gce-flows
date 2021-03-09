@@ -18,7 +18,7 @@ def simulator(theta, temps_poiss, temps_ps, mask_sim, mask_normalize_counts, mas
     while not good_map:
         
         # Normalize poiss DM norm to get correct counts/pix in ROI
-        norm_gce = theta[0] / np.mean(temps_poiss[0][np.where(~mask_sim)])
+        norm_gce = theta[0] / np.mean(temps_poiss[0][~mask_sim]) #/ np.mean(temps_poiss[0][~mask_normalize_counts])
 
         # Grab the rest of the poiss norms
         norms_poiss =  theta[1:len(temps_poiss)]
@@ -31,7 +31,7 @@ def simulator(theta, temps_poiss, temps_ps, mask_sim, mask_normalize_counts, mas
         for temp_ps in temps_ps:
             dnds_ary_temp = dnds(s_ary, theta[idx_theta_ps:idx_theta_ps + 6])
             s_exp = np.trapz(s_ary * dnds_ary_temp, s_ary)
-            temp_ratio = np.sum(temp_ps[np.where(~mask_normalize_counts)]) / np.sum(temp_ps)
+            temp_ratio = np.sum(temp_ps[~mask_normalize_counts]) / np.sum(temp_ps)
             dnds_ary_temp *= theta[idx_theta_ps] * np.sum(~mask_normalize_counts) / s_exp / temp_ratio
             dnds_ary.append(dnds_ary_temp)
             idx_theta_ps += 6

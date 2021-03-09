@@ -1,15 +1,17 @@
 #!/bin/bash
-#SBATCH -N 1   # node count
-#SBATCH --ntasks-per-node=24
-#SBATCH -t 23:59:00
-#SBATCH --mem=24GB
-##SBATCH --mail-type=begin
-##SBATCH --mail-type=end
-##SBATCH --mail-user=sm8383@nyu.edu
 
-module load gsl/intel/2.6 
+#SBATCH --job-name=train
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=32GB
+#SBATCH --time=36:59:00
+#SBATCH --gres=gpu:1
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+#SBATCH --mail-user=sm8383@nyu.edu
+
+source ~/.bashrc
 conda activate sbi-fermi
+cd /scratch/sm8383/sbi-fermi/
 
-cd /scratch/sm8383/sbi-fermi
-
-python nptfit.py --diffuse ModelO --transform_prior_on_s 1 --ps_mask_type 0.8 --sample_name runs_25_ModelO_1_0.8 --n_cpus 24 --r_outer 25 --ps_mask_type default --n_live 500
+python -u train.py --sample train_ModelO_gamma_fix --name gce_ModelO_gamma_fix_100k --method snpe --maf_num_transforms 4 --fc_dims '[[-1, 2048], [2048, 96]]' --batch_size 256 --activation relu
