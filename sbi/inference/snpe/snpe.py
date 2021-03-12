@@ -145,6 +145,7 @@ class PosteriorEstimator(NeuralInference, ABC):
             deterministic=False,
             gpus=[0],  # Hard-coded
             num_sanity_val_steps=10,
+            stochastic_weight_avg=True
         )
 
         # Auto log all MLflow entities
