@@ -99,13 +99,13 @@ class NPRegression:
         with Pool(processes=n_cpus) as pool:
 
             sampler = NestedSampler(self.loglike, self.prior_cube, n_dim, pool=pool, queue_size=n_cpus, nlive=nlive, bound="balls", method="slice")
-            sampler.run_nested(dlogz=0.1)
+            sampler.run_nested(dlogz=0.5)
             
         # Draw posterior samples
         weights = np.exp(sampler.results['logwt'] - sampler.results['logz'][-1])
         samples_weighted = resample_equal(sampler.results.samples, weights)
 
-        return sampler.results.samples, samples_weighted
+        return samples_weighted
 
 def load_psf(psf_type="king"):
 
@@ -147,14 +147,15 @@ def parse_args():
 
     parser.add_argument("--n_cpus", action="store", default=36, type=int)
     parser.add_argument("--n_live", action="store", default=500, type=int)
-    parser.add_argument("--sample_name", action="store", default="runs", type=str)
+    parser.add_argument("--sample_name", action="store", default="ModelO_PS_only", type=str)
     parser.add_argument("--sampler", action="store", default="dynesty", type=str)
     parser.add_argument("--save_dir", action="store", default="data/nptfit_samples/", type=str)
     parser.add_argument("--r_outer", action="store", default=25., type=float)
     parser.add_argument("--r_outer_normalize", action="store", default=25., type=float)
     parser.add_argument("--ps_mask_type", action="store", default="0.8", type=str)
-    parser.add_argument("--transform_prior_on_s", action="store", default=0, type=int)
+    parser.add_argument("--transform_prior_on_s", action="store", default=1, type=int)
     parser.add_argument("--diffuse", action="store", default="ModelO", type=str)
+    parser.add_argument("--i_mc", action="store", default=-1, type=int)
     parser.add_argument("--psf", action="store", default="king", type=str)
 
     return parser.parse_args()
@@ -180,6 +181,16 @@ if __name__ == "__main__":
 
     fermi_exp = np.load("data/fermi_data/fermidata_exposure.npy")
     fermi_data = np.load("data/fermi_data/fermidata_counts.npy")
+    
+    if args.i_mc != -1:
+
+        # Create MC mask
+        hp_mask_nside1 = cm.make_mask_total(nside=1, band_mask = True, band_mask_range = 0, mask_ring = True, inner = 0, outer = 25)
+        mc_mask = hp.ud_grade(hp_mask_nside1, 128)
+
+        x = np.load("data/samples/x_{}.npy".format(args.sample_name))[args.i_mc]
+        fermi_data = np.zeros(hp.nside2npix(128))
+        fermi_data[np.where(~mc_mask)] = x[0]
 
     if args.ps_mask_type == "0.8":
         ps_mask = np.load("data/mask_3fgl_0p8deg.npy")
@@ -197,12 +208,12 @@ if __name__ == "__main__":
     if args.diffuse == "ModelO":
         temps_poiss = [temp_gce, temp_iso, temp_bub, temp_psc, temp_mO_pibrem, temp_mO_ics]
         priors_poiss = [[0., 0.001, 0.001, 0.001, 6., 1.], 
-                        [2.5, 1.5, 1.5, 1.5, 12., 6.]]
+                        [2., 1.5, 1.5, 1.5, 12., 6.]]
         params_log_poiss = [0, 0, 0, 0, 0, 0]
     elif args.diffuse == "p6":
         temps_poiss = [temp_gce, temp_iso, temp_bub, temp_psc, temp_dif]
         priors_poiss = [[0., 0.001, 0.001, 0.001, 10.], 
-                        [2.5, 1.5, 1.5, 1.5, 20.]]
+                        [2., 1.5, 1.5, 1.5, 20.]]
         params_log_poiss = [0, 0, 0, 0, 0]
     else:
         raise NotImplementedError
@@ -210,7 +221,7 @@ if __name__ == "__main__":
     rescale = (fermi_exp / np.mean(fermi_exp))
     temps_ps = [temp_gce / rescale, temp_dsk / rescale]
     priors_ps = [[0., 10.0, 1.1, -10.0, 5.0, 0.1, 0., 10.0, 1.1, -10.0, 5.0, 0.1], 
-                [2.5, 20.0, 1.99, 0.99, 50.0, 4.99, 2., 20.0, 1.99, 0.99, 50.0, 4.99]]
+                [2., 20.0, 1.99, 0.99, 50.0, 4.99, 2., 20.0, 1.99, 0.99, 50.0, 4.99]]
 
     param_log = np.array(params_log_poiss + [0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0 ,0, 0])
 
@@ -220,9 +231,9 @@ if __name__ == "__main__":
 
     # Sample using chosen sampler
     if args.sampler == "dynesty":
-        samples, samples_thinned_flattened = npr.run_dynesty(nlive=args.n_live, n_cpus=args.n_cpus)
+        samples_weighted = npr.run_dynesty(nlive=args.n_live, n_cpus=args.n_cpus)
     else:
         raise NotImplementedError
     
     # Save samples
-    np.savez(args.save_dir + args.sample_name + "_samples.npz", samples=samples, samples_thinned_flattened=samples_thinned_flattened)
+    np.savez("{}/{}_{}_samples.npz".format(args.save_dir, args.sample_name, args.i_mc), samples_weighted=samples_weighted)

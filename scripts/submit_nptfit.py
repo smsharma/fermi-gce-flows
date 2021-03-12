@@ -16,19 +16,16 @@ conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi
 """
 
-diffuse_list = ["ModelO"]
-ps_mask_list = ["0.8"]
-transform_prior_on_s_list = [1]
+sample_list = ["ModelO_PS_only", "ModelO_DM_only", "ModelA_PS_only", "ModelA_DM_only"]
+n_mc = 5
 
-for ps_mask_type in ps_mask_list:
-    for diffuse in diffuse_list:
-        for transform_prior_on_s in transform_prior_on_s_list:
-            batchn = batch + "\n"
-            sample_name = "runs_25_{}_{}_{}".format(diffuse, transform_prior_on_s, ps_mask_type)
-            batchn += "python nptfit.py --diffuse {} --transform_prior_on_s {} --ps_mask_type {} --sample_name {} --n_cpus 24 --r_outer 25 --ps_mask_type default --n_live 500".format(diffuse, transform_prior_on_s, ps_mask_type, sample_name)
-            fname = "batch/submit.batch"
-            f = open(fname, "w")
-            f.write(batchn)
-            f.close()
-            os.system("chmod +x " + fname)
-            os.system("sbatch " + fname)
+for sample_name in sample_list:
+    for i_mc in range(n_mc):
+        batchn = batch + "\n"
+        batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 25 --n_live 200 --i_mc {}".format(sample_name, i_mc)
+        fname = "batch/submit.batch"
+        f = open(fname, "w")
+        f.write(batchn)
+        f.close()
+        os.system("chmod +x " + fname)
+        os.system("sbatch " + fname)

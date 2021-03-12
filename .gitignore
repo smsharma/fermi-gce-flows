@@ -6,6 +6,7 @@
 *.idea
 .vscode
 samples/
+data/samples/*
 
 # Tex
 *.aux
