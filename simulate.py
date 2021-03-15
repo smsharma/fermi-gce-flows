@@ -72,7 +72,7 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="fi
         raise NotImplementedError
 
     # gce, dsk PS priors
-    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [2., 20.0, 1.99, 1.99, 50.0, 4.99, 2., 20.0, 1.99, 1.99, 50.0, 4.99]]
+    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [2.5, 20.0, 1.99, 1.99, 50.0, 4.99, 2.5, 20.0, 1.99, 1.99, 50.0, 4.99]]
 
     # Poiss priors
 
@@ -95,6 +95,9 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="fi
 
     logger.info("Generating NFW template...")
 
+    if gamma == "default":
+        temps_gce_poiss = [temp_gce] * n
+        temps_gce_ps = [temp_gce] * n
     if gamma == "fix":
         temp_gce = get_NFW2_template(gamma=1.2)
         temps_gce_poiss = [temp_gce] * n

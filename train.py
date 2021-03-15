@@ -171,6 +171,7 @@ def parse_args():
     parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 512], [512, 96]]", help='Specification of fully-connected embedding layers')
     parser.add_argument("--activation", type=str, default='relu', help='Nonlinearity, "relu" or "selu"')
     parser.add_argument("--maf_num_transforms", type=int, default=4, help="Number of MAF blocks")
+    parser.add_argument("--max_num_epochs", type=int, default=30, help="Max number of training epochs")
     parser.add_argument("--maf_hidden_features", type=int, default=128, help="Nodes in a MAF layer")
     parser.add_argument("--kernel_size", type=int, default=4, help="GNN  kernel size")
     parser.add_argument("--batch_size", type=int, default=64, help="Training batch size")
@@ -192,6 +193,6 @@ if __name__ == "__main__":
     else:
         args.summary_range = None
 
-    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size)
+    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size, max_num_epochs=args.max_num_epochs)
 
     logging.info("All done! Have a nice day!")

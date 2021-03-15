@@ -16,8 +16,8 @@ conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi
 """
 
-sample_list = ["ModelO_PS_only", "ModelO_DM_only", "ModelA_PS_only", "ModelA_DM_only"]
-n_mc = 5
+sample_list = ["ModelA_PS_only_mismo", "ModelA_DM_only_mismo"]
+n_mc = 10
 
 for sample_name in sample_list:
     for i_mc in range(n_mc):

@@ -98,8 +98,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         num_z_score = 50000  # Z-score using a limited random sample for memory reasons
         theta_z_score, x_z_score, x_aux_z_score = train_loader.dataset[:num_z_score]
 
-
-        logging.info("Z-scoring using {} random training samples for x".format(num_z_score))
+        logging.info("Z-scoring using up to {} random training samples for x".format(num_z_score))
 
         x_and_aux_z_score = torch.cat([x_z_score, x_aux_z_score], -1)
 
@@ -144,8 +143,8 @@ class PosteriorEstimator(NeuralInference, ABC):
             progress_bar_refresh_rate=self._show_progress_bars,
             deterministic=False,
             gpus=[0],  # Hard-coded
-            num_sanity_val_steps=10,
-            stochastic_weight_avg=True
+            num_sanity_val_steps=5,
+            stochastic_weight_avg=False
         )
 
         # Auto log all MLflow entities
