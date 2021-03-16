@@ -61,10 +61,10 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     prior_poiss = [[0.001, 0.001, 0.001, 6., 1.], [1.5, 1.5, 1.5, 12., 6.]]
 
     # gce, dsk PS priors
-    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [2., 20.0, 1.99, 1.99, 50.0, 4.99, 2., 20.0, 1.99, 1.99, 50.0, 4.99]]
+    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [2.5, 20.0, 1.99, 1.99, 50.0, 4.99, 2.5, 20.0, 1.99, 1.99, 50.0, 4.99]]
 
     # Combine priors
-    prior = utils.BoxUniform(low=torch.tensor([0.001] + prior_poiss[0] + prior_ps[0]), high=torch.tensor([2.] + prior_poiss[1] + prior_ps[1]))
+    prior = utils.BoxUniform(low=torch.tensor([0.001] + prior_poiss[0] + prior_ps[0]), high=torch.tensor([2.5] + prior_poiss[1] + prior_ps[1]))
 
     # MLFlow logger
     tracking_uri = "file:{}/logs/mlruns".format(data_dir)
@@ -171,7 +171,7 @@ def parse_args():
     parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 512], [512, 96]]", help='Specification of fully-connected embedding layers')
     parser.add_argument("--activation", type=str, default='relu', help='Nonlinearity, "relu" or "selu"')
     parser.add_argument("--maf_num_transforms", type=int, default=4, help="Number of MAF blocks")
-    parser.add_argument("--max_num_epochs", type=int, default=30, help="Max number of training epochs")
+    parser.add_argument("--max_num_epochs", type=int, default=40, help="Max number of training epochs")
     parser.add_argument("--maf_hidden_features", type=int, default=128, help="Nodes in a MAF layer")
     parser.add_argument("--kernel_size", type=int, default=4, help="GNN  kernel size")
     parser.add_argument("--batch_size", type=int, default=64, help="Training batch size")

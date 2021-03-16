@@ -62,7 +62,7 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="fi
 
     # Priors for DM template, if required
     
-    if gamma == "fix":
+    if gamma in ["fix", "default"]:
         prior_temp = [[],[]]
     elif gamma == "float":
         prior_temp = [[0.5],[1.5]]
@@ -98,7 +98,7 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="fi
     if gamma == "default":
         temps_gce_poiss = [temp_gce] * n
         temps_gce_ps = [temp_gce] * n
-    if gamma == "fix":
+    elif gamma == "fix":
         temp_gce = get_NFW2_template(gamma=1.2)
         temps_gce_poiss = [temp_gce] * n
         temps_gce_ps = [temp_gce] * n
