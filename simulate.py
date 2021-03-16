@@ -31,7 +31,9 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="fi
     mask_sim = hp.ud_grade(hp_mask_nside1, nside)
 
     # ROI to normalize counts over
-    mask_normalize_counts = cm.make_mask_total(nside=nside, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=25.)
+    # mask_normalize_counts = cm.make_mask_total(nside=nside, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=25.)
+
+    mask_normalize_counts = mask_sim
 
     # Get ROI mask
     ps_mask = np.load("data/mask_3fgl_0p8deg.npy")
@@ -72,7 +74,7 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="fi
         raise NotImplementedError
 
     # gce, dsk PS priors
-    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [2.5, 20.0, 1.99, 1.99, 50.0, 4.99, 2.5, 20.0, 1.99, 1.99, 50.0, 4.99]]
+    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [2., 20.0, 1.99, 1.99, 35.0, 4.99, 2., 20.0, 1.99, 1.99, 35.0, 4.99]]
 
     # Poiss priors
 
