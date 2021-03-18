@@ -38,7 +38,7 @@ urlcolor=linkcolor,
 
 \begin{document}
 
-\title{Unveiling the Galactic Center $\gamma$-ray excess with neural simulation-based inference}
+\title{A neural simulation-based inference approach to the Galactic Center $\gamma$-ray excess}
  
 \author{Siddharth Mishra-Sharma}
 \email{sm8383@nyu.edu}
@@ -65,9 +65,11 @@ Abstract will go here.
 \section{Analysis pipeline}
 \label{sec:analysis}
 
-\section{Results}
-\label{sec:results}
+\section{Test on simulated data}
+\label{sec:simulations}
 
+\section{Results on \emph{Fermi} data}
+\label{sec:data}
 
 %
 \begin{figure*}
@@ -82,15 +84,14 @@ Abstract will go here.
 \section{Susceptibility to mismodeling}
 \label{sec:mismodeling}
 
-\section{Foreground mismodeling}
+\subsection{Foreground mismodeling}
 \label{sec:fg-mismodeling}
 
-\section{Signal mismodeling}
+\subsection{Signal mismodeling}
 \label{sec:sig-mismodeling}
 
-\section{Signal injection test}
+\subsection{Signal injection test}
 \label{sec:sig-injection}
-
 
 \section{Systematic variations on analysis}
 \label{sec:systematics}
@@ -108,16 +109,13 @@ KC is partially supported by NSF awards ACI-1450310, OAC-1836650, and OAC-184147
 SM is supported by the NSF CAREER grant PHY-1554858, NSF grants PHY-1620727 and PHY-1915409, and the Simons Foundation. 
 This work made use of the NYU IT High Performance Computing resources, services, and staff expertise. 
 This research has made use of NASA's Astrophysics Data System. 
-This research made use of the \texttt{astropy}~\cite{Price-Whelan:2018hus,Robitaille:2013mpa}, \texttt{IPython}~\cite{PER-GRA:2007}, Jupyter~\cite{Kluyver2016JupyterN}, \texttt{matplotlib}~\cite{Hunter:2007}, \texttt{NumPy}~\cite{numpy:2011}, \texttt{seaborn}~\cite{seaborn}, \texttt{pandas}~\cite{pandas:2010}, \texttt{SciPy}~\cite{2020SciPy-NMeth}, and \texttt{tqdm}~\cite{da2019tqdm}  software packages. 
+This research made use of the \texttt{astropy}~\cite{Price-Whelan:2018hus,Robitaille:2013mpa}, \texttt{IPython}~\cite{PER-GRA:2007}, Jupyter~\cite{Kluyver2016JupyterN}, \texttt{matplotlib}~\cite{Hunter:2007}, \texttt{NPTFit}, \texttt{NumPy}~\cite{numpy:2011}, \texttt{PyTorch}, \texttt{PyTorch Geometric},  \texttt{seaborn}~\cite{seaborn}, \texttt{pandas}~\cite{pandas:2010}, \texttt{sbi}, \texttt{scikit-learn}, \texttt{SciPy}~\cite{2020SciPy-NMeth}, and \texttt{tqdm}~\cite{da2019tqdm}  software packages. 
 \end{acknowledgments}
 
 \appendix
 
-\section{Systematics}
-\label{app:systematics}
-
-\section{Alternative summary statistics}
-\label{app:summaries}
+\section{Variations on analysis}
+\label{app:variations}
 
 \bibliographystyle{apsrev4-1}
 \bibliography{fermi-gce-sbi}
