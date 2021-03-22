@@ -169,7 +169,7 @@ class RatioEstimator(NeuralInference, ABC):
             progress_bar_refresh_rate=self._show_progress_bars,
             deterministic=False,
             gpus=[0],  # Hard-coded
-            num_sanity_val_steps=10,
+            num_sanity_val_steps=5,
         )
 
         # Auto log all MLflow entities

@@ -124,7 +124,7 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     elif method == "snre":
 
         # Embedding net (feature extractor)
-        sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux=n_aux, n_params=18)
+        sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux=n_aux, n_params=18, activation=activation)
 
         # If using a summary stat, don't use (overwrite) feature extractor
         if summary is not None:

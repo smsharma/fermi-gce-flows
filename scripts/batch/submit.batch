@@ -14,4 +14,4 @@ source ~/.bashrc
 conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi/
 
-python -u train.py --sample train_ModelO_gamma_fix_1p2M --name gce_ModelO_gamma_fix_1p2M --method snpe --maf_num_transforms 12 --maf_hidden_features 128 --fc_dims '[[-1, 2048], [2048, 96]]' --batch_size 256 --activation relu --kernel_size 8
+python -u train.py --sample train_ModelO_gamma_fix_1p2M --name gce_ModelO_gamma_fix_1p2M_snre --method snre --maf_num_transforms 12 --maf_hidden_features 128 --fc_dims '[[-1, 2048], [2048, 96]]' --batch_size 256 --activation relu --kernel_size 4

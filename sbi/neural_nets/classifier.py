@@ -33,8 +33,9 @@ class StandardizeInputs(nn.Module):
 
         theta = self.standardizing_net_x(theta)
         theta = self.embedding_net_x(theta)
+
         if len(theta.shape) != len(x.shape):
-            theta.unsqueeze(1)
+            theta = theta.unsqueeze(1)
 
         x_and_theta = torch.cat([x, theta], -1)
         
