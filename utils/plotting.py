@@ -106,7 +106,7 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         hist_kwargs = {'bins':bins, 'alpha':0.9, 'histtype':'step', 'lw':1.5, 'density':True}
         divide_by = 1e-7
 
-        mean_counts_roi_post = np.zeros(n_samples)
+        mean_counts_roi_post = np.zeros(len(posterior_samples))
 
         for i_temp_ps, idx_ps in enumerate([6,12]):
             
@@ -188,7 +188,7 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         ax[i_r][3].plot((0, 0), (1 - d, 1 + d), **kwargs)
         ax[i_r][3].plot((0, 0), (-d, +d), **kwargs) 
     
-            ## Flux fractions plot
+        ## Flux fractions plot
 
         ax[i_r][1] = fig.add_subplot(gs[i_r,-1])
 
@@ -237,6 +237,113 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
 
         ax[i_r][1].tick_params(axis='x', labelsize=17.5)
         ax[i_r][1].tick_params(axis='y', labelsize=17.5)
+
+    # Optionally save plot
+
+    if save_filename is not None:
+        plt.tight_layout()
+        fig.savefig(save_filename,bbox_inches='tight',pad_inches=0.1)
+
+def make_signal_injection_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None):
+
+    # Extract templates and labels
+    n = SimpleNamespace(**temps_dict)
+    fermi_exp, temps_ps, temps_ps_sim, ps_labels, temps_poiss, temps_poiss_sim, poiss_labels = n.fermi_exp, n.temps_ps, n.temps_ps_sim, n.ps_labels, n.temps_poiss, n.temps_poiss_sim, n.poiss_labels
+    
+    pixarea = hp.nside2pixarea(nside, degrees=False)
+    pixarea_deg = hp.nside2pixarea(nside, degrees=True)
+
+    # Set up plot
+
+    n_datasets = x_test.shape[0]
+    nrows = n_datasets
+
+    fig = plt.figure(constrained_layout=True, figsize=figsize)
+    gs = fig.add_gridspec(nrows=1, ncols=n_datasets, width_ratios=n_datasets * [1])
+
+    ax = [None] * n_datasets
+
+    # Go row by row and plot
+
+    for i_r in range(nrows):
+
+        x_o = x_test[i_r]
+        
+        if x_data_test is not None:
+            x_d = x_data_test
+        else:
+            x_d = x_o[:,:-2]
+                
+        if not is_data:
+            theta_truth = theta_test[i_r]
+        
+        if nptf:
+            posterior_samples = posterior[i_r]
+        else:
+            posterior_samples = posterior.sample((n_samples,), x=x_o)
+            posterior_samples = posterior_samples.detach().numpy()
+        
+        # Counts and flux arrays
+        s_f_conv = np.mean(fermi_exp[~roi_counts_normalize])
+        s_ary = np.logspace(-1, 2, 100)
+        f_ary = np.logspace(-1, 2, 100) / s_f_conv
+        
+        mean_counts_roi_post = np.zeros(len(posterior_samples))
+
+        for i_temp_ps, idx_ps in enumerate([6,12]):
+            
+            mean_counts_roi = posterior_samples[:, idx_ps] * np.mean(temps_ps[i_temp_ps][~roi_normalize]) / np.mean(temps_ps[i_temp_ps][~roi_counts_normalize])
+
+            mean_counts_roi_post += mean_counts_roi
+
+        for i_temp_poiss in range(len(temps_poiss)):
+
+            mean_counts_roi = posterior_samples[:, 1 + i_temp_poiss] * np.mean(temps_poiss[i_temp_poiss][~roi_normalize])
+            mean_counts_roi_post += mean_counts_roi
+
+        i_temp_ps = 0
+
+        mean_counts_roi = posterior_samples[:, 0] * np.mean(temps_ps[i_temp_ps][~roi_normalize]) / np.mean(temps_ps[i_temp_ps][~roi_counts_normalize])
+        mean_counts_roi_post += mean_counts_roi
+
+        ## Flux fractions plot
+
+        ax[i_r] = fig.add_subplot(gs[i_r])
+
+        fraction_multiplier = 100 * np.mean(temps_ps[0][~roi_normalize]) / np.mean(temps_ps[0][~roi_counts_normalize]) / mean_counts_roi_post
+
+        g = plots.get_single_plotter()
+        samples = MCSamples(samples=np.transpose(np.array([posterior_samples[:, 0] * fraction_multiplier, posterior_samples[:, 6] * fraction_multiplier])),names = ['DM','PS'], labels = ['DM','PS'])
+        g.plot_2d(samples, 'DM', 'PS', filled=True, alphas=[0.5], ax=ax[i_r], colors=[cols_default[0]])
+        g.plot_2d(samples, 'DM', 'PS', filled=False, ax=ax[i_r], colors=['k'], lws=[1.2])
+
+        # TODO: Take span depending on mean roi counts rather than posterior
+        
+        if signal_injection:
+            if i_r == 0:
+                theta_dm_baseline = np.median(posterior_samples[:, 0])
+                theta_ps_baseline = np.median(posterior_samples[:, 6])
+            else:
+                ax[i_r].axvline((theta_dm_baseline + coeff_ary[i_r]) * np.median(fraction_multiplier), color='k', ls='dotted')
+                ax[i_r].axhline((theta_ps_baseline) * np.median(fraction_multiplier), color='k', ls='dotted')
+
+        if not is_data:
+            ax[i_r].axvline(theta_truth[0] * np.median(fraction_multiplier), color='k', ls='dotted')
+            ax[i_r].axhline(theta_truth[6] * np.median(fraction_multiplier), color='k', ls='dotted')
+
+        ax[i_r].set_xlim(0., 15.)
+        ax[i_r].set_ylim(0., 15.)
+
+        ax[i_r].set_ylabel(r"PS\,[\%]", fontsize=17.5)
+        if i_r == nrows - 1:
+            ax[i_r].set_xlabel(r"DM\,[\%]", fontsize=17.5)
+        else:
+            ax[i_r].set_xlabel(None, fontsize=17.5)
+        if i_r == 0:
+            ax[i_r].set_title(r"\bf{Flux fractions}")
+
+        ax[i_r].tick_params(axis='x', labelsize=17.5)
+        ax[i_r].tick_params(axis='y', labelsize=17.5)
 
     # Optionally save plot
 
