@@ -16,7 +16,7 @@ logging.basicConfig(
 )
 
 
-def shuffle_and_combine(dir, input_samples, output_sample, regex=False):
+def shuffle_and_combine(dir, input_samples, output_sample, regex=False, n_files=-1):
     logger.info("Starting shuffling and combining")
     logger.info("  Folder:              %s", dir)
     logger.info("  Input samples:       %s", input_samples[0])
@@ -28,7 +28,7 @@ def shuffle_and_combine(dir, input_samples, output_sample, regex=False):
     # Path and filenames
     folder = "{}/data/samples/".format(dir)
     # filenames = ["theta", "x", "x_aux", "x_pca_96", "x_pspec_4", "x_hist_96"]
-    filenames = ["theta", "x", "x_aux"]
+    filenames = ["theta", "x_nest", "x_aux"]
 
     # Parse regular expressions
     if regex:
@@ -64,13 +64,16 @@ def shuffle_and_combine(dir, input_samples, output_sample, regex=False):
     n_samples = None
     permutation = None
 
+    if n_files == -1:
+        n_files = len(input_samples)
+
     for filename in filenames:
 
         # Load individual files
         try:
             individuals = [
                 np.load(folder + "/" + filename + "_" + input_sample + ".npy")
-                for input_sample in input_samples
+                for input_sample in input_samples[:n_files]
             ]
         except FileNotFoundError:
             logger.info(
@@ -180,6 +183,12 @@ def parse_args():
         default=".",
         help="Directory. Samples will be looked for / saved in the data/samples subfolder.",
     )
+    parser.add_argument(
+        "--n_files",
+        type=int,
+        default=-1,
+        help="Maximum number of files.",
+    )
 
     return parser.parse_args()
 
@@ -187,6 +196,6 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
 
-    shuffle_and_combine(args.dir, args.inputs, args.output, args.regex)
+    shuffle_and_combine(args.dir, args.inputs, args.output, args.regex, args.n_files)
 
     logger.info("All done! Have a nice day!")

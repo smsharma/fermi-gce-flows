@@ -52,8 +52,11 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     # Build indexes corresponding to subsequent nsides
     for nside in nside_list:
         hp_mask = hp.ud_grade(hp_mask_nside1, nside)
+        hp_mask = hp.reorder(hp_mask, r2n=True)  # Switch to NESTED pixel order as that's required for DeepSphere batchnorm
         masks_list.append(hp_mask)
         indexes_list.append(np.arange(hp.nside2npix(nside))[~hp_mask])
+    
+    hp_mask_nside1 = hp.reorder(hp_mask_nside1, r2n=True)  # Switch to NESTED pixel order as that's required for DeepSphere batchnorm
 
     # Priors hard-coded for now
 
@@ -74,7 +77,7 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     # Specify datasets
 
     if summary is None:
-        x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
+        x_filename = "{}/samples/x_nest_{}.npy".format(data_dir, sample_name)
     else:
         x_filename = "{}/samples/x_{}_{}.npy".format(data_dir, summary, sample_name)  # If using a summary
 
@@ -167,6 +170,7 @@ def parse_args():
     parser.add_argument("--summary", type=str, default=None, help='Whether using a summary statistic')
     parser.add_argument("--summary_range", type=str, default="None", help='Whether to use only a subset of the summary stats')
     parser.add_argument("--name", type=str, default='test', help='Experiment name')
+    parser.add_argument("--laplacian_type", type=str, default='combinatorial', help='"normalized" or "combinatorial" Laplacian')
     parser.add_argument("--method", type=str, default='snpe', help='SBI method; "snpe" or "snre"')
     parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 512], [512, 96]]", help='Specification of fully-connected embedding layers')
     parser.add_argument("--activation", type=str, default='relu', help='Nonlinearity, "relu" or "selu"')
@@ -193,6 +197,6 @@ if __name__ == "__main__":
     else:
         args.summary_range = None
 
-    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size, max_num_epochs=args.max_num_epochs)
+    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size, max_num_epochs=args.max_num_epochs, laplacian_type=args.laplacian_type)
 
     logging.info("All done! Have a nice day!")

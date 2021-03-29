@@ -17,7 +17,7 @@ cd /scratch/sm8383/sbi-fermi/
 n_files = 50
 i_starts = np.arange(0, 1200, n_files)
 
-for i_start in i_starts[:-1]:
+for i_start in i_starts:
     batchn = batch + "\n"
     batchn += "python -u ring2nest.py --i_start {} --n_files {}".format(i_start, n_files)
     fname = "batch/submit.batch"

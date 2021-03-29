@@ -34,11 +34,11 @@ if __name__ == "__main__":
 
     for i in tqdm(range(args.i_start, args.i_start + args.n_files)):
 
-        filename = "../data/samples/x_{}_{}.npy".format(sample, i)
+        filename = "./data/samples/x_{}_{}.npy".format(sample, i)
         x_og = np.load(filename)
         x_og = ring2nest(x_og.squeeze(), mask)
         x_og = np.expand_dims(x_og, 1)
-        filename_save = "../data/samples/x_{}_nest_{}.npy".format(sample, i)
+        filename_save = "./data/samples/x_nest_{}_{}.npy".format(sample, i)
         np.save(filename_save, x_og)
 
     logging.info("All done! Have a nice day!")
