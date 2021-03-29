@@ -2,6 +2,7 @@
 """
 
 import numpy as np
+import healpy as hp
 from scipy import sparse
 from scipy.sparse import coo_matrix
 import torch
@@ -57,7 +58,7 @@ def prepare_laplacian(laplacian):
     return laplacian
 
 
-def get_healpix_laplacians(nside_list, laplacian_type, indexes_list=None):
+def get_healpix_laplacians(nside_list, laplacian_type, indexes_list=None, n_neighbours=20, nest=True):
     """Get the healpix laplacian list for a certain depth.
     Args:
         nodes (int): initial number of nodes.
@@ -72,8 +73,9 @@ def get_healpix_laplacians(nside_list, laplacian_type, indexes_list=None):
         indexes_list = [None] * len(nside_list)
 
     for nside, indexes in zip(nside_list, indexes_list):
-        G = SphereHealpix(nside=nside, n_neighbors=None, indexes=indexes)
+        G = SphereHealpix(subdivisions=nside, indexes=indexes, k=n_neighbours, nest=nest)
         G.compute_laplacian(laplacian_type)
         laplacian = prepare_laplacian(G.L)
         laps.append(laplacian)
+
     return laps
