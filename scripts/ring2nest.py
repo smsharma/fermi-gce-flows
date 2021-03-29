@@ -1,3 +1,6 @@
+import sys
+sys.path.append("../")
+
 import numpy as np
 import healpy as hp
 from tqdm import tqdm
