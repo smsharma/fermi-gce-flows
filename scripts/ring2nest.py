@@ -21,4 +21,4 @@ for i in tqdm(range(n_files)):
     x_og = ring2nest(x_og.squeeze(), mask)
     x_og = np.expand_dims(x_og, 1)
     filename_save = "../data/samples/x_{}_nest_{}.npy".format(sample, i)
-    np.save(filename_save)
+    np.save(filename_save, x_og)
