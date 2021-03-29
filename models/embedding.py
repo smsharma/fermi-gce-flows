@@ -50,7 +50,10 @@ class SphericalGraphCNN(nn.Module):
         # Specify fully-connected part
         self.fc_layers = []
         for i, (in_ch, out_ch) in enumerate(fc_dims):
-            layer = nn.Sequential(nn.Linear(in_ch, out_ch), self.activation_function)
+            if i == len(fc_dims) - 1:  # No activation in final FC layer
+                layer = nn.Sequential(nn.Linear(in_ch, out_ch))
+            else:
+                layer = nn.Sequential(nn.Linear(in_ch, out_ch), self.activation_function)
             setattr(self, "layer_fc_{}".format(i), layer)
             self.fc_layers.append(layer)
 
