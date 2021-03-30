@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from models.healpix_pool_unpool import Healpix
 from models.laplacians import get_healpix_laplacians
-from models.layers import SphericalChebBNPool
+from models.layers import SphericalChebBNPool, SphericalChebBNPoolGeom
 
 # pylint: disable=W0223
 
@@ -13,7 +13,7 @@ class SphericalGraphCNN(nn.Module):
     """Spherical GCNN Autoencoder.
     """
 
-    def __init__(self, nside_list, indexes_list, kernel_size=4, n_neighbours=8, laplacian_type="normalized", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=0, n_params=0, activation="relu", nest=True):
+    def __init__(self, nside_list, indexes_list, kernel_size=4, n_neighbours=8, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=0, n_params=0, activation="relu", nest=True, chebconv="deepsphere"):
         """Initialization.
 
         Args:
@@ -40,7 +40,16 @@ class SphericalGraphCNN(nn.Module):
             raise NotImplementedError
 
         for i, (in_ch, out_ch) in enumerate([(1, 32), (32, 64), (64, 128), (128, 256), (256, 256), (256, 256), (256, 256)]):
-            layer = SphericalChebBNPool(in_ch, out_ch, self.laps[i], self.pooling_class.pooling, self.kernel_size, activation)
+
+            if chebconv == "deepsphere":
+                layer = SphericalChebBNPool(in_ch, out_ch, self.laps[i], self.pooling_class.pooling, self.kernel_size, activation)
+            elif chebconv == "geometric":
+                edge_index = self.laps[i].indices()
+                edge_weight = self.laps[i].values()
+                layer = SphericalChebBNPoolGeom(in_ch, out_ch, self.pooling_class.pooling, self.kernel_size, edge_index=edge_index, edge_weight=edge_weight, laplacian_type=laplacian_type, indexes_list=indexes_list[i], activation=activation)
+            else:
+                raise NotImplementedError
+
             setattr(self, "layer_{}".format(i), layer)
             self.cnn_layers.append(layer)
 
