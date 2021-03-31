@@ -25,7 +25,7 @@ from pytorch_lightning.loggers import TensorBoardLogger, MLFlowLogger
 import mlflow
 
 
-def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=2, maf_hidden_features=128, maf_num_transforms=8, batch_size=256, max_num_epochs=50, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe", summary=None, summary_range=None, activation="relu", chebconv="deepsphere"):
+def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=2, maf_hidden_features=128, maf_num_transforms=8, batch_size=256, max_num_epochs=50, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe", summary=None, summary_range=None, activation="relu", chebconv="deepsphere", aux_summary=None):
 
     # Cache hyperparameters to log
     params_to_log = locals()
@@ -84,6 +84,10 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     x_aux_filename = "{}/samples/x_aux_{}.npy".format(data_dir, sample_name)
     theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)
 
+    x_summary_aux_filenames = None
+    if aux_summary is not None:
+        x_summary_aux_filenames = ["{}/samples/x_{}_{}.npy".format(data_dir, summary, sample_name) for summary in aux_summary]
+
     if method == "snpe":
         
         # Embedding net (feature extractor)
@@ -112,7 +116,8 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
                                     initial_lr=initial_lr,
                                     optimizer_kwargs=optimizer_kwargs,
                                     summary=summary,
-                                    summary_range=summary_range)
+                                    summary_range=summary_range,
+                                    x_summary_aux_filenames=x_summary_aux_filenames)
         
         # Save density estimator
         mlflow.set_tracking_uri(tracking_uri)
@@ -174,6 +179,8 @@ def parse_args():
     parser.add_argument("--chebconv", type=str, default='deepsphere', help='Use "deepsphere" or "geometric" implementation of ChebConv layer')
     parser.add_argument("--method", type=str, default='snpe', help='SBI method; "snpe" or "snre"')
     parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 512], [512, 96]]", help='Specification of fully-connected embedding layers')
+    parser.add_argument("--aux_summary", type=str, default="None", help='Which summaries to tack on')
+    parser.add_argument("--n_aux", type=int, default=2, help="Number of auxiliary variables")
     parser.add_argument("--activation", type=str, default='relu', help='Nonlinearity, "relu" or "selu"')
     parser.add_argument("--maf_num_transforms", type=int, default=4, help="Number of MAF blocks")
     parser.add_argument("--max_num_epochs", type=int, default=30, help="Max number of training epochs")
@@ -198,6 +205,11 @@ if __name__ == "__main__":
     else:
         args.summary_range = None
 
-    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size, max_num_epochs=args.max_num_epochs, laplacian_type=args.laplacian_type, chebconv=args.chebconv)
+    if args.aux_summary != "None":
+        args.aux_summary = list(json.loads(args.summary_range))
+    else:
+        args.aux_summary = None
+
+    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size, max_num_epochs=args.max_num_epochs, laplacian_type=args.laplacian_type, chebconv=args.chebconv, aux_summary=args.aux_summary, n_aux=args.n_aux)
 
     logging.info("All done! Have a nice day!")

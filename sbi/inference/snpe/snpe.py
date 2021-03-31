@@ -66,7 +66,8 @@ class PosteriorEstimator(NeuralInference, ABC):
         max_num_epochs: Optional[int] = None,
         clip_max_norm: Optional[float] = 1.0,
         summary=False,
-        summary_range=None
+        summary_range=None,
+        x_summary_aux_filenames=None
     ) -> DirectPosterior:
 
         optimizer_kwargs = {} if optimizer_kwargs is None else optimizer_kwargs
@@ -84,6 +85,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         x = self.load_and_check(x, memmap=memmap_x)
         x_aux = self.load_and_check(x_aux, memmap=False)
 
+
         data = OrderedDict()
         data["theta"] = theta
         if summary_range is None:
@@ -91,6 +93,12 @@ class PosteriorEstimator(NeuralInference, ABC):
         else:
             data["x"] = x[:,:,summary_range[0]:summary_range[1]]
         data["x_aux"] = x_aux
+
+        if x_summary_aux_filenames is not None:
+            for x_summary_aux_filename in x_summary_aux_filenames:
+                x_aux_summary = self.load_and_check(x_aux, memmap=False)
+                x_aux = torch.cat([x_aux, x_aux_summary], -1)
+                
         dataset = self.make_dataset(data)
 
         train_loader, val_loader = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
