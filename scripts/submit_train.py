@@ -17,15 +17,16 @@ conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi/
 """
 
-batch_size_list = [64, 256]
-fc_dims_list = [[[-1, 2048], [2048, 512]],
+batch_size_list = [128]
+fc_dims_list = [[[-1, 2048], [2048, 512], [512, 256]],
                 [[-1, 2048], [2048, 128]]]
-maf_num_transforms_list = [4]
+maf_num_transforms_list = [8]
 maf_hidden_features_list = [128]
 methods = ["snpe"]
-activations = ["relu"]
+activations = ["relu", "selu"]
 kernel_size_list = [4]
-laplacian_types = ["combinatorial", "normalized"]
+laplacian_types = ["combinatorial"]
+chebconvs = ["deepsphere"]
 
 for maf_num_transforms in maf_num_transforms_list:
     for maf_hidden_features in maf_hidden_features_list:
@@ -35,11 +36,12 @@ for maf_num_transforms in maf_num_transforms_list:
                     for activation in activations:
                         for kernel_size in kernel_size_list:
                             for laplacian_type in laplacian_types:
-                                batchn = batch + "\n"
-                                batchn += "python -u train.py --sample train_ModelO_gamma_fix_500k --name gce_ModelO_gamma_fix_500k --method {} --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {}".format(method, maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type)
-                                fname = "batch/submit.batch"
-                                f = open(fname, "w")
-                                f.write(batchn)
-                                f.close()
-                                os.system("chmod +x " + fname)
-                                os.system("sbatch " + fname)
+                                for chebconv in chebconvs:
+                                    batchn = batch + "\n"
+                                    batchn += "python -u train.py --sample train_ModelO_gamma_fix_500k --name gce_ModelO_gamma_fix_500k --method {} --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --chebconv {}".format(method, maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, chebconvs)
+                                    fname = "batch/submit.batch"
+                                    f = open(fname, "w")
+                                    f.write(batchn)
+                                    f.close()
+                                    os.system("chmod +x " + fname)
+                                    os.system("sbatch " + fname)

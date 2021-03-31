@@ -25,7 +25,7 @@ from pytorch_lightning.loggers import TensorBoardLogger, MLFlowLogger
 import mlflow
 
 
-def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=2, maf_hidden_features=128, maf_num_transforms=8, batch_size=256, max_num_epochs=50, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe", summary=None, summary_range=None, activation="relu"):
+def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=2, maf_hidden_features=128, maf_num_transforms=8, batch_size=256, max_num_epochs=50, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe", summary=None, summary_range=None, activation="relu", chebconv="deepsphere"):
 
     # Cache hyperparameters to log
     params_to_log = locals()
@@ -87,7 +87,7 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     if method == "snpe":
         
         # Embedding net (feature extractor)
-        sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux=n_aux, activation=activation)
+        sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux=n_aux, activation=activation, chebconv=chebconv)
 
         # If using a summary stat, don't use (overwrite) feature extractor
         if summary is not None:
@@ -127,7 +127,7 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     elif method == "snre":
 
         # Embedding net (feature extractor)
-        sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux=n_aux, n_params=18, activation=activation)
+        sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux=n_aux, n_params=18, activation=activation, chebconv=chebconv)
 
         # If using a summary stat, don't use (overwrite) feature extractor
         if summary is not None:
@@ -171,6 +171,7 @@ def parse_args():
     parser.add_argument("--summary_range", type=str, default="None", help='Whether to use only a subset of the summary stats')
     parser.add_argument("--name", type=str, default='test', help='Experiment name')
     parser.add_argument("--laplacian_type", type=str, default='combinatorial', help='"normalized" or "combinatorial" Laplacian')
+    parser.add_argument("--chebconv", type=str, default='deepsphere', help='Use "deepsphere" or "geometric" implementation of ChebConv layer')
     parser.add_argument("--method", type=str, default='snpe', help='SBI method; "snpe" or "snre"')
     parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 512], [512, 96]]", help='Specification of fully-connected embedding layers')
     parser.add_argument("--activation", type=str, default='relu', help='Nonlinearity, "relu" or "selu"')
@@ -197,6 +198,6 @@ if __name__ == "__main__":
     else:
         args.summary_range = None
 
-    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size, max_num_epochs=args.max_num_epochs, laplacian_type=args.laplacian_type)
+    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size, max_num_epochs=args.max_num_epochs, laplacian_type=args.laplacian_type, chebconv=args.chebconv)
 
     logging.info("All done! Have a nice day!")
