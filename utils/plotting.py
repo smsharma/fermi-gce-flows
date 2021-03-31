@@ -350,3 +350,79 @@ def make_signal_injection_plot(posterior, x_test, x_data_test=None, theta_test=N
     if save_filename is not None:
         plt.tight_layout()
         fig.savefig(save_filename,bbox_inches='tight',pad_inches=0.1)
+
+def make_violin_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=1000, nside=128, coeff_ary=None, temps_dict=None):
+
+    # Extract templates and labels
+    n = SimpleNamespace(**temps_dict)
+    fermi_exp, temps_ps, temps_ps_sim, ps_labels, temps_poiss, temps_poiss_sim, poiss_labels = n.fermi_exp, n.temps_ps, n.temps_ps_sim, n.ps_labels, n.temps_poiss, n.temps_poiss_sim, n.poiss_labels
+
+    # Set up plot
+
+    n_datasets = x_test.shape[0]
+    nrows = n_datasets
+
+    # fig = plt.figure(constrained_layout=True, figsize=figsize)
+    # gs = fig.add_gridspec(nrows=1, ncols=n_datasets, width_ratios=n_datasets * [1])
+
+    # ax = [None] * n_datasets
+
+    # Go row by row and plot
+
+    samples_violin_list = []
+    truths_violin_list = []
+
+    for i_r in range(nrows):
+
+        x_o = x_test[i_r]
+                        
+        if not is_data:
+            theta_truth = theta_test[i_r]
+        
+        if nptf:
+            posterior_samples = posterior[i_r]
+        else:
+            posterior_samples = posterior.sample((n_samples,), x=x_o)
+            posterior_samples = posterior_samples.detach().numpy()
+                
+        mean_counts_roi_post = np.zeros(len(posterior_samples))
+
+        for i_temp_ps, idx_ps in enumerate([6,12]):
+            
+            mean_counts_roi = posterior_samples[:, idx_ps] * np.mean(temps_ps[i_temp_ps][~roi_normalize]) / np.mean(temps_ps[i_temp_ps][~roi_counts_normalize])
+
+            mean_counts_roi_post += mean_counts_roi
+
+        for i_temp_poiss in range(len(temps_poiss)):
+
+            mean_counts_roi = posterior_samples[:, 1 + i_temp_poiss] * np.mean(temps_poiss[i_temp_poiss][~roi_normalize])
+            mean_counts_roi_post += mean_counts_roi
+
+        i_temp_ps = 0
+
+        mean_counts_roi = posterior_samples[:, 0] * np.mean(temps_ps[i_temp_ps][~roi_normalize]) / np.mean(temps_ps[i_temp_ps][~roi_counts_normalize])
+        mean_counts_roi_post += mean_counts_roi
+
+        ## Flux fractions plot
+
+        # ax[i_r] = fig.add_subplot(gs[i_r])
+
+        fraction_multiplier = 100 * np.mean(temps_ps[0][~roi_normalize]) / np.mean(temps_ps[0][~roi_counts_normalize]) / mean_counts_roi_post
+        
+        samples_violin = np.transpose(np.array([posterior_samples[:, 0] * fraction_multiplier, posterior_samples[:, 6] * fraction_multiplier]))
+        samples_violin_list.append(samples_violin)
+
+        truths_violin = [theta_truth[0] * np.median(fraction_multiplier), theta_truth[6] * np.median(fraction_multiplier)]
+        truths_violin_list.append(truths_violin)
+
+    samples_violin_list = np.array(samples_violin_list)
+
+    return samples_violin_list, truths_violin_list
+    print(samples_violin_list.shape)
+    # Optionally save plot
+
+    # if save_filename is not None:
+    #     plt.tight_layout()
+    #     fig.savefig(save_filename,bbox_inches='tight',pad_inches=0.1)
+
+

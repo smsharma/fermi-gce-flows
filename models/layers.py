@@ -1,10 +1,13 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-from torch_geometric.nn import ChebConv
-from torch_geometric.utils import get_laplacian
-from torch_geometric.transforms import LaplacianLambdaMax
-from torch_geometric.data import Data
+
+try:
+    from torch_geometric.nn import ChebConv
+    from torch_geometric.transforms import LaplacianLambdaMax
+    from torch_geometric.data import Data
+except:
+    print("PyTorch Geometric not importable")
 
 from models.chebyshev import SphericalChebConv
 
