@@ -205,10 +205,10 @@ if __name__ == "__main__":
     else:
         args.summary_range = None
 
-    if args.aux_summary != "None":
-        args.aux_summary = list(json.loads(args.summary_range))
+    if args.aux_summary == "None":
+        args.aux_summary = None 
     else:
-        args.aux_summary = None
+        args.aux_summary = args.aux_summary.strip('][').split(',')
 
     train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size, max_num_epochs=args.max_num_epochs, laplacian_type=args.laplacian_type, chebconv=args.chebconv, aux_summary=args.aux_summary, n_aux=args.n_aux)
 

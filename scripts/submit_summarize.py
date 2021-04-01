@@ -14,7 +14,7 @@ conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi/
 """
 
-range_list = np.arange(0, 500, 20)
+range_list = np.arange(0, 501, 20)
 file_range_list = np.transpose([range_list[:-1],range_list[1:]])
 
 for file_range in [[0, 500]]:
