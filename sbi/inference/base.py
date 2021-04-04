@@ -16,8 +16,6 @@ from sbi.inference.posteriors.base_posterior import NeuralPosterior
 from sbi.utils import get_log_root
 from sbi.utils.torchutils import process_device
 
-from pytorch_lightning.loggers import TensorBoardLogger
-
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.tensorboard import SummaryWriter
