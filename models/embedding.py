@@ -48,7 +48,7 @@ class SphericalGraphCNN(nn.Module):
         else:
             raise NotImplementedError
 
-        npix_final = len(indexes_list[len(conv_config)])  # Number of pixels in final layers
+        npix_final = int(len(indexes_list[len(conv_config) - 1]) / 4)  # Number of pixels in final layers
 
         for i, (in_ch, out_ch) in enumerate(conv_config):
 
