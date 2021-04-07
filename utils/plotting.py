@@ -22,7 +22,7 @@ def dnds_conv(s_ary, theta, ps_temp, roi_counts_normalize, roi_normalize):
     dnds_ary = dnds(s_ary, [A] + list(theta[1:]))
     return dnds_ary
 
-def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None):
+def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None, **kwargs):
 
     # Extract templates and labels
     n = SimpleNamespace(**temps_dict)
@@ -58,7 +58,7 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         if nptf:
             posterior_samples = posterior[i_r]
         else:
-            posterior_samples = posterior.sample((n_samples,), x=x_o)
+            posterior_samples = posterior.sample((n_samples,), x=x_o, **kwargs)
             posterior_samples = posterior_samples.detach().numpy()
         
         # Counts and flux arrays
@@ -72,7 +72,7 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         
         for idx_ps, i_param_ps in enumerate([6, 12]):
 
-            dnds_ary = np.array([dnds_conv(s_ary, theta, temps_ps[idx_ps], roi_counts_normalize,roi_normalize) for theta in posterior_samples[:,i_param_ps:i_param_ps+6]])
+            dnds_ary = np.array([dnds_conv(s_ary, theta, temps_ps[idx_ps], roi_counts_normalize, roi_normalize) for theta in posterior_samples[:,i_param_ps:i_param_ps+6]])
             dnds_ary *= s_f_conv / pixarea_deg
             ax[i_r][0].plot(f_ary, np.median(f_ary ** 2 * dnds_ary, axis=0), color=cols_default[idx_ps], lw=0.8)
             ax[i_r][0].fill_between(f_ary, np.percentile(f_ary ** 2 * dnds_ary, [16], axis=0)[0], np.percentile(f_ary ** 2 * dnds_ary, [84], axis=0)[0], alpha=0.2, color=cols_default[idx_ps], label=ps_labels[idx_ps])
@@ -180,13 +180,13 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         ax[i_r][2].legend(handles_2 + handles_3, labels_2 + labels_3, fontsize=14, ncol=2)
 
         d = .02 
-        kwargs = dict(transform=ax[i_r][2].transAxes, color='k', lw=1.8, clip_on=False)
-        ax[i_r][2].plot((1, 1), (1 - d, 1 + d), **kwargs)
-        ax[i_r][2].plot((1, 1), (-d, +d), **kwargs)
+        line_kwargs = dict(transform=ax[i_r][2].transAxes, color='k', lw=1.8, clip_on=False)
+        ax[i_r][2].plot((1, 1), (1 - d, 1 + d), **line_kwargs)
+        ax[i_r][2].plot((1, 1), (-d, +d), **line_kwargs)
 
-        kwargs.update(transform=ax[i_r][3].transAxes)
-        ax[i_r][3].plot((0, 0), (1 - d, 1 + d), **kwargs)
-        ax[i_r][3].plot((0, 0), (-d, +d), **kwargs) 
+        line_kwargs.update(transform=ax[i_r][3].transAxes)
+        ax[i_r][3].plot((0, 0), (1 - d, 1 + d), **line_kwargs)
+        ax[i_r][3].plot((0, 0), (-d, +d), **line_kwargs) 
     
         ## Flux fractions plot
 
@@ -313,7 +313,7 @@ def make_signal_injection_plot(posterior, x_test, x_data_test=None, theta_test=N
         fraction_multiplier = 100 * np.mean(temps_ps[0][~roi_normalize]) / np.mean(temps_ps[0][~roi_counts_normalize]) / mean_counts_roi_post
 
         g = plots.get_single_plotter()
-        samples = MCSamples(samples=np.transpose(np.array([posterior_samples[:, 0] * fraction_multiplier, posterior_samples[:, 6] * fraction_multiplier])),names = ['DM','PS'], labels = ['DM','PS'])
+        samples = MCSamples(samples=np.transpose(np.array([posterior_samples[:, 0] * np.mean(fraction_multiplier), posterior_samples[:, 6] * np.mean(fraction_multiplier)])),names = ['DM','PS'], labels = ['DM','PS'])
         g.plot_2d(samples, 'DM', 'PS', filled=True, alphas=[0.5], ax=ax[i_r], colors=[cols_default[0]])
         g.plot_2d(samples, 'DM', 'PS', filled=False, ax=ax[i_r], colors=['k'], lws=[1.2])
 
@@ -324,12 +324,12 @@ def make_signal_injection_plot(posterior, x_test, x_data_test=None, theta_test=N
                 theta_dm_baseline = np.median(posterior_samples[:, 0])
                 theta_ps_baseline = np.median(posterior_samples[:, 6])
             else:
-                ax[i_r].axvline((theta_dm_baseline + coeff_ary[i_r]) * np.median(fraction_multiplier), color='k', ls='dotted')
-                ax[i_r].axhline((theta_ps_baseline) * np.median(fraction_multiplier), color='k', ls='dotted')
+                ax[i_r].axvline((theta_dm_baseline + coeff_ary[i_r]) * np.mean(fraction_multiplier), color='k', ls='dotted')
+                ax[i_r].axhline((theta_ps_baseline) * np.mean(fraction_multiplier), color='k', ls='dotted')
 
         if not is_data:
-            ax[i_r].axvline(theta_truth[0] * np.median(fraction_multiplier), color='k', ls='dotted')
-            ax[i_r].axhline(theta_truth[6] * np.median(fraction_multiplier), color='k', ls='dotted')
+            ax[i_r].axvline(theta_truth[0] * np.mean(fraction_multiplier), color='k', ls='dotted')
+            ax[i_r].axhline(theta_truth[6] * np.mean(fraction_multiplier), color='k', ls='dotted')
 
         ax[i_r].set_xlim(0., 15.)
         ax[i_r].set_ylim(0., 15.)
@@ -418,7 +418,6 @@ def make_violin_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_n
     samples_violin_list = np.array(samples_violin_list)
 
     return samples_violin_list, truths_violin_list
-    print(samples_violin_list.shape)
     # Optionally save plot
 
     # if save_filename is not None:
