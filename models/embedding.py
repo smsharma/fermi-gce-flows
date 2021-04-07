@@ -13,7 +13,7 @@ class SphericalGraphCNN(nn.Module):
     """Spherical GCNN Autoencoder.
     """
 
-    def __init__(self, nside_list, indexes_list, kernel_size=4, n_neighbours=8, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=0, n_params=0, activation="relu", nest=True, conv_source="deepsphere", conv_type="chebconv"):
+    def __init__(self, nside_list, indexes_list, kernel_size=4, n_neighbours=8, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=0, n_params=0, activation="relu", nest=True, conv_source="deepsphere", conv_type="chebconv", conv_channel_config="standard"):
         """Initialization.
 
         Args:
@@ -38,8 +38,19 @@ class SphericalGraphCNN(nn.Module):
             self.activation_function = nn.SELU()
         else:
             raise NotImplementedError
+        
+        if conv_channel_config == "standard":
+            conv_config = [(1, 32), (32, 64), (64, 128), (128, 256), (256, 256), (256, 256), (256, 256)]
+        elif conv_channel_config == "more_channels":
+            conv_config = [(1, 32), (32, 64), (64, 128), (128, 256), (256, 512), (512, 512), (512, 512)]
+        elif conv_channel_config == "fewer_layers":
+            conv_config = [(1, 32), (32, 64), (64, 128), (128, 256), (256, 512), (512, 512)]
+        else:
+            raise NotImplementedError
 
-        for i, (in_ch, out_ch) in enumerate([(1, 32), (32, 64), (64, 128), (128, 256), (256, 256), (256, 256), (256, 256)]):
+        npix_final = len(indexes_list[len(conv_config)])  # Number of pixels in final layers
+
+        for i, (in_ch, out_ch) in enumerate(conv_config):
 
             if conv_source == "deepsphere":
                 layer = SphericalChebBNPool(in_ch, out_ch, self.laps[i], self.pooling_class.pooling, self.kernel_size, activation)
@@ -52,7 +63,7 @@ class SphericalGraphCNN(nn.Module):
             self.cnn_layers.append(layer)
 
         # Set shape of first input of FC layers to correspond to output of conv layers + aux variables
-        fc_dims[0][0] = 256 + self.n_aux + self.n_params
+        fc_dims[0][0] = conv_config[-1][-1] * npix_final + self.n_aux + self.n_params
         
         # Specify fully-connected part
         self.fc_layers = []
@@ -86,6 +97,7 @@ class SphericalGraphCNN(nn.Module):
         if (self.n_aux != 0) or (self.n_params != 0):
             x_aux = x[:, 16384:16384 + self.n_aux + self.n_params, :]
             x_aux = x_aux.view(-1, 1, self.n_aux + self.n_params)
+            x_map = x_map.contiguous().view(-1, 1, x_map.shape[1] * x_map.shape[2])
             x_map = torch.cat([x_map, x_aux], -1)
 
         # FC layers

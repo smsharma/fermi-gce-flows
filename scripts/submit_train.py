@@ -17,6 +17,45 @@ conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi/
 """
 
+##########################
+# Explore configurations #
+##########################
+
+batch_size_list = [128]
+fc_dims_list = [[[-1, 2048], [2048, 128]], [[-1, 2048], [2048, 512]], [[-1, 2048], [2048, 512], [2048, 256]]]
+maf_num_transforms_list = [4]
+maf_hidden_features_list = [128]
+methods = ["snpe"]
+activations = ["relu"]
+kernel_size_list = [4]
+conv_channel_configs = ["standard", "fewer_layers", "more_channels"]
+laplacian_types = ["normalized"]
+conv_types = ["chebconv", "gcn"]
+aux_summaries = ["None"]
+n_aux_list = [2]
+
+for maf_num_transforms in maf_num_transforms_list:
+    for maf_hidden_features in maf_hidden_features_list:
+        for batch_size in batch_size_list:
+            for fc_dims in fc_dims_list:
+                for method in methods:
+                    for activation in activations:
+                        for kernel_size in kernel_size_list:
+                            for laplacian_type in laplacian_types:
+                                for conv_type in conv_types:
+                                    for conv_channel_config in conv_channel_configs:
+                                        for aux_summary, n_aux in zip(aux_summaries, n_aux_list):
+                                            if conv_type == "gcn" and laplacian_type == "normalized":
+                                                continue
+                                            batchn = batch + "\n"
+                                            batchn += "python -u train.py --sample train_ModelO_gamma_fix_480k --name gce_ModelO_gamma_fix_480k_geometric_tests --method {} --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {}".format(method, maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux)
+                                            fname = "batch/submit.batch"
+                                            f = open(fname, "w")
+                                            f.write(batchn)
+                                            f.close()
+                                            os.system("chmod +x " + fname)
+                                            os.system("sbatch " + fname)
+
 ##############
 # DeepSphere #
 ##############

@@ -138,7 +138,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         path = Path(checkpoint_path)
         path.mkdir(parents=True, exist_ok=True)
 
-        model_checkpoint = ModelCheckpoint(monitor='val_loss', dirpath=checkpoint_path, filename="{epoch:02d}-{val_loss:.2f}", period=5, save_top_k=3)
+        model_checkpoint = ModelCheckpoint(monitor='val_loss', dirpath=checkpoint_path, filename="{epoch:02d}-{val_loss:.2f}", period=5, save_top_k=1)
         checkpoint_callback = model_checkpoint
 
         early_stop_callback = EarlyStopping(monitor='val_loss', patience=stop_after_epochs)        
