@@ -16,8 +16,6 @@ from sbi.inference.posteriors.base_posterior import NeuralPosterior
 from sbi.utils import get_log_root
 from sbi.utils.torchutils import process_device
 
-from pytorch_lightning.loggers import TensorBoardLogger
-
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.tensorboard import SummaryWriter
@@ -131,7 +129,7 @@ class NeuralInference(ABC):
         return dataset
 
     @staticmethod
-    def make_dataloaders(dataset, validation_split, batch_size, num_workers=46, pin_memory=True, seed=None):
+    def make_dataloaders(dataset, validation_split, batch_size, num_workers=8, pin_memory=True, seed=None):
         if validation_split is None or validation_split <= 0.0:
             train_loader = DataLoader(
                 dataset,
