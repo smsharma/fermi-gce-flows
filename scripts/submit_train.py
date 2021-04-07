@@ -45,8 +45,6 @@ for maf_num_transforms in maf_num_transforms_list:
                                 for conv_type in conv_types:
                                     for conv_channel_config in conv_channel_configs:
                                         for aux_summary, n_aux in zip(aux_summaries, n_aux_list):
-                                            if conv_type == "gcn" and laplacian_type == "normalized":
-                                                continue
                                             batchn = batch + "\n"
                                             batchn += "python -u train.py --sample train_ModelO_gamma_fix_480k --name gce_ModelO_gamma_fix_480k_geometric_tests --method {} --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {}".format(method, maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux)
                                             fname = "batch/submit.batch"
