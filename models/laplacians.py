@@ -31,7 +31,6 @@ def scipy_csr_to_sparse_tensor(csr_mat):
     sparse_tensor = sparse_tensor.coalesce()
     return sparse_tensor
 
-
 def prepare_laplacian(laplacian):
     """Prepare a graph Laplacian to be fed to a graph convolutional layer.
     """
@@ -56,7 +55,6 @@ def prepare_laplacian(laplacian):
     laplacian = scale_operator(laplacian, lmax)
     laplacian = scipy_csr_to_sparse_tensor(laplacian)
     return laplacian
-
 
 def get_healpix_laplacians(nside_list, laplacian_type, indexes_list=None, n_neighbours=20, nest=True):
     """Get the healpix laplacian list for a certain depth.
