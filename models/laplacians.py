@@ -7,6 +7,8 @@ from scipy import sparse
 from scipy.sparse import coo_matrix
 import torch
 
+import sys
+
 from pygsp.graphs.nngraphs.spherehealpix import SphereHealpix
 
 # pylint: disable=W0223
@@ -56,7 +58,7 @@ def prepare_laplacian(laplacian):
     laplacian = scipy_csr_to_sparse_tensor(laplacian)
     return laplacian
 
-def get_healpix_laplacians(nside_list, laplacian_type, indexes_list=None, n_neighbours=20, nest=True):
+def get_healpix_laplacians(nside_list, laplacian_type="combinatorial", indexes_list=None, n_neighbours=8, nest=True):
     """Get the healpix laplacian list for a certain depth.
     Args:
         nodes (int): initial number of nodes.
@@ -66,14 +68,19 @@ def get_healpix_laplacians(nside_list, laplacian_type, indexes_list=None, n_neig
         laps (list): increasing list of laplacians.
     """
     laps = []
+    adjs = []
 
     if indexes_list is None:
         indexes_list = [None] * len(nside_list)
 
     for nside, indexes in zip(nside_list, indexes_list):
-        G = SphereHealpix(subdivisions=nside, indexes=indexes, k=n_neighbours, nest=nest)
+        G = SphereHealpix(subdivisions=nside, indexes=indexes, k=n_neighbours, nest=nest, lap_type=laplacian_type)
         G.compute_laplacian(laplacian_type)
-        laplacian = prepare_laplacian(G.L)
-        laps.append(laplacian)
 
-    return laps
+        lap = prepare_laplacian(G.L)
+        adj = scipy_csr_to_sparse_tensor(G.W)
+
+        laps.append(lap)
+        adjs.append(adj)
+
+    return laps, adjs

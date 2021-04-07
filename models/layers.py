@@ -3,7 +3,7 @@ from torch import nn
 import torch.nn.functional as F
 
 # try:
-from torch_geometric.nn import ChebConv
+from torch_geometric.nn import ChebConv, GCNConv, LEConv
 from torch_geometric.transforms import LaplacianLambdaMax
 from torch_geometric.data import Data
 # except:
@@ -60,8 +60,7 @@ class SphericalChebBNPoolGeom(nn.Module):
     """Building Block with a pooling/unpooling, a calling the SphericalChebBN block.
     """
 
-    def __init__(self, in_channels, out_channels, pooling, kernel_size, edge_index, edge_weight,
-                 laplacian_type, indexes_list, activation="relu"):
+    def __init__(self, in_channels, out_channels, adj, pooling, kernel_size, laplacian_type, indexes_list, activation="relu", conv_type="chebconv"):
         """Initialization.
         Args:
             in_channels (int): initial number of channels.
@@ -72,9 +71,11 @@ class SphericalChebBNPoolGeom(nn.Module):
         """
         super().__init__()
 
-        assert laplacian_type in ['normalized', 'combinatorial'], 'Invalid normalization'
+        self.laplacian_type = laplacian_type
+        assert self.laplacian_type in ['normalized', 'combinatorial'], 'Invalid normalization'
 
-        
+        edge_index = adj.indices()
+        edge_weight = adj.values()
 
         self.register_buffer("edge_index", edge_index)
         if edge_weight is None:
@@ -82,13 +83,26 @@ class SphericalChebBNPoolGeom(nn.Module):
         else:
             self.register_buffer("edge_weight", edge_weight)
         
-        # Get lambda_max for non-symmetric Laplacian
-        data = Data(num_nodes=len(indexes_list), edge_index=edge_index, edge_attr=edge_weight)
-        lambda_max = LaplacianLambdaMax()(data).lambda_max
+        # Graph convolution layer to use
+        if conv_type == "chebconv":
+            
+            # Get lambda_max for non-symmetric Laplacian
+            data = Data(num_nodes=len(indexes_list), edge_index=edge_index, edge_attr=edge_weight)
+            lambda_max = LaplacianLambdaMax(normalization='sym' if laplacian_type == 'normalized' else None, is_undirected=True)(data).lambda_max
+            self.register_buffer('lambda_max', torch.tensor(lambda_max, dtype=torch.float32))
+            
+            self.conv = ChebConv(in_channels, out_channels, kernel_size, normalization='sym' if self.laplacian_type == 'normalized' else None)
+            self.conv_kwargs = {'lambda_max':self.lambda_max if self.laplacian_type == "combinatorial" else None}
+        
+        elif conv_type == "gcn":
+            
+            self.conv = GCNConv(in_channels, out_channels)
+            self.conv_kwargs = {}
+        
+        else:
+            raise NotImplementedError
 
-        self.register_buffer('lambda_max', torch.tensor(lambda_max, dtype=torch.float32))
-        self.chebconv = ChebConv(in_channels, out_channels, kernel_size, normalization='sym' if laplacian_type == 'normalized' else None)
-        self.batchnorm = nn.BatchNorm1d(out_channels, affine=False)
+        self.batchnorm = nn.BatchNorm1d(out_channels)
         self.pooling = pooling
 
         if activation == "relu":
@@ -105,7 +119,7 @@ class SphericalChebBNPoolGeom(nn.Module):
         Returns:
             :obj:`torch.tensor`: output [batch x vertices x channels/features]
         """
-        x = self.chebconv(x, self.edge_index, self.edge_weight, lambda_max=self.lambda_max)
+        x = self.conv(x, self.edge_index, self.edge_weight, **self.conv_kwargs)
         x = self.batchnorm(x.permute(0, 2, 1))
         x = self.activation_function(x.permute(0, 2, 1))
         x = self.pooling(x)

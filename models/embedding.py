@@ -13,7 +13,7 @@ class SphericalGraphCNN(nn.Module):
     """Spherical GCNN Autoencoder.
     """
 
-    def __init__(self, nside_list, indexes_list, kernel_size=4, n_neighbours=8, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=0, n_params=0, activation="relu", nest=True, chebconv="deepsphere"):
+    def __init__(self, nside_list, indexes_list, kernel_size=4, n_neighbours=8, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=0, n_params=0, activation="relu", nest=True, conv_source="deepsphere", conv_type="chebconv"):
         """Initialization.
 
         Args:
@@ -28,7 +28,7 @@ class SphericalGraphCNN(nn.Module):
 
         # Specify convolutional part
 
-        self.laps = get_healpix_laplacians(nside_list=nside_list, laplacian_type=laplacian_type, indexes_list=indexes_list, n_neighbours=n_neighbours, nest=nest)
+        self.laps, self.adjs = get_healpix_laplacians(nside_list=nside_list, laplacian_type=laplacian_type, indexes_list=indexes_list, n_neighbours=n_neighbours, nest=nest)
 
         self.cnn_layers = []
 
@@ -41,12 +41,10 @@ class SphericalGraphCNN(nn.Module):
 
         for i, (in_ch, out_ch) in enumerate([(1, 32), (32, 64), (64, 128), (128, 256), (256, 256), (256, 256), (256, 256)]):
 
-            if chebconv == "deepsphere":
+            if conv_source == "deepsphere":
                 layer = SphericalChebBNPool(in_ch, out_ch, self.laps[i], self.pooling_class.pooling, self.kernel_size, activation)
-            elif chebconv == "geometric":
-                edge_index = self.laps[i].indices()
-                edge_weight = self.laps[i].values()
-                layer = SphericalChebBNPoolGeom(in_ch, out_ch, self.pooling_class.pooling, self.kernel_size, edge_index=edge_index, edge_weight=edge_weight, laplacian_type=laplacian_type, indexes_list=indexes_list[i], activation=activation)
+            elif conv_source == "geometric":
+                layer = SphericalChebBNPoolGeom(in_ch, out_ch, self.adjs[i], self.pooling_class.pooling, self.kernel_size, laplacian_type=laplacian_type, indexes_list=indexes_list[i], activation=activation, conv_type=conv_type)
             else:
                 raise NotImplementedError
 
