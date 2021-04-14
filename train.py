@@ -77,7 +77,7 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     # Specify datasets
 
     if summary is None:
-        x_filename = "{}/samples/x_nest_{}.npy".format(data_dir, sample_name)
+        x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
     else:
         x_filename = "{}/samples/x_{}_{}.npy".format(data_dir, summary, sample_name)  # If using a summary
 
