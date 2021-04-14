@@ -424,4 +424,3 @@ def make_violin_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_n
     #     plt.tight_layout()
     #     fig.savefig(save_filename,bbox_inches='tight',pad_inches=0.1)
 
-

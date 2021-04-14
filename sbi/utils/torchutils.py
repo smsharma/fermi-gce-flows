@@ -225,7 +225,7 @@ class BoxUniform(Independent):
                                              reinterpret as event dims.
         """
 
-        super().__init__(Uniform(low=low, high=high), reinterpreted_batch_ndims)
+        super().__init__(Uniform(low=low, high=high, validate_args=False), reinterpreted_batch_ndims)
 
 
 def ensure_theta_batched(theta: Tensor) -> Tensor:

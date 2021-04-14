@@ -2,12 +2,12 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-# try:
-from torch_geometric.nn import ChebConv, GCNConv, LEConv
-from torch_geometric.transforms import LaplacianLambdaMax
-from torch_geometric.data import Data
-# except:
-#     print("PyTorch Geometric not importable")
+try:
+    from torch_geometric.nn import ChebConv, GCNConv, LEConv
+    from torch_geometric.transforms import LaplacianLambdaMax
+    from torch_geometric.data import Data
+except:
+    print("PyTorch Geometric not importable")
 
 from models.chebyshev import SphericalChebConv
 

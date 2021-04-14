@@ -17,10 +17,11 @@ from sbi import utils
 from simulations.wrapper import simulator
 from utils import create_mask as cm
 from utils.templates import get_NFW2_template
+from utils.utils import ring2nest
 from models.psf import KingPSF
 
 
-def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="fix"):
+def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="default"):
     """ High-level simulation script
     """
 
@@ -132,6 +133,10 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="fi
     # Grab maps and aux variables
     x = torch.Tensor(list(map(itemgetter(0), x_and_aux)))
     x_aux = torch.Tensor(list(map(itemgetter(1), x_and_aux)))
+    
+    # Convert from RING to NEST Healpix ordering, as that's required by DeepSphere pooling
+    x = ring2nest(x.squeeze(), mask_sim)  # Collapse channel dimension
+    x = np.expand_dims(x, 1)  # Reinstate channel dimension
 
     results["x"] = x
     results["x_aux"] = x_aux
@@ -166,7 +171,7 @@ def parse_args():
         "-n", type=int, default=10000, help="Number of samples to generate. Default is 10k.",
     )
     parser.add_argument("--dif", type=str, default="ModelO", help='Diffuse model to simulate, wither "ModelO" (default) or "p6"')
-    parser.add_argument("--gamma", type=str, default="fix", help='Whether to float NFW index gamma. "fix" (default, fixes to gamma=1.2), "float" (float both gammas), or "float_both" (float PS and poiss gammas separately)')
+    parser.add_argument("--gamma", type=str, default="default", help='Whether to float NFW index gamma. "fix" (default, fixes to gamma=1.2), "float" (float both gammas), or "float_both" (float PS and poiss gammas separately)')
     parser.add_argument("--name", type=str, default=None, help='Sample name, like "train" or "test".')
     parser.add_argument("--dir", type=str, default=".", help="Base directory. Results will be saved in the data/samples subfolder.")
     parser.add_argument("--debug", action="store_true", help="Prints debug output.")
