@@ -25,7 +25,7 @@ from pytorch_lightning.loggers import TensorBoardLogger, MLFlowLogger
 import mlflow
 
 
-def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=2, maf_hidden_features=128, maf_num_transforms=8, batch_size=256, max_num_epochs=50, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe", summary=None, summary_range=None, activation="relu", conv_source="geometric", conv_type="chebconv", conv_channel_config="standard", aux_summary=None):
+def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="normalized", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=2, maf_hidden_features=128, maf_num_transforms=4, batch_size=256, max_num_epochs=50, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe", summary=None, summary_range=None, activation="relu", conv_source="geometric", conv_type="chebconv", conv_channel_config="standard", aux_summary=None):
 
     # Cache hyperparameters to log
     params_to_log = locals()
@@ -175,7 +175,7 @@ def parse_args():
     parser.add_argument("--summary", type=str, default=None, help='Whether using a summary statistic')
     parser.add_argument("--summary_range", type=str, default="None", help='Whether to use only a subset of the summary stats')
     parser.add_argument("--name", type=str, default='test', help='Experiment name')
-    parser.add_argument("--laplacian_type", type=str, default='combinatorial', help='"normalized" or "combinatorial" Laplacian')
+    parser.add_argument("--laplacian_type", type=str, default='normalized', help='"normalized" or "combinatorial" Laplacian')
     parser.add_argument("--conv_source", type=str, default='geometric', help='Use "deepsphere" or "geometric" implementation of ChebConv layer')
     parser.add_argument("--conv_type", type=str, default='chebconv', help='Use "chebconv" or "gcn" graph convolution layers')
     parser.add_argument("--conv_channel_config", type=str, default='standard', help='Use "standard", "fewer layers", or "more_channels" GCN channel configuration')
