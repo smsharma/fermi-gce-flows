@@ -22,13 +22,13 @@ cd /scratch/sm8383/sbi-fermi/
 ##########################
 
 batch_size_list = [128]
-fc_dims_list = [[[-1, 2048], [2048, 128]], [[-1, 2048], [2048, 512]], [[-1, 2048], [2048, 512], [512, 128]]]
+fc_dims_list = [[[-1, 2048], [2048, 512]], [[-1, 2048], [2048, 512], [512, 256]]]
 maf_num_transforms_list = [4]
 maf_hidden_features_list = [128]
 methods = ["snpe"]
 activations = ["relu"]
 kernel_size_list = [4]
-n_neighbours_list = [8, 20]
+n_neighbours_list = [8]
 conv_channel_configs = ["standard"]
 laplacian_types = ["normalized"]
 conv_types = ["chebconv"]
