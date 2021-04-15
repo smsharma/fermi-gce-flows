@@ -48,7 +48,7 @@ for n_neighbours in n_neighbours_list:
                                         for conv_channel_config in conv_channel_configs:
                                             for aux_summary, n_aux in zip(aux_summaries, n_aux_list):
                                                 batchn = batch + "\n"
-                                                batchn += "python -u train.py --sample train_ModelO_gamma_default_1p2M --name gce_ModelO_gamma_default_1M --method {} --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {}".format(method, maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours)
+                                                batchn += "python -u train.py --sample train_ModelO_gamma_default_1M --name gce_ModelO_gamma_default_1M --method {} --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {}".format(method, maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours)
                                                 fname = "batch/submit.batch"
                                                 f = open(fname, "w")
                                                 f.write(batchn)
