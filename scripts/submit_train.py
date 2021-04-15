@@ -22,7 +22,7 @@ cd /scratch/sm8383/sbi-fermi/
 ##########################
 
 batch_size_list = [128]
-fc_dims_list = [[[-1, 2048], [2048, 512]], [[-1, 2048], [2048, 512], [512, 256]]]
+fc_dims_list = [[[-1, 2048], [2048, 512], [512, 256]]]
 maf_num_transforms_list = [4]
 maf_hidden_features_list = [128]
 methods = ["snpe"]
@@ -30,8 +30,9 @@ activations = ["relu"]
 kernel_size_list = [4]
 n_neighbours_list = [8]
 conv_channel_configs = ["standard"]
-laplacian_types = ["normalized"]
+laplacian_types = ["combinatorial", "normalized"]
 conv_types = ["chebconv"]
+conv_source_list = ["deepsphere", "geometric"]
 aux_summaries = ["None"]
 n_aux_list = [2]
 
@@ -47,14 +48,15 @@ for n_neighbours in n_neighbours_list:
                                     for conv_type in conv_types:
                                         for conv_channel_config in conv_channel_configs:
                                             for aux_summary, n_aux in zip(aux_summaries, n_aux_list):
-                                                batchn = batch + "\n"
-                                                batchn += "python -u train.py --sample train_ModelO_gamma_default_1M --name gce_ModelO_gamma_default_1M --method {} --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {}".format(method, maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours)
-                                                fname = "batch/submit.batch"
-                                                f = open(fname, "w")
-                                                f.write(batchn)
-                                                f.close()
-                                                os.system("chmod +x " + fname)
-                                                os.system("sbatch " + fname)
+                                                for conv_source in conv_source_list:
+                                                    batchn = batch + "\n"
+                                                    batchn += "python -u train.py --sample train_ModelO_gamma_default_1M --name gce_ModelO_gamma_default_1M --method {} --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {}".format(method, maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source)
+                                                    fname = "batch/submit.batch"
+                                                    f = open(fname, "w")
+                                                    f.write(batchn)
+                                                    f.close()
+                                                    os.system("chmod +x " + fname)
+                                                    os.system("sbatch " + fname)
 
 # ##################
 # # Just summaries #

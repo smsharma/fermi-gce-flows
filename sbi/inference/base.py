@@ -14,7 +14,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from sbi.inference.posteriors.base_posterior import NeuralPosterior
 from sbi.utils import get_log_root
-from sbi.utils.torchutils import process_device
+from sbi.utils.torchutils import process_device, seed_worker
 
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
@@ -71,7 +71,7 @@ class EstimatorNet(pl.LightningModule):
         if self.summary:
             x_and_aux = torch.squeeze(x_and_aux, 1)
         loss = torch.mean(self.loss(theta, x_and_aux, self.proposal))
-        self.log('val_loss', loss)
+        self.log('val_loss', loss, on_epoch=True)
 
 class NeuralInference(ABC):
     """Abstract base class for neural inference methods."""
@@ -129,7 +129,7 @@ class NeuralInference(ABC):
         return dataset
 
     @staticmethod
-    def make_dataloaders(dataset, validation_split, batch_size, num_workers=1, pin_memory=True, seed=None):
+    def make_dataloaders(dataset, validation_split, batch_size, num_workers=16, pin_memory=True, seed=None):
         if validation_split is None or validation_split <= 0.0:
             train_loader = DataLoader(
                 dataset,
@@ -159,6 +159,7 @@ class NeuralInference(ABC):
                 batch_size=batch_size,
                 pin_memory=pin_memory,
                 num_workers=num_workers,
+                # worker_init_fn=seed_worker
             ) 
             val_loader = DataLoader(
                 dataset,
@@ -166,6 +167,7 @@ class NeuralInference(ABC):
                 batch_size=batch_size,
                 pin_memory=pin_memory,
                 num_workers=num_workers,
+                # worker_init_fn=seed_worker
             )  
 
         return train_loader, val_loader
@@ -178,6 +180,7 @@ class NeuralInference(ABC):
         else:
             data = np.load(filename)
         return data
+
 
 class NumpyDataset(Dataset):
     """ Dataset for numpy arrays with explicit memmap support """

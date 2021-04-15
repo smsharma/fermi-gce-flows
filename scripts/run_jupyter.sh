@@ -2,7 +2,7 @@
 
 #SBATCH -N 1   # node count
 #SBATCH --ntasks-per-node=1
-#SBATCH -t 01:59:00
+#SBATCH -t 23:59:00
 #SBATCH --mem=32GB
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end
