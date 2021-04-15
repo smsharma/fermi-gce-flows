@@ -21,7 +21,7 @@ from utils.utils import ring2nest
 from models.psf import KingPSF
 
 
-def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="default"):
+def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="default"):
     """ High-level simulation script
     """
 
@@ -133,7 +133,9 @@ def simulate(n=10000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="de
     # Grab maps and aux variables
     x = torch.Tensor(list(map(itemgetter(0), x_and_aux)))
     x_aux = torch.Tensor(list(map(itemgetter(1), x_and_aux)))
-    
+
+    logger.info("Converting from RING to NEST ordering...")
+
     # Convert from RING to NEST Healpix ordering, as that's required by DeepSphere pooling
     x = ring2nest(x.squeeze(), mask_sim)  # Collapse channel dimension
     x = np.expand_dims(x, 1)  # Reinstate channel dimension

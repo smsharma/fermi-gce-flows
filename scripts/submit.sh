@@ -6,7 +6,7 @@ cd /scratch/sm8383/sbi-fermi/scripts/
 # Simulation
 ############################################################
 
-sbatch --array=0-499 simulate.sh
+sbatch --array=0-999 simulate.sh
 
 ############################################################
 # Combination
