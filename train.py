@@ -76,7 +76,7 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
 
     # Specify datasets
 
-    n_files = 500
+    n_files = 5
 
     if summary is None:
         x_filename = ["{}/samples/x_{}_{}.npy".format(data_dir, sample_name, i) for i in range(n_files)]
@@ -190,7 +190,7 @@ def parse_args():
     parser.add_argument("--summary_range", type=str, default="None", help='Whether to use only a subset of the summary stats')
     parser.add_argument("--name", type=str, default='test', help='Experiment name')
     parser.add_argument("--laplacian_type", type=str, default='normalized', help='"normalized" or "combinatorial" Laplacian')
-    parser.add_argument("--conv_source", type=str, default='geometric', help='Use "deepsphere" or "geometric" implementation of ChebConv layer')
+    parser.add_argument("--conv_source", type=str, default='deepsphere', help='Use "deepsphere" or "geometric" implementation of ChebConv layer')
     parser.add_argument("--conv_type", type=str, default='chebconv', help='Use "chebconv" or "gcn" graph convolution layers')
     parser.add_argument("--conv_channel_config", type=str, default='standard', help='Use "standard", "fewer layers", or "more_channels" GCN channel configuration')
     parser.add_argument("--method", type=str, default='snpe', help='SBI method; "snpe" or "snre"')
