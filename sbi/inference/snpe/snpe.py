@@ -81,13 +81,17 @@ class PosteriorEstimator(NeuralInference, ABC):
             memmap_x = False
 
         # Load data
-        theta = self.load_and_check(theta, memmap=False)
-        x = self.load_and_check(x, memmap=memmap_x)
-        x_aux = self.load_and_check(x_aux, memmap=False)
+        # x = self.load_and_check(x, memmap=memmap_x)
+        # theta = self.load_and_check(theta, memmap=False)
+        # x_aux = self.load_and_check(x_aux, memmap=False)
 
+        x = [self.load_and_check(x_i, memmap=memmap_x) for x_i in x]
+        theta = [self.load_and_check(theta_i, memmap=False) for theta_i in theta]
+        x_aux = [self.load_and_check(x_aux_i, memmap=False) for x_aux_i in x_aux]
 
         data = OrderedDict()
         data["theta"] = theta
+        
         if summary_range is None:
             data["x"] = x
         else:
@@ -100,7 +104,8 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         data["x_aux"] = x_aux
 
-        dataset = self.make_dataset(data)
+        # dataset = self.make_dataset(data)
+        dataset = self.make_datasets(data)
 
         train_loader, val_loader = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
 

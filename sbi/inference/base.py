@@ -16,10 +16,9 @@ from sbi.inference.posteriors.base_posterior import NeuralPosterior
 from sbi.utils import get_log_root
 from sbi.utils.torchutils import process_device, seed_worker
 
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, ConcatDataset
 from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.tensorboard import SummaryWriter
-from torch.utils.data.sampler import SubsetRandomSampler
 
 import numpy as np
 import six
@@ -127,6 +126,16 @@ class NeuralInference(ABC):
             data_arrays.append(value)
         dataset = NumpyDataset(*data_arrays, dtype=torch.float)  # Should maybe mod dtype
         return dataset
+
+    @staticmethod
+    def make_datasets(data):
+        data_arrays_list = []
+        data_labels = []
+        for key, value in six.iteritems(data):
+            data_labels.append(key)
+            data_arrays_list.append(value)
+        datasets = ConcatDataset([NumpyDataset(*data_arrays, dtype=torch.float) for data_arrays in data_arrays_list])
+        return datasets
 
     @staticmethod
     def make_dataloaders(dataset, validation_split, batch_size, num_workers=16, pin_memory=True, seed=None):
