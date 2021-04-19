@@ -129,13 +129,13 @@ class NeuralInference(ABC):
 
     @staticmethod
     def make_datasets(data):
-        data_arrays_list = []
-        data_labels = []
-        for key, value in six.iteritems(data):
-            data_labels.append(key)
-            data_arrays_list.append(value)
-        datasets = ConcatDataset([NumpyDataset(*data_arrays, dtype=torch.float) for data_arrays in data_arrays_list])
-        return datasets
+        datasets = []
+        for i in range(len(data[next(iter(data))])):
+            data_arrays = []
+            for key, value in six.iteritems(data):
+                data_arrays.append(value[i])
+            datasets.append(NumpyDataset(*data_arrays, dtype=torch.float))
+        return ConcatDataset(datasets)
 
     @staticmethod
     def make_dataloaders(dataset, validation_split, batch_size, num_workers=16, pin_memory=True, seed=None):

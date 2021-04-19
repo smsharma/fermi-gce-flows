@@ -34,6 +34,9 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, Learning
 
 import mlflow.pytorch
 
+import os
+
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 class PosteriorEstimator(NeuralInference, ABC):
     def __init__(self, prior, density_estimator: Union[str, Callable] = "maf", device: str = "cpu", logging_level: Union[int, str] = "WARNING", summary_writer: Optional[SummaryWriter] = None, show_progress_bars: bool = True, **unused_args):
@@ -110,7 +113,23 @@ class PosteriorEstimator(NeuralInference, ABC):
         train_loader, val_loader = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
 
         num_z_score = 50000  # Z-score using a limited random sample for memory reasons
-        theta_z_score, x_z_score, x_aux_z_score = train_loader.dataset[:num_z_score]
+        # theta_z_score, x_z_score, x_aux_z_score = train_loader.dataset[:num_z_score]
+
+        theta_z_score, x_z_score, x_aux_z_score = torch.Tensor([]), torch.Tensor([]), torch.Tensor([])
+        
+        n_batches = int(num_z_score / training_batch_size)
+        for i, batch in enumerate(train_loader):
+            if i < n_batches:
+                theta, x, x_aux = batch
+                x_z_score = torch.cat([x, x_z_score])
+                x_aux_z_score = torch.cat([x_aux, x_aux_z_score])
+                theta_z_score = torch.cat([theta, theta_z_score])
+            else:
+                break
+
+        # x_z_score = torch.Tensor(x_z_score)
+        # x_aux_z_score = torch.Tensor(x_aux_z_score)
+        # theta_z_score = torch.Tensor(theta_z_score)
 
         logging.info("Z-scoring using up to {} random training samples for x".format(num_z_score))
 
