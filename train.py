@@ -76,7 +76,7 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
 
     # Specify datasets
 
-    n_files = 5
+    n_files = 500
 
     if summary is None:
         x_filename = ["{}/samples/x_{}_{}.npy".format(data_dir, sample_name, i) for i in range(n_files)]

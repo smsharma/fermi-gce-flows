@@ -2,8 +2,8 @@
 
 #SBATCH -N 1   # node count
 #SBATCH --ntasks-per-node=1
-#SBATCH -t 23:59:00
-#SBATCH --mem=32GB
+#SBATCH -t 03:59:00
+#SBATCH --mem=16GB
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end
 #SBATCH --mail-user=sm8383@nyu.edu

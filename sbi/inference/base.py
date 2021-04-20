@@ -184,7 +184,8 @@ class NeuralInference(ABC):
     @staticmethod
     def load_and_check(filename, memmap=False):
         # Don't load image files > 1 GB into memory
-        if memmap and os.stat(filename).st_size > 1.0 * 1024 ** 3:
+        # if memmap and os.stat(filename).st_size > 1.0 * 1024 ** 3:
+        if memmap:
             data = np.load(filename, mmap_mode="c")
         else:
             data = np.load(filename)
