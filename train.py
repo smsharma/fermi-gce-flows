@@ -76,31 +76,17 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
 
     # Specify datasets
 
-    n_files = 500
-
     if summary is None:
-        x_filename = ["{}/samples/x_{}_{}.npy".format(data_dir, sample_name, i) for i in range(n_files)]
+        x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
     else:
-        x_filename = ["{}/samples/x_{}_{}_{}.npy".format(data_dir, summary, sample_name, i) for i in range(n_files)] 
+        x_filename = "{}/samples/x_{}_{}.npy".format(data_dir, summary, sample_name)  # If using a summary
 
-    x_aux_filename = ["{}/samples/x_aux_{}_{}.npy".format(data_dir, sample_name, i) for i in range(n_files)]
-    theta_filename = ["{}/samples/theta_{}_{}.npy".format(data_dir, sample_name, i) for i in range(n_files)]
+    x_aux_filename = "{}/samples/x_aux_{}.npy".format(data_dir, sample_name)
+    theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)
 
     x_summary_aux_filenames = None
     if aux_summary is not None:
         x_summary_aux_filenames = ["{}/samples/x_{}_{}.npy".format(data_dir, summary, sample_name) for summary in aux_summary]
-
-    # if summary is None:
-    #     x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
-    # else:
-    #     x_filename = "{}/samples/x_{}_{}.npy".format(data_dir, summary, sample_name)  # If using a summary
-
-    # x_aux_filename = "{}/samples/x_aux_{}.npy".format(data_dir, sample_name)
-    # theta_filename = "{}/samples/theta_{}.npy".format(data_dir, sample_name)
-
-    # x_summary_aux_filenames = None
-    # if aux_summary is not None:
-    #     x_summary_aux_filenames = ["{}/samples/x_{}_{}.npy".format(data_dir, summary, sample_name) for summary in aux_summary]
 
     if method == "snpe":
         

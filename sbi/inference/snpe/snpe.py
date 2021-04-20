@@ -88,13 +88,9 @@ class PosteriorEstimator(NeuralInference, ABC):
         logging.info("")
 
         # Load data
-        # x = self.load_and_check(x, memmap=memmap_x)
-        # theta = self.load_and_check(theta, memmap=False)
-        # x_aux = self.load_and_check(x_aux, memmap=False)
-
-        x = [self.load_and_check(x_i, memmap=memmap_x) for x_i in x]
-        theta = [self.load_and_check(theta_i, memmap=False) for theta_i in theta]
-        x_aux = [self.load_and_check(x_aux_i, memmap=False) for x_aux_i in x_aux]
+        x = self.load_and_check(x, memmap=memmap_x)
+        theta = self.load_and_check(theta, memmap=False)
+        x_aux = self.load_and_check(x_aux, memmap=False)
 
         data = OrderedDict()
         data["theta"] = theta
@@ -120,27 +116,11 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         train_loader, val_loader = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
 
-        num_z_score = 10000  # Z-score using a limited random sample for memory reasons
-        # theta_z_score, x_z_score, x_aux_z_score = train_loader.dataset[:num_z_score]
+        num_z_score = 50000  # Z-score using a limited random sample for memory reasons
 
         logging.info("Z-scoring using up to {} random training samples for x".format(num_z_score))
 
-        theta_z_score, x_z_score, x_aux_z_score = torch.Tensor([]), torch.Tensor([]), torch.Tensor([])
-        
-        n_batches = int(num_z_score / training_batch_size)
-        for i, batch in tqdm(enumerate(train_loader)):
-            if i < n_batches:
-                theta, x, x_aux = batch
-                x_z_score = torch.cat([x, x_z_score])
-                x_aux_z_score = torch.cat([x_aux, x_aux_z_score])
-                theta_z_score = torch.cat([theta, theta_z_score])
-            else:
-                break
-
-        # x_z_score = torch.Tensor(x_z_score)
-        # x_aux_z_score = torch.Tensor(x_aux_z_score)
-        # theta_z_score = torch.Tensor(theta_z_score)
-
+        theta_z_score, x_z_score, x_aux_z_score = train_loader.dataset[:num_z_score]
 
         x_and_aux_z_score = torch.cat([x_z_score, x_aux_z_score], -1)
 
