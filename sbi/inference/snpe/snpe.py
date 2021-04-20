@@ -107,12 +107,9 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         data["x_aux"] = x_aux
 
-        logging.info("Making dataset")
+        logging.info("Making datasets and dataloader")
 
-        # dataset = self.make_dataset(data)
-        dataset = self.make_datasets(data)
-
-        logging.info("Making dataloader")
+        dataset = self.make_dataset(data)
 
         train_loader, val_loader = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
 

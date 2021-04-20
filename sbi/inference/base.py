@@ -128,16 +128,6 @@ class NeuralInference(ABC):
         return dataset
 
     @staticmethod
-    def make_datasets(data):
-        datasets = []
-        for i in range(len(data[next(iter(data))])):
-            data_arrays = []
-            for key, value in six.iteritems(data):
-                data_arrays.append(value[i])
-            datasets.append(NumpyDataset(*data_arrays, dtype=torch.float))
-        return ConcatDataset(datasets)
-
-    @staticmethod
     def make_dataloaders(dataset, validation_split, batch_size, num_workers=16, pin_memory=True, seed=None):
         if validation_split is None or validation_split <= 0.0:
             train_loader = DataLoader(

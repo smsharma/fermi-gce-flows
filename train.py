@@ -25,7 +25,7 @@ from pytorch_lightning.loggers import TensorBoardLogger, MLFlowLogger
 import mlflow
 
 
-def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="normalized", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_neighbours=8, n_aux=2, maf_hidden_features=128, maf_num_transforms=4, batch_size=256, max_num_epochs=50, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe", summary=None, summary_range=None, activation="relu", conv_source="geometric", conv_type="chebconv", conv_channel_config="standard", aux_summary=None):
+def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="normalized", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_neighbours=8, n_aux=2, maf_hidden_features=128, maf_num_transforms=4, batch_size=256, max_num_epochs=50, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe", summary=None, summary_range=None, activation="relu", conv_source="geometric", conv_type="chebconv", conv_channel_config="standard", aux_summary=None, density_estimator_arch="maf"):
 
     # Cache hyperparameters to log
     params_to_log = locals()
@@ -98,7 +98,7 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
             sg_embed = nn.Identity()
 
         # Instantiate the neural density estimator
-        density_estimator = utils.posterior_nn(model="maf", embedding_net=sg_embed, hidden_features=maf_hidden_features, num_transforms=maf_num_transforms,)
+        density_estimator = utils.posterior_nn(model=density_estimator_arch, embedding_net=sg_embed, hidden_features=maf_hidden_features, num_transforms=maf_num_transforms,)
 
         # Setup the inference procedure with NPE
         posterior_estimator = PosteriorEstimator(prior=prior, density_estimator=density_estimator, show_progress_bars=True, logging_level="INFO", device=device.type, summary_writer=mlf_logger)
@@ -180,6 +180,7 @@ def parse_args():
     parser.add_argument("--conv_type", type=str, default='chebconv', help='Use "chebconv" or "gcn" graph convolution layers')
     parser.add_argument("--conv_channel_config", type=str, default='standard', help='Use "standard", "fewer layers", or "more_channels" GCN channel configuration')
     parser.add_argument("--method", type=str, default='snpe', help='SBI method; "snpe" or "snre"')
+    parser.add_argument("--density_estimator", type=str, default='maf', help='Density estimator method; "maf" or "nsf"')
     parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 512], [512, 96]]", help='Specification of fully-connected embedding layers')
     parser.add_argument("--n_neighbours", type=int, default=8, help="Number of neightbours in graph.")
     parser.add_argument("--aux_summary", type=str, default="None", help='Which summaries to tack on')
@@ -213,6 +214,6 @@ if __name__ == "__main__":
     else:
         args.aux_summary = args.aux_summary.strip('][').split(',')
 
-    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size, max_num_epochs=args.max_num_epochs, laplacian_type=args.laplacian_type, conv_source=args.conv_source, conv_type=args.conv_type, conv_channel_config=args.conv_channel_config, aux_summary=args.aux_summary, n_aux=args.n_aux, n_neighbours=args.n_neighbours)
+    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size, max_num_epochs=args.max_num_epochs, laplacian_type=args.laplacian_type, conv_source=args.conv_source, conv_type=args.conv_type, conv_channel_config=args.conv_channel_config, aux_summary=args.aux_summary, n_aux=args.n_aux, n_neighbours=args.n_neighbours, density_estimator_arch=args.density_estimator)
 
     logging.info("All done! Have a nice day!")
