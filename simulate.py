@@ -38,6 +38,9 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     ps_mask = np.load("data/mask_3fgl_0p8deg.npy")
     mask_roi = cm.make_mask_total(nside=nside, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=r_outer, custom_mask=ps_mask)
 
+    # ROI over which templates are normalized
+    roi_normalize_temps = cm.make_mask_total(nside=128, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=30)
+
     # King PSF hard-coded for now
     if psf == "king":
         kp = KingPSF()
@@ -51,6 +54,9 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     temp_iso = np.load("data/fermi_data/template_iso.npy")
     temp_dsk = np.load("data/fermi_data/template_dsk.npy")
     temp_bub = np.load("data/fermi_data/template_bub.npy")
+
+    # Load exposure
+    fermi_exp = np.load("data/fermi_data/fermidata_exposure.npy")
 
     # Load Model O templates
     temp_mO_pibrem = np.load('data/fermi_data/ModelO_r25_q1_pibrem.npy')
@@ -100,16 +106,16 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
         temps_gce_poiss = [temp_gce] * n
         temps_gce_ps = [temp_gce] * n
     elif gamma == "fix":
-        temp_gce = get_NFW2_template(gamma=1.2)
+        temp_gce = get_NFW2_template(gamma=1.2, exp_map=fermi_exp, roi_normalize=roi_normalize_temps)
         temps_gce_poiss = [temp_gce] * n
         temps_gce_ps = [temp_gce] * n
     elif gamma == "float":
-        temps_gce = [get_NFW2_template(gamma=gamma.detach().numpy()) for gamma in tqdm(thetas[:, -1])]
+        temps_gce = [get_NFW2_template(gamma=gamma.detach().numpy(), exp_map=fermi_exp, roi_normalize=roi_normalize_temps) for gamma in tqdm(thetas[:, -1])]
         temps_gce_poiss = temps_gce
         temps_gce_ps = temps_gce
     elif gamma == "float_both":
-        temps_gce_poiss = [get_NFW2_template(gamma=gamma.detach().numpy()) for gamma in tqdm(thetas[:, -2])]
-        temps_gce_ps = [get_NFW2_template(gamma=gamma.detach().numpy()) for gamma in tqdm(thetas[:, -1])]
+        temps_gce_poiss = [get_NFW2_template(gamma=gamma.detach().numpy(), exp_map=fermi_exp, roi_normalize=roi_normalize_temps) for gamma in tqdm(thetas[:, -2])]
+        temps_gce_ps = [get_NFW2_template(gamma=gamma.detach().numpy(), exp_map=fermi_exp, roi_normalize=roi_normalize_temps) for gamma in tqdm(thetas[:, -1])]
     else:
         raise NotImplementedError
 
