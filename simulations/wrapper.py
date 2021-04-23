@@ -7,7 +7,7 @@ from simulations.simulate_ps import SimulateMap
 from models.scd import dnds
 
 
-def simulator(theta, temps_poiss, temps_ps, mask_sim, mask_normalize_counts, mask_roi, psf_r_func):
+def simulator(theta, temps_poiss, temps_ps, mask_sim, mask_normalize_counts, mask_roi, psf_r_func, exp_map):
 
     the_map = np.zeros(np.sum(~mask_sim))
     aux_vars = np.zeros(2)
@@ -32,12 +32,14 @@ def simulator(theta, temps_poiss, temps_ps, mask_sim, mask_normalize_counts, mas
             dnds_ary_temp = dnds(s_ary, theta[idx_theta_ps:idx_theta_ps + 6])
             s_exp = np.trapz(s_ary * dnds_ary_temp, s_ary)
             temp_ratio = np.sum(temp_ps[~mask_normalize_counts]) / np.sum(temp_ps)
-            dnds_ary_temp *= theta[idx_theta_ps] * np.sum(~mask_normalize_counts) / s_exp / temp_ratio
+            exp_ratio = np.mean(exp_map[~mask_normalize_counts]) / np.mean(exp_map)
+            dnds_ary_temp *= theta[idx_theta_ps] * np.sum(~mask_normalize_counts) / s_exp / temp_ratio / exp_ratio
             dnds_ary.append(dnds_ary_temp)
             idx_theta_ps += 6
 
+        exp_map_norm = exp_map / np.mean(exp_map)
         # Draw PSs and simulate map
-        sm = SimulateMap(temps_poiss, [norm_gce] + list(norms_poiss), [s_ary] * len(temps_ps), dnds_ary, temps_ps, psf_r_func)
+        sm = SimulateMap(temps_poiss, [norm_gce] + list(norms_poiss), [s_ary] * len(temps_ps), dnds_ary, temps_ps, psf_r_func, exp_map_norm)
         the_map_temp = sm.create_map()
         the_map_temp[mask_roi] = 0.
         the_map = the_map_temp[~mask_sim].astype(np.float32)
