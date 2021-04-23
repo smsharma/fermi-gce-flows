@@ -134,7 +134,7 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
 
     logger.info("Generating maps...")
     
-    x_and_aux = [simulator(theta.detach().numpy(), [temp_gce_poiss] + temps_poiss, [temp_gce_ps] + temps_ps, mask_sim, mask_normalize_counts, mask_roi, kp.psf_fermi_r) for (theta, temp_gce_poiss, temp_gce_ps) in tqdm(zip(thetas, temps_gce_poiss, temps_gce_ps))]
+    x_and_aux = [simulator(theta.detach().numpy(), [temp_gce_poiss] + temps_poiss, [temp_gce_ps] + temps_ps, mask_sim, mask_normalize_counts, mask_roi, kp.psf_fermi_r, fermi_exp) for (theta, temp_gce_poiss, temp_gce_ps) in tqdm(zip(thetas, temps_gce_poiss, temps_gce_ps))]
 
     # Grab maps and aux variables
     x = torch.Tensor(list(map(itemgetter(0), x_and_aux)))
