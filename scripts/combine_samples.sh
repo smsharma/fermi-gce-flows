@@ -11,5 +11,6 @@
 source ~/.bashrc
 conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi
-./combine_samples.py --regex train_ModelO_gamma_default_1M 'train_ModelO_gamma_default_\d+' --dir /scratch/sm8383/sbi-fermi/
+./combine_samples.py --regex train_ModelO_gamma_fix_1M 
+'train_ModelO_gamma_fix_\d+' --dir /scratch/sm8383/sbi-fermi/
 
