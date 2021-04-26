@@ -108,11 +108,17 @@ $10^{6}$ training samples are generated. Models are trained with batch size 64 u
 \section{Tests on simulated data}
 \label{sec:simulations}
 
+We begin by validating our trained model on simulated data. We create simulated datasets using the best-fit astrophysical model obtained from a non-Poissonian fit in our fiducal ROI, and test the ability of our model to infer the presence of either DM-like or PS-like signals on top of this background.
+
+Figure~\ref{fig:sim_sbi_dm} shows results on maps where the GCE consists of purely DM-like emission. The left column shows the middle-68/95\% containment of the point-wise posterior on the source-count distributions of GCE- and disk-correlated point source emission in red and blue, respectively. The middle column shows the posterior on emission of all components in our model. The right- column shows the fraction of DM- and PS-like emission in proportion to the total inferred flux in the ROI. The true underlying quantities from which the data was generated are represented by dotted lines. We see that, in all cases shown, we are successfully able to infer the presence of DM-like emission. Some PS-like emission is inferred in most cases as well, due to a combination of degeneracy with both disk-correlated and DM-like flux. The overall flux of all components corresponds well to their true underlying values.
+
+Figure~\ref{fig:sim_sbi_dm} shows the corresponding results for simulated data containing PS-like emission. We see that PS-like emission is successfully inferred in each case. Furthermore, the model is able to characterize the source-count of PSs through the source count distribution. Some degeneracy with disk-like source is seen.
+
 %
 \begin{figure*}
     \centering
     \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm.pdf}
-    \caption{Results on simulated data where the GCE consists of purely PS-like emission.}
+    \caption{Results on simulated data where the GCE consists of purely DM-like emission.}
     \label{fig:sim_sbi_dm}
 \end{figure*}
 %
@@ -121,13 +127,17 @@ $10^{6}$ training samples are generated. Models are trained with batch size 64 u
 \begin{figure*}
     \centering
     \includegraphics[width=0.95\textwidth]{plots/sim_sbi_ps.pdf}
-    \caption{Results on simulated data where the GCE consists of purely DM-like emission.}
+    \caption{Results on simulated data where the GCE consists of purely PS-like emission.}
     \label{fig:sim_sbi_ps}
 \end{figure*}
 %
 
 \section{Results on \emph{Fermi} data}
 \label{sec:data}
+
+We finally apply our formalism to real \Fermi data. The results are shown in Fig.~\ref{fig:fid_data}. The top panel shows results from this work, while the bottom row shows results from an NPTF analysis. No strong preference for either PS-like or DM-like emission is seen, contrary to the NPTF analysis.
+
+Figure~\ref{fig:sig_inj_data} shows the results of injecting a DM signal directly onto the \Fermi data. We see that the injected DM signal is successfully recovered and not misattributed to PS-like emission.
 
 %
 \begin{figure*}
@@ -166,17 +176,19 @@ $10^{6}$ training samples are generated. Models are trained with batch size 64 u
 \section{Conclusions}
 \label{sec:conclusion}
 
+The code used to obtain in this paper is available at \url{https://github.com/smsharma/sbi-fermi}.
+
 \vspace{.3cm}
 %%%%%%%%%%%%%%%
 
 \begin{acknowledgments}
 
-We thank\ldots for helpful conversations.  
+We thank Florian List, Nick Rodd, and Tracy Slatyer for helpful conversations.  
 KC is partially supported by NSF awards ACI-1450310, OAC-1836650, and OAC-1841471, the NSF grant PHY-1505463, and the Moore-Sloan Data Science Environment at NYU. 
 SM is supported by the NSF CAREER grant PHY-1554858, NSF grants PHY-1620727 and PHY-1915409, and the Simons Foundation. 
 This work made use of the NYU IT High Performance Computing resources, services, and staff expertise. 
 This research has made use of NASA's Astrophysics Data System. 
-This research made use of the \texttt{astropy}~\cite{Price-Whelan:2018hus,Robitaille:2013mpa}, \texttt{dynesty}~\cite{Speagle_2020}, \texttt{IPython}~\cite{PER-GRA:2007}, Jupyter~\cite{Kluyver2016JupyterN}, \texttt{matplotlib}~\cite{Hunter:2007}, \texttt{mlflow}, \texttt{NPTFit}, \texttt{NumPy}~\cite{numpy:2011}, \texttt{PyTorch}~\cite{NEURIPS2019_9015}, \texttt{PyTorch Geometric}~\cite{Fey/Lenssen/2019}, \texttt{PyTorch Lightning}~\cite{william_falcon_2020_3828935}, \texttt{seaborn}~\cite{seaborn}, \texttt{pandas}~\cite{pandas:2010}, \texttt{sbi}~\cite{tejero-cantero2020sbi}, \texttt{scikit-learn}~\cite{scikit-learn}, \texttt{SciPy}~\cite{2020SciPy-NMeth}, and \texttt{tqdm}~\cite{da2019tqdm}  software packages. 
+This research made use of the \texttt{astropy}~\cite{Price-Whelan:2018hus,Robitaille:2013mpa}, \texttt{dynesty}~\cite{Speagle_2020}, \texttt{IPython}~\cite{PER-GRA:2007}, Jupyter~\cite{Kluyver2016JupyterN}, \texttt{matplotlib}~\cite{Hunter:2007}, \texttt{mlflow}, \texttt{NPTFit}~\cite{Mishra-Sharma:2016gis}, \texttt{NumPy}~\cite{numpy:2011}, \texttt{PyTorch}~\cite{NEURIPS2019_9015}, \texttt{PyTorch Geometric}~\cite{Fey/Lenssen/2019}, \texttt{PyTorch Lightning}~\cite{william_falcon_2020_3828935}, \texttt{seaborn}~\cite{seaborn}, \texttt{pandas}~\cite{pandas:2010}, \texttt{sbi}~\cite{tejero-cantero2020sbi}, \texttt{scikit-learn}~\cite{scikit-learn}, \texttt{SciPy}~\cite{2020SciPy-NMeth}, and \texttt{tqdm}~\cite{da2019tqdm}  software packages. 
 \end{acknowledgments}
 
 % \appendix
