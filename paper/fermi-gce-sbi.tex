@@ -81,7 +81,7 @@ Of central interest in parameter estimation is often the probability distributio
 
 Simulation-based inference (SBI) refers to a class of methods for performing inference when the data-generating process does not have a tractable likelihood. In this setting, a model is defined through a simulator as a probabilistic program, often knows as a forward model. Samples $x$ from the simulator then implicitly define a likelihood, $x\sim p(x\mid\theta)$. In the simplest realizations of SBI, samples $x'$ generated from a given prior proposal distribution $p(\theta$) can be compared to a given dataset of interest $x$, with the approximate posterior defined by samples that most closely approximate $x$. Such methods---usually grouped under the umbrella term Approximate Bayesian Computation (ABC)---are not uncommon in astrophysics and cosmology. Nevertheless, they suffer from several downsides. The curse of dimensionality usually necessitates reduction of data to representative lower-dimensional summary statistics $s(x)$, resulting in loss of information. A notion and measure of distance between summaries from the implicit model and those derived from the dataset of interest is necessary, leading to inexact inference. Additionally, the ABC analysis must be performed anew for each new target dataset.
 
-Recently, methods leveraging advancements in machine learning and probabilistic programming have been developed in order to address these issues, enabling new ways of performing inference on complex models defined through simulations. See Ref. for a review of recent developments.
+Recently, methods leveraging advancements in machine learning and probabilistic programming have been developed in order to address these issues, enabling new ways of performing inference on complex models defined through simulations. See Ref.~\cite{cranmer2020frontier} for a review of recent developments.
 
 \subsection{Conditional density estimation with normalizing flows}
 
@@ -91,13 +91,21 @@ We employ normalizing flows, which provide a general way of constructing flexibl
 
 \subsection{Learning summary statistics with neural networks}
 
-The curse of dimensionality makes it computationally prohibitive to condition the density estimation task on the the raw dataset $x$ \emph{i.e.}, the $\gamma$-ray pixel counts map in the region of interest (ROI). Instead, we use a neural network to learn lower-dimensional summary features from the map, $s = s_\varphi(x)$. The \emph{DeepSphere} architecture, with a configuration similar to that introduced and employed in Ref., is used here and summarized briefly here. For more details on the summary extractor network, see Ref.
+The curse of dimensionality makes it computationally prohibitive to condition the density estimation task on the the raw dataset $x$ \emph{i.e.}, the $\gamma$-ray pixel counts map in the region of interest (ROI). Instead, we use a neural network to learn lower-dimensional summary features from the map, $s = s_\varphi(x)$. The \emph{DeepSphere}~\cite{defferrard2020deepsphere,Perraudin:2018rbt} architecture, with a configuration similar to that introduced and employed in Ref.~\cite{List:2020mzd}, is used here and summarized briefly here. For more details on the summary extractor network, see Ref.~\cite{List:2020mzd}.
 
-\subsection{}
+\subsection{Simulations and datasets}
 
-% based on Chebyshev spectral graph convolutions is used.
+We use the datasets and templates from Ref.~\cite{rodd_nicholas_safdi_siddharth_2016} (packaged with Ref.~\cite{Mishra-Sharma:2016gis}) to create the simulated maps. The data and templates used correspond to 413 weeks of \emph{Fermi}-LAT Pass 8 data collected between August 4, 2008 and July 7, 2016. The top quarter of photons in the energy range 2--20~GeV by quality of PSF reconstruction (corresponding to PSF3 event type) in the event class \texttt{ULTRACLEANVETO} are used. The recommended quality cuts are applied, corresponding to zenith angle less than 90$^\circ$, \texttt{LAT\_CONFIG} = 1, and \texttt{DATA\_QUAL} $> 0.1$.\footnote{\url{https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data_Exploration/Data_preparation.html}} The maps are spatially binned using HEALPix~\cite{Gorski:2004by} with \texttt{nside} = 128. Note that here we only use the real \Fermi-LAT counts data to determine the appropriate normalizations for the Poissonian astrophysical background templates.
 
-\section{Test on simulated data}
+The simulated data maps are a combination of smooth (\emph{i.e.}, Poissonian) and PS contributions. Each PS population is completely specified by its spatial and source-count distribution. Photon counts from a generated PS population are put down on a map according to the same \emph{Fermi} PSF described in the previous section using the algorithm implemented in the code package \texttt{NPTFit-Sim}~\cite{NPTFit-Sim}.
+
+In addition to the PS emission from subhalos and blazars, we also account for Poissonian astrophysical emission in the simulated maps.  These contributions include: \emph{(i)}~the Galactic diffuse foreground emission, described by \texttt{Model~O} from Ref.~\cite{Buschmann:2020adf} and found in that reference to be formally the best fit of the considered models to \emph{Fermi} data at higher latitudes $|b|>20^\circ$, \emph{(ii)}~isotropic emission, \emph{(iii)}~resolved PSs from the 3FGL catalog, and \emph{(iv)}~emission from the \Fermi bubbles~\cite{Su:2010qj}. The latter three templates are obtained from Ref.~\cite{rodd_nicholas_safdi_siddharth_2016} and the normalization of each template is set to the best-fit coefficient from a Poissonian regression of the templates to the \emph{Fermi} data in the analysis ROI. To get the normalization of the Poissonian isotropic template, we subtract the modeled blazar contribution from the best-fit isotropic Poissonian emission. This ensures that the total IGRB flux is consistent with observations. The final maps are obtained by combining a Poisson-fluctuated realization of the combined astrophysical templates with the subhalo and blazar PS maps. We use the provided PS mask~\cite{rodd_nicholas_safdi_siddharth_2016} to mask resolved 3FGL PSs at 95\% PSF containment.   
+
+\subsection{Optimization and training}
+
+$10^{6}$ training samples are generated. Models are trained with batch size 64 using the \texttt{AdamW} optimizer with initial learning rate $10^{-3}$ and weight decay $10^{-5}$. Cosine annealing is used to decay the learning rate, training for up to 50 epochs with early stopping.
+
+\section{Tests on simulated data}
 \label{sec:simulations}
 
 %
@@ -168,7 +176,7 @@ KC is partially supported by NSF awards ACI-1450310, OAC-1836650, and OAC-184147
 SM is supported by the NSF CAREER grant PHY-1554858, NSF grants PHY-1620727 and PHY-1915409, and the Simons Foundation. 
 This work made use of the NYU IT High Performance Computing resources, services, and staff expertise. 
 This research has made use of NASA's Astrophysics Data System. 
-This research made use of the \texttt{astropy}~\cite{Price-Whelan:2018hus,Robitaille:2013mpa}, \texttt{dynesty}, \texttt{IPython}~\cite{PER-GRA:2007}, Jupyter~\cite{Kluyver2016JupyterN}, \texttt{matplotlib}~\cite{Hunter:2007}, \texttt{mlflow}, \texttt{NPTFit}, \texttt{NumPy}~\cite{numpy:2011}, \texttt{PyTorch}, \texttt{PyTorch Geometric}, \texttt{PyTorch Lightning}, \texttt{seaborn}~\cite{seaborn}, \texttt{pandas}~\cite{pandas:2010}, \texttt{sbi}, \texttt{scikit-learn}, \texttt{SciPy}~\cite{2020SciPy-NMeth}, and \texttt{tqdm}~\cite{da2019tqdm}  software packages. 
+This research made use of the \texttt{astropy}~\cite{Price-Whelan:2018hus,Robitaille:2013mpa}, \texttt{dynesty}~\cite{Speagle_2020}, \texttt{IPython}~\cite{PER-GRA:2007}, Jupyter~\cite{Kluyver2016JupyterN}, \texttt{matplotlib}~\cite{Hunter:2007}, \texttt{mlflow}, \texttt{NPTFit}, \texttt{NumPy}~\cite{numpy:2011}, \texttt{PyTorch}~\cite{NEURIPS2019_9015}, \texttt{PyTorch Geometric}~\cite{Fey/Lenssen/2019}, \texttt{PyTorch Lightning}~\cite{william_falcon_2020_3828935}, \texttt{seaborn}~\cite{seaborn}, \texttt{pandas}~\cite{pandas:2010}, \texttt{sbi}~\cite{tejero-cantero2020sbi}, \texttt{scikit-learn}~\cite{scikit-learn}, \texttt{SciPy}~\cite{2020SciPy-NMeth}, and \texttt{tqdm}~\cite{da2019tqdm}  software packages. 
 \end{acknowledgments}
 
 % \appendix
