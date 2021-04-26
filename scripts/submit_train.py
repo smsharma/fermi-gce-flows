@@ -5,8 +5,8 @@ batch = """#!/bin/bash
 #SBATCH --job-name=train
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=42GB
-#SBATCH --time=39:59:00
+#SBATCH --mem=48GB
+#SBATCH --time=47:59:00
 #SBATCH --gres=gpu:1
 ##SBATCH --mail-type=begin
 #SBATCH --mail-type=end
@@ -21,8 +21,8 @@ cd /scratch/sm8383/sbi-fermi/
 # Explore configurations #
 ##########################
 
-batch_size_list = [128]
-fc_dims_list = [[[-1, 2048], [2048, 1024], [1024, 512]], [[-1, 2048], [2048, 512]], [[-1, 2048], [2048, 1024]]]
+batch_size_list = [64]
+fc_dims_list = [[[-1, 2048], [2048, 512]]]
 maf_num_transforms_list = [4, 12]
 maf_hidden_features_list = [128, 512]
 methods = ["snpe"]
@@ -52,7 +52,7 @@ for n_neighbours in n_neighbours_list:
                                                 for conv_source in conv_source_list:
                                                     for density_estimator in density_estimator_list:
                                                         batchn = batch + "\n"
-                                                        batchn += "python -u train.py --sample train_ModelO_gamma_default_1M --name gce_ModelO_gamma_default_1M --method {} --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {}".format(method, maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator)
+                                                        batchn += "python -u train.py --sample train_ModelO_gamma_fix_1M --name gce_ModelO_gamma_default_1M --method {} --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {}".format(method, maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator)
                                                         fname = "batch/submit.batch"
                                                         f = open(fname, "w")
                                                         f.write(batchn)
