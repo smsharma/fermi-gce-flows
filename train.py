@@ -214,6 +214,11 @@ if __name__ == "__main__":
     else:
         args.aux_summary = args.aux_summary.strip('][').split(',')
 
-    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=list(json.loads(args.fc_dims)), batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size, max_num_epochs=args.max_num_epochs, laplacian_type=args.laplacian_type, conv_source=args.conv_source, conv_type=args.conv_type, conv_channel_config=args.conv_channel_config, aux_summary=args.aux_summary, n_aux=args.n_aux, n_neighbours=args.n_neighbours, density_estimator_arch=args.density_estimator)
+    if args.fc_dims == "None":
+        args.fc_dims = None
+    else:
+        args.fc_dims = list(json.loads(args.fc_dims))
+
+    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=args.fc_dims, batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size, max_num_epochs=args.max_num_epochs, laplacian_type=args.laplacian_type, conv_source=args.conv_source, conv_type=args.conv_type, conv_channel_config=args.conv_channel_config, aux_summary=args.aux_summary, n_aux=args.n_aux, n_neighbours=args.n_neighbours, density_estimator_arch=args.density_estimator)
 
     logging.info("All done! Have a nice day!")

@@ -62,18 +62,20 @@ class SphericalGraphCNN(nn.Module):
             setattr(self, "layer_{}".format(i), layer)
             self.cnn_layers.append(layer)
 
-        # Set shape of first input of FC layers to correspond to output of conv layers + aux variables
-        fc_dims[0][0] = conv_config[-1][-1] * npix_final + self.n_aux + self.n_params
-        
         # Specify fully-connected part
         self.fc_layers = []
-        for i, (in_ch, out_ch) in enumerate(fc_dims):
-            if i == len(fc_dims) - 1:  # No activation in final FC layer
-                layer = nn.Sequential(nn.Linear(in_ch, out_ch))
-            else:
-                layer = nn.Sequential(nn.Linear(in_ch, out_ch), self.activation_function)
-            setattr(self, "layer_fc_{}".format(i), layer)
-            self.fc_layers.append(layer)
+
+        if fc_dims is not None:
+            # Set shape of first input of FC layers to correspond to output of conv layers + aux variables
+            fc_dims[0][0] = conv_config[-1][-1] * npix_final + self.n_aux + self.n_params
+        
+            for i, (in_ch, out_ch) in enumerate(fc_dims):
+                if i == len(fc_dims) - 1:  # No activation in final FC layer
+                    layer = nn.Sequential(nn.Linear(in_ch, out_ch))
+                else:
+                    layer = nn.Sequential(nn.Linear(in_ch, out_ch), self.activation_function)
+                setattr(self, "layer_fc_{}".format(i), layer)
+                self.fc_layers.append(layer)
 
     def forward(self, x):
         """Forward Pass.
