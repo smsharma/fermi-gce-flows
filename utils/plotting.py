@@ -100,7 +100,7 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         ## Fluxes plot, all templates except diffuse
 
         ax[i_r][2] = fig.add_subplot(gs[i_r,1])
-        ax2_max = 4.5
+        ax2_max = 5.5
 
         bins = np.linspace(0., 5, 60)
         hist_kwargs = {'bins':bins, 'alpha':0.9, 'histtype':'step', 'lw':1.5, 'density':True}

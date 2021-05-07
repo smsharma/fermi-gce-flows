@@ -103,7 +103,7 @@ In addition to the PS emission from subhalos and blazars, we also account for Po
 
 \subsection{Optimization and training}
 
-$10^{6}$ training samples are generated. Models are trained with batch size 64 using the \texttt{AdamW} optimizer with initial learning rate $10^{-3}$ and weight decay $10^{-5}$. Cosine annealing is used to decay the learning rate, training for up to 50 epochs with early stopping.
+$10^{6}$ training samples are generated. Models are trained with batch size 64 using the \texttt{AdamW} optimizer with initial learning rate $10^{-3}$ and weight decay $10^{-5}$. Cosine annealing is used to decay the learning rate, training for up to 100 epochs with early stopping if the validation loss has not improved after 10 epochs.
 
 \section{Tests on simulated data}
 \label{sec:simulations}
@@ -172,6 +172,13 @@ Figure~\ref{fig:sig_inj_data} shows the results of injecting a DM signal directl
 
 \section{Systematic variations on analysis}
 \label{sec:systematics}
+
+\begin{itemize}
+    \item Different diffuse models (Models A, B, F, p6v11, mismodeling, GP data-driven)
+    \item Different ROIs (15, 20, 25)
+    \item Varying inner slope of NFW profile
+    \item Different disk templates
+\end{itemize}
 
 \section{Conclusions}
 \label{sec:conclusion}
