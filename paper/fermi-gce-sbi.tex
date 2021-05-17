@@ -52,7 +52,7 @@ urlcolor=linkcolor,
 \date{\today}
 
 \begin{abstract}
-The nature of the \Fermi $\gamma$-ray Galactic Center Excess (GCE) has remained a persistent mystery for over a decade. Although the excess is broadly compatible with emission expected from annihilating dark matter, an explanation in terms of a population of unresolved point sources remains viable. The effort to uncover its origin is hampered in particular by the mischaracterization of the diffuse emission of Galactic origin, which can lead to spurious residuals that make it difficult to robustly differentiate smooth emission, as expected of dark matter origin, from more clumpy emission sources from relatively bright, unresolved point sources. We use neural simulation-based inference methods, in particular conditional density estimation, in order to extract more information from $\gamma$-ray maps of the Galactic Center with the aim of characterizing the contribution of unresolved point sources to the GCE.
+The nature of the \Fermi $\gamma$-ray Galactic Center Excess (GCE) has remained a persistent mystery for over a decade. Although the excess is broadly compatible with emission expected from annihilating dark matter, an explanation in terms of a population of unresolved point sources remains viable. The effort to uncover the origin of the GCE is hampered in particular by a poor understanding of the diffuse emission of Galactic origin, which can lead to spurious residuals that make it difficult to robustly differentiate smooth emission, as expected due to a dark matter origin, from more ``clumpy'' emission expected from relatively bright, unresolved point sources. We use neural simulation-based inference methods, in particular conditional density estimation with normalizing flows, in order to extract more information from $\gamma$-ray maps of the Galactic Center with the aim of characterizing the contribution of unresolved point sources to the GCE. We do not find a substantial preference for emission of point source origin within our framework.
 \end{abstract}
 
 \maketitle
@@ -60,18 +60,18 @@ The nature of the \Fermi $\gamma$-ray Galactic Center Excess (GCE) has remained 
 \section{Introduction}
 \label{sec:intro}
 
-Dark matter (DM) represents one of the major unsolved problems in particle physics and cosmology today. The traditional Weakly-Interacting Dark Matter (WIMP) paradigm envisions production of dark matter in the early Universe through freeze-out of dark matter particles weakly coupled to the Standard Model (SM). In this scenario, one of the most promising methods of detecting a dark matter signal would be through an excess of $\gamma$-ray photons from DM-rich regions of the sky, produced through the cascade of SM particles produced as a result of DM annihilation. 
+Dark matter (DM) represents one of the major unsolved problems in particle physics and cosmology today. The traditional Weakly-Interacting Dark Matter (WIMP) paradigm envisions production of dark matter in the early Universe through freeze-out of dark matter particles weakly coupled to the Standard Model (SM). In this scenario, one of the most promising methods of detecting a dark matter signal would be through an observation of excess $\gamma$-ray photons from DM-rich regions of the sky, produced through the cascade of SM particles resulting from DM annihilation. 
 
-The \Fermi $\gamma$-ray Galactic Center Excess (GCE), first identified over a decade ago using data from the \Fermi Large Area Telescope (LAT), is an excess of photons in the Galactic Center with properties---such as energy spectrum and spatial morphology---roughly compatible with that expected due to annihilation DM. The nature of the GCE remains contentious---although it's properties are similar to that expected from DM annihilation, competing explanations in terms of a population of unresolved astrophysical point sources (PSs) remain viable. Although analyses based on the statistics of photon counts in the Galactic Center have shown the data to prefer a point source origin of the excess, recent analyses have pointed out the potential of unknown systematics in the data---such as the morphology of the diffuse foreground emission---to bias the conclusions of these results. Furthermore, analyses of the spatial morphology of the excess have shown it to be more compatible with that tracing a stellar bulge distribution in the Galactic Center.
+The \Fermi $\gamma$-ray Galactic Center Excess (GCE), first identified over a decade ago using data from the \Fermi Large Area Telescope (LAT), is an excess of photons in the Galactic Center with properties---such as energy spectrum and spatial morphology---broadly compatible with that expected due to annihilating DM. The nature of the GCE remains contentious however, with competing explanations in terms of a population of unresolved astrophysical point sources (PSs) remaining viable. For example, analyses of the spatial morphology of the excess have shown it to be more compatible with that tracing a stellar bulge distribution in the Galactic Center. Furthermore, analyses based on the statistics of photons in the Galactic Center have shown the data to prefer a point source origin of the excess. Recent analyses have however pointed out the potential of unknown systematics---such as the poorly understood morphology of the diffuse foreground emission---to bias these conclusions.
 
-Novel analysis techniques that can extract more information from the high-dimensional photon count maps could do a better job of ``hedging'' against unknown systematics in the data compared to traditional analyses based on summary statistics like the 1-point PDF. Machine learning methods in particular have demonstrated promise for general analyses of $\gamma$-ray data and in particular focusing on understanding the nature of the GCE. In this paper, we leverage recent developments in the field of simulation-based inference (SBI) in order to weigh in on the nature of the GCE.
+ Due to the high-dimensional nature of $\gamma$-ray data, traditional analyses techniques have resorted to a hand-crafted reduction of the photon map into summaries such as the probability distribution of photon counts or a wavelet decomposition of the photon map. Novel analysis techniques that can extract more information from the photon maps could do a better job of hedging against unknown systematics in the data compared to traditional analyses based on specific statistics of the map. Machine learning methods in particular have demonstrated promise for general analyses of $\gamma$-ray data and in particular focusing on understanding the nature of the GCE. In this paper, we leverage recent developments in the field of simulation-based inference (SBI) in order to weigh in on the nature of the GCE.
 
 This paper is organized as follows. In Sec.~\ref{sec:analysis} we describe the various components of our analysis method based on simulation-based inference. In Sec.~\ref{sec:simulations} we describe our simulation pipeline and verify our analysis on simulated data. Section~\ref{sec:data} presents results on \Fermi $\gamma$-ray data. In Sec.~\ref{sec:mismodeling} we explore the susceptibility of the analysis to mismodeling of the background and signal templates, and present systematic variations on our analysis in Sec.~\ref{sec:systematics}. We conclude in Sec.~\ref{sec:conclusion}.
 
 \section{Methodology}
 \label{sec:analysis}
 
-We begin by describing our analysis methodology, going over, in turn the general principles behind simulation-based inference, posterior estimation using normalizing flows, and learning representative summary statistics from high-dimensional $\gamma$-ray maps with neural networks.
+We begin by describing our analysis methodology, going over in turn the general principles behind simulation-based inference, posterior estimation using normalizing flows, and learning representative summary statistics from high-dimensional $\gamma$-ray maps with neural networks.
 
 \subsection{Simulation-based inference}
 
@@ -79,15 +79,15 @@ Of central interest in parameter estimation is often the probability distributio
 
 % $\theta \sim p(\theta)$, $x\sim p(x\mid\theta, z)$, $z\sim p(z\mid\theta)$.
 
-Simulation-based inference (SBI) refers to a class of methods for performing inference when the data-generating process does not have a tractable likelihood. In this setting, a model is defined through a simulator as a probabilistic program, often knows as a forward model. Samples $x$ from the simulator then implicitly define a likelihood, $x\sim p(x\mid\theta)$. In the simplest realizations of SBI, samples $x'$ generated from a given prior proposal distribution $p(\theta$) can be compared to a given dataset of interest $x$, with the approximate posterior defined by samples that most closely approximate $x$. Such methods---usually grouped under the umbrella term Approximate Bayesian Computation (ABC)---are not uncommon in astrophysics and cosmology. Nevertheless, they suffer from several downsides. The curse of dimensionality usually necessitates reduction of data to representative lower-dimensional summary statistics $s(x)$, resulting in loss of information. A notion and measure of distance between summaries from the implicit model and those derived from the dataset of interest is necessary, leading to inexact inference. Additionally, the ABC analysis must be performed anew for each new target dataset.
+Simulation-based inference (SBI) refers to a class of methods for performing inference when the data-generating process does not have a tractable likelihood. In this setting, a model is defined through a simulator as a probabilistic program, often knows as a forward model. Samples $x$ from the simulator then implicitly define a likelihood, $x\sim p(x\mid\theta)$. In the simplest realizations of SBI, samples $x'$ generated from a given prior proposal distribution $p(\theta$) can be compared to a given dataset of interest $x$, with the approximate posterior defined by samples that most closely approximate $x$ according to some distance metric. Such methods---usually grouped under the umbrella of Approximate Bayesian Computation (ABC)---are not uncommon in astrophysics and cosmology. Nevertheless, they suffer from several downsides. The curse of dimensionality usually necessitates reduction of data to representative lower-dimensional summary statistics $s(x)$, resulting in loss of information. A notion and measure of distance between summaries from the implicit model and those derived from the dataset of interest is necessary, leading to inexact inference. Additionally, the ABC analysis must be performed anew for each new target dataset.
 
-Recently, methods leveraging advancements in machine learning and probabilistic programming have been developed in order to address these issues, enabling new ways of performing inference on complex models defined through simulations. See Ref.~\cite{cranmer2020frontier} for a review of recent developments.
+Recent methods have leveraged advancements in machine learning, in particular the ability of neural networks to extract useful features from high-dimensional data and flexibly approximate functions and distributions, in order to address these issues, enabling new ways of performing inference on complex models defined through simulations. See Ref.~\cite{cranmer2020frontier} for a review of recent developments.
 
 \subsection{Conditional density estimation with normalizing flows}
 
-In this paper, we approximate the joint posterior $p(\theta\mid x)$ through a parameterized distribution $\hat p_\phi(\theta\mid s)$ conditioned on summaries $s=s(x)$ from the samples $x$. This class of simulation-based inference techniques, known as conditional neural density estimation, directly models the posterior distribution given a set of samples drawn from simulator according to some prior proposal distribution $p(\theta)$.
+In this paper, we approximate the joint posterior $p(\theta\mid x)$ through a parameterized distribution $\hat p_\phi(\theta\mid s)$ conditioned on \emph{learned} summaries $s=s(x)$ from the samples $x$. This class of simulation-based inference techniques, known as conditional neural density estimation, directly models the posterior distribution given a set of samples drawn from simulator according to some prior proposal distribution $p(\theta)$.
 
-We employ normalizing flows, which provide a general way of constructing flexible probability distributions, for posterior estimation. Specifically, we use Masked Autoregressive Flows (MAFs).
+We employ normalizing flows, which provide an efficient way of constructing flexible probability distributions. Specifically, we use Masked Autoregressive Flows (MAFs) for posterior estimation.
 
 \subsection{Learning summary statistics with neural networks}
 
@@ -95,15 +95,15 @@ The curse of dimensionality makes it computationally prohibitive to condition th
 
 \subsection{Simulations and datasets}
 
-We use the datasets and templates from Ref.~\cite{rodd_nicholas_safdi_siddharth_2016} (packaged with Ref.~\cite{Mishra-Sharma:2016gis}) to create the simulated maps. The data and templates used correspond to 413 weeks of \emph{Fermi}-LAT Pass 8 data collected between August 4, 2008 and July 7, 2016. The top quarter of photons in the energy range 2--20~GeV by quality of PSF reconstruction (corresponding to PSF3 event type) in the event class \texttt{ULTRACLEANVETO} are used. The recommended quality cuts are applied, corresponding to zenith angle less than 90$^\circ$, \texttt{LAT\_CONFIG} = 1, and \texttt{DATA\_QUAL} $> 0.1$.\footnote{\url{https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data_Exploration/Data_preparation.html}} The maps are spatially binned using HEALPix~\cite{Gorski:2004by} with \texttt{nside} = 128. Note that here we only use the real \Fermi-LAT counts data to determine the appropriate normalizations for the Poissonian astrophysical background templates.
+We use the datasets and templates from Ref.~\cite{rodd_nicholas_safdi_siddharth_2016} (packaged with Ref.~\cite{Mishra-Sharma:2016gis}) to create the simulated maps. The data and templates used correspond to 413 weeks of \emph{Fermi}-LAT Pass 8 data collected between August 4, 2008 and July 7, 2016. The top quarter of photons in the energy range 2--20~GeV by quality of PSF reconstruction (corresponding to PSF3 event type) in the event class \texttt{ULTRACLEANVETO} are used. The recommended quality cuts are applied, corresponding to zenith angle less than 90$^\circ$, \texttt{LAT\_CONFIG} = 1, and \texttt{DATA\_QUAL} $> 0.1$.\footnote{\url{https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data_Exploration/Data_preparation.html}} The maps are spatially binned using HEALPix~\cite{Gorski:2004by} with \texttt{nside} = 128.
 
-The simulated data maps are a combination of smooth (\emph{i.e.}, Poissonian) and PS contributions. Each PS population is completely specified by its spatial and source-count distribution. Photon counts from a generated PS population are put down on a map according to the same \emph{Fermi} PSF described in the previous section using the algorithm implemented in the code package \texttt{NPTFit-Sim}~\cite{NPTFit-Sim}.
+The simulated data maps are a combination of smooth (\emph{i.e.}, Poissonian) and PS contributions. Each PS population is completely specified by its spatial and source-count distribution. Photon counts from a generated PS population are put down on a map according to the \emph{Fermi} PSF at 2 GeV, modeled as a King function, using the algorithm implemented in the code package \texttt{NPTFit-Sim}~\cite{NPTFit-Sim}. PS populations spatially correlated with t
 
-In addition to the PS emission from subhalos and blazars, we also account for Poissonian astrophysical emission in the simulated maps.  These contributions include: \emph{(i)}~the Galactic diffuse foreground emission, described by \texttt{Model~O} from Ref.~\cite{Buschmann:2020adf} and found in that reference to be formally the best fit of the considered models to \emph{Fermi} data at higher latitudes $|b|>20^\circ$, \emph{(ii)}~isotropic emission, \emph{(iii)}~resolved PSs from the 3FGL catalog, and \emph{(iv)}~emission from the \Fermi bubbles~\cite{Su:2010qj}. The latter three templates are obtained from Ref.~\cite{rodd_nicholas_safdi_siddharth_2016} and the normalization of each template is set to the best-fit coefficient from a Poissonian regression of the templates to the \emph{Fermi} data in the analysis ROI. To get the normalization of the Poissonian isotropic template, we subtract the modeled blazar contribution from the best-fit isotropic Poissonian emission. This ensures that the total IGRB flux is consistent with observations. The final maps are obtained by combining a Poisson-fluctuated realization of the combined astrophysical templates with the subhalo and blazar PS maps. We use the provided PS mask~\cite{rodd_nicholas_safdi_siddharth_2016} to mask resolved 3FGL PSs at 95\% PSF containment.   
+In addition to the PS emission from subhalos and blazars, we also account for Poissonian astrophysical emission in the simulated maps.  These contributions include: \emph{(i)}~the Galactic diffuse foreground emission, described by \texttt{Model~O} from Ref.~\cite{Buschmann:2020adf}, \emph{(ii)}~isotropic emission, \emph{(iii)}~resolved PSs from the 3FGL catalog, and \emph{(iv)}~emission from the \Fermi bubbles~\cite{Su:2010qj}. The latter three templates are obtained from Ref.~\cite{rodd_nicholas_safdi_siddharth_2016}. The final maps are obtained by combining a Poisson-fluctuated realization of the combined astrophysical templates with the PS maps. We mask resolved PSs from the 3FGL catalog at a containment radius of $0.8^\circ$.   
 
 \subsection{Optimization and training}
 
-$10^{6}$ training samples are generated. Models are trained with batch size 64 using the \texttt{AdamW} optimizer with initial learning rate $10^{-3}$ and weight decay $10^{-5}$. Cosine annealing is used to decay the learning rate, training for up to 100 epochs with early stopping if the validation loss has not improved after 10 epochs.
+$10^{6}$ training samples are generated. Models are trained with batch size 128 using the \texttt{AdamW} optimizer with initial learning rate $10^{-3}$ and weight decay $10^{-5}$. Cosine annealing is used to decay the learning rate, training for up to 100 epochs with early stopping if the validation loss has not improved after 10 epochs.
 
 \section{Tests on simulated data}
 \label{sec:simulations}
@@ -137,8 +137,6 @@ Figure~\ref{fig:sim_sbi_dm} shows the corresponding results for simulated data c
 
 We finally apply our formalism to real \Fermi data. The results are shown in Fig.~\ref{fig:fid_data}. The top panel shows results from this work, while the bottom row shows results from an NPTF analysis. No strong preference for either PS-like or DM-like emission is seen, contrary to the NPTF analysis.
 
-Figure~\ref{fig:sig_inj_data} shows the results of injecting a DM signal directly onto the \Fermi data. We see that the injected DM signal is successfully recovered and not misattributed to PS-like emission.
-
 %
 \begin{figure*}
     \centering
@@ -151,6 +149,8 @@ Figure~\ref{fig:sig_inj_data} shows the results of injecting a DM signal directl
 
 \subsection{Signal injection test}
 \label{sec:sig-injection}
+
+Figure~\ref{fig:sig_inj_data} shows the results of injecting a DM signal directly onto the \Fermi data. We see that the injected DM signal is successfully recovered and not misattributed to PS-like emission.
 
 %
 \begin{figure*}
@@ -166,6 +166,16 @@ Figure~\ref{fig:sig_inj_data} shows the results of injecting a DM signal directl
 
 \subsection{Foreground mismodeling}
 \label{sec:fg-mismodeling}
+
+%
+\begin{figure}
+    \centering
+    \includegraphics[width=0.47\textwidth]{plots/dd_mismo_map.pdf}
+    \caption{Data-driven mismodeling.}
+    \label{fig:dd_mismo_map}
+\end{figure}
+%
+
 
 \subsection{Signal mismodeling}
 \label{sec:sig-mismodeling}
