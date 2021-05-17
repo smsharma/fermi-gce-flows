@@ -68,7 +68,8 @@ class PosteriorEstimator(NeuralInference, ABC):
         clip_max_norm: Optional[float] = 1.0,
         summary=False,
         summary_range=None,
-        x_summary_aux_filenames=None
+        x_summary_aux_filenames=None,
+        mask=None
     ) -> DirectPosterior:
 
         optimizer_kwargs = {} if optimizer_kwargs is None else optimizer_kwargs
@@ -119,6 +120,9 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         theta_z_score, x_z_score, x_aux_z_score = train_loader.dataset[:num_z_score]
 
+        if mask is not None:
+            x_z_score[:, :, mask] = 0.
+            
         x_and_aux_z_score = torch.cat([x_z_score, x_aux_z_score], -1)
 
         if summary:
@@ -141,7 +145,8 @@ class PosteriorEstimator(NeuralInference, ABC):
             optimizer_kwargs=optimizer_kwargs, 
             scheduler=scheduler, 
             scheduler_kwargs=scheduler_kwargs,
-            summary=summary
+            summary=summary,
+            mask=mask
         )
 
         checkpoint_path = "{}/{}/{}/artifacts/checkpoints/".format(self.summary_writer.save_dir, self.summary_writer.experiment_id, self.summary_writer.run_id)
@@ -185,7 +190,8 @@ class PosteriorEstimator(NeuralInference, ABC):
             optimizer_kwargs=optimizer_kwargs, 
             scheduler=scheduler, 
             scheduler_kwargs=scheduler_kwargs,
-            summary=summary
+            summary=summary,
+            mask=mask
         )
 
         # Return the posterior net corresponding to the best model

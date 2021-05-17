@@ -40,7 +40,7 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     logging.info("")
 
     # Get mask of central pixel for nside=1
-    hp_mask_nside1 = cm.make_mask_total(nside=1, band_mask=True, band_mask_range=0, mask_ring=True, inner=0, outer=r_outer)
+    hp_mask_nside1 = cm.make_mask_total(nside=1, band_mask=True, band_mask_range=0, mask_ring=True, inner=0, outer=25.)
 
     indexes_list = []
     masks_list = []
@@ -58,6 +58,15 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     
     hp_mask_nside1 = hp.reorder(hp_mask_nside1, r2n=True)  # Switch to NESTED pixel order as that's required for DeepSphere batchnorm
 
+    # Create mask if reducing ROI from the one specified in the training data
+    roi_mask_reduced = cm.make_mask_total(nside=128, band_mask=True, band_mask_range=2, mask_ring=True, inner=0, outer=r_outer)
+    roi_mask_reduced = hp.reorder(roi_mask_reduced, r2n=True)
+    indices_mask_reduced = np.intersect1d(np.where(~masks_list[0] == 1), np.where(~roi_mask_reduced == 1), return_indices=True)[1]
+    a = indices_mask_reduced
+    b = np.arange(np.sum(~masks_list[0] == 1))
+    mask_reduce = torch.Tensor(np.setdiff1d(np.union1d(a, b), np.intersect1d(a, b))).type(torch.int64)
+
+    print(mask_reduce.shape, mask_reduce)
     # Priors hard-coded for now
 
     # iso, bub, psc, dif_pibrem, dif_ics
@@ -117,7 +126,8 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
                                     optimizer_kwargs=optimizer_kwargs,
                                     summary=summary,
                                     summary_range=summary_range,
-                                    x_summary_aux_filenames=x_summary_aux_filenames)
+                                    x_summary_aux_filenames=x_summary_aux_filenames,
+                                    mask=mask_reduce)
         
         # Save density estimator
         mlflow.set_tracking_uri(tracking_uri)
@@ -175,6 +185,7 @@ def parse_args():
     parser.add_argument("--summary", type=str, default=None, help='Whether using a summary statistic')
     parser.add_argument("--summary_range", type=str, default="None", help='Whether to use only a subset of the summary stats')
     parser.add_argument("--name", type=str, default='test', help='Experiment name')
+    parser.add_argument("--r_outer", type=float, default=25., help="Additional mask to reduce map to.")
     parser.add_argument("--laplacian_type", type=str, default='normalized', help='"normalized" or "combinatorial" Laplacian')
     parser.add_argument("--conv_source", type=str, default='deepsphere', help='Use "deepsphere" or "geometric" implementation of ChebConv layer')
     parser.add_argument("--conv_type", type=str, default='chebconv', help='Use "chebconv" or "gcn" graph convolution layers')
@@ -219,6 +230,6 @@ if __name__ == "__main__":
     else:
         args.fc_dims = list(json.loads(args.fc_dims))
 
-    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=args.fc_dims, batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size, max_num_epochs=args.max_num_epochs, laplacian_type=args.laplacian_type, conv_source=args.conv_source, conv_type=args.conv_type, conv_channel_config=args.conv_channel_config, aux_summary=args.aux_summary, n_aux=args.n_aux, n_neighbours=args.n_neighbours, density_estimator_arch=args.density_estimator)
+    train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=args.fc_dims, batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size, max_num_epochs=args.max_num_epochs, laplacian_type=args.laplacian_type, conv_source=args.conv_source, conv_type=args.conv_type, conv_channel_config=args.conv_channel_config, aux_summary=args.aux_summary, n_aux=args.n_aux, n_neighbours=args.n_neighbours, density_estimator_arch=args.density_estimator, r_outer=args.r_outer)
 
     logging.info("All done! Have a nice day!")
