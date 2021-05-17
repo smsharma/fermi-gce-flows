@@ -66,7 +66,6 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     b = np.arange(np.sum(~masks_list[0] == 1))
     mask_reduce = torch.Tensor(np.setdiff1d(np.union1d(a, b), np.intersect1d(a, b))).type(torch.int64)
 
-    print(mask_reduce.shape, mask_reduce)
     # Priors hard-coded for now
 
     # iso, bub, psc, dif_pibrem, dif_ics

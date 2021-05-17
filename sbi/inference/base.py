@@ -59,7 +59,6 @@ class EstimatorNet(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         theta, x, x_aux = batch
         x[:, :, self.mask] = 0.
-        print(torch.sum(x))
         x_and_aux = torch.cat([x, x_aux], -1)
         if self.summary:
             x_and_aux = torch.squeeze(x_and_aux, 1)
