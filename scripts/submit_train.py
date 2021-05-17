@@ -5,7 +5,7 @@ batch = """#!/bin/bash
 #SBATCH --job-name=train
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=48GB
+#SBATCH --mem=32GB
 #SBATCH --time=47:59:00
 #SBATCH --gres=gpu:1
 ##SBATCH --mail-type=begin
@@ -21,14 +21,14 @@ cd /scratch/sm8383/sbi-fermi/
 # Explore configurations #
 ##########################
 
-batch_size_list = [64]
-fc_dims_list = [[[-1, 2048], [2048, 512]]]
-maf_num_transforms_list = [4]
+batch_size_list = [128]
+fc_dims_list = [[[-1, 1024], [1024, 128]]]
+maf_num_transforms_list = [8]
 maf_hidden_features_list = [128]
 methods = ["snpe"]
 activations = ["relu"]
 kernel_size_list = [4]
-n_neighbours_list = [20]
+n_neighbours_list = [8]
 conv_channel_configs = ["standard"]
 laplacian_types = ["combinatorial"]
 conv_types = ["chebconv"]
@@ -36,6 +36,7 @@ conv_source_list = ["deepsphere"]
 aux_summaries = ["None"]
 n_aux_list = [2]
 density_estimator_list = ["maf"]
+r_outer_list = [10, 15, 20, 25]
 
 for n_neighbours in n_neighbours_list:
     for maf_num_transforms in maf_num_transforms_list:
@@ -51,14 +52,15 @@ for n_neighbours in n_neighbours_list:
                                             for aux_summary, n_aux in zip(aux_summaries, n_aux_list):
                                                 for conv_source in conv_source_list:
                                                     for density_estimator in density_estimator_list:
-                                                        batchn = batch + "\n"
-                                                        batchn += "python -u train.py --sample train_ModelO_gamma_fix_1M --name gce_ModelO_gamma_default_1M --method {} --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {}".format(method, maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator)
-                                                        fname = "batch/submit.batch"
-                                                        f = open(fname, "w")
-                                                        f.write(batchn)
-                                                        f.close()
-                                                        os.system("chmod +x " + fname)
-                                                        os.system("sbatch " + fname)
+                                                        for r_outer in r_outer_list:
+                                                            batchn = batch + "\n"
+                                                            batchn += "python -u train.py --sample train_ModelO_gamma_fix_1M --name gce_ModelO_gamma_default_1M --method {} --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {} --r_outer {}".format(method, maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator, r_outer)
+                                                            fname = "batch/submit.batch"
+                                                            f = open(fname, "w")
+                                                            f.write(batchn)
+                                                            f.close()
+                                                            os.system("chmod +x " + fname)
+                                                            os.system("sbatch " + fname)
 
 # ##################
 # # Just summaries #
