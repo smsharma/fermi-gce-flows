@@ -132,7 +132,7 @@ class NeuralInference(ABC):
         return dataset
 
     @staticmethod
-    def make_dataloaders(dataset, validation_split, batch_size, num_workers=16, pin_memory=True, seed=None):
+    def make_dataloaders(dataset, validation_split, batch_size, num_workers=8, pin_memory=True, seed=None):
         if validation_split is None or validation_split <= 0.0:
             train_loader = DataLoader(
                 dataset,

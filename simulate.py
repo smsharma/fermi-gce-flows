@@ -62,6 +62,12 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     temp_mO_pibrem = np.load('data/fermi_data/ModelO_r25_q1_pibrem.npy')
     temp_mO_ics = np.load('data/fermi_data/ModelO_r25_q1_ics.npy')
 
+    # Load Model A templates
+    temp_mA_pibrem = np.load('data/modelA/modelA_brempi0.npy')
+    temp_mA_pibrem /= np.mean(temp_mA_pibrem[~roi_normalize_temps])
+    temp_mA_ics = np.load('data/modelA/modelA_ics.npy')
+    temp_mA_ics /= np.mean(temp_mA_ics[~roi_normalize_temps]) 
+
     logger.info("Generating training data with %s maps", n)
 
     # Dict to save results
@@ -86,6 +92,9 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     if dif == "ModelO":
         # iso, bub, psc, dif_pibrem, dif_ics
         prior_poiss = [[0.001, 0.001, 0.001, 6., 1.], [1.5, 1.5, 1.5, 12., 6.]]
+    elif dif == "ModelA":
+        # iso, bub, psc, dif_pibrem, dif_ics
+        prior_poiss = [[0.001, 0.001, 0.001, 6., 0.001], [1.5, 1.5, 1.5, 12., 5.]]
     elif dif == "p6v11":
         # iso, bub, psc, dif
         prior_poiss = [[0.001, 0.001, 0.001, 11.], [1.5, 1.5, 1.5, 16.]]
@@ -125,6 +134,8 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
 
     if dif == "ModelO":
         temps_poiss = [temp_iso, temp_bub, temp_psc, temp_mO_pibrem, temp_mO_ics]
+    elif dif == "ModelA":
+        temps_poiss = [temp_iso, temp_bub, temp_psc, temp_mA_pibrem, temp_mA_ics]
     elif dif == "p6v11":
         temps_poiss = [temp_iso, temp_bub, temp_psc, temp_dif]
     else:
