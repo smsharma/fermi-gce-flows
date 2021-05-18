@@ -28,7 +28,7 @@ maf_hidden_features_list = [128]
 methods = ["snpe"]
 activations = ["relu"]
 kernel_size_list = [4]
-n_neighbours_list = [8]
+n_neighbours_list = [8, 20]
 conv_channel_configs = ["standard"]
 laplacian_types = ["combinatorial"]
 conv_types = ["chebconv"]
@@ -36,7 +36,7 @@ conv_source_list = ["deepsphere"]
 aux_summaries = ["None"]
 n_aux_list = [2]
 density_estimator_list = ["maf"]
-r_outer_list = [10, 15, 20, 25]
+r_outer_list = [25]
 
 for n_neighbours in n_neighbours_list:
     for maf_num_transforms in maf_num_transforms_list:
@@ -54,7 +54,7 @@ for n_neighbours in n_neighbours_list:
                                                     for density_estimator in density_estimator_list:
                                                         for r_outer in r_outer_list:
                                                             batchn = batch + "\n"
-                                                            batchn += "python -u train.py --sample train_ModelO_gamma_fix_1M --name gce_ModelO_gamma_default_1M --method {} --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {} --r_outer {}".format(method, maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator, r_outer)
+                                                            batchn += "python -u train.py --sample train_ModelA_gamma_fix_1M --name gce_ModelA_gamma_default_1M --method {} --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {} --r_outer {}".format(method, maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator, r_outer)
                                                             fname = "batch/submit.batch"
                                                             f = open(fname, "w")
                                                             f.write(batchn)
