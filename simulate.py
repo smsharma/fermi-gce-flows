@@ -63,9 +63,10 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     temp_mO_ics = np.load('data/fermi_data/ModelO_r25_q1_ics.npy')
 
     # Load Model A templates
-    temp_mA_pibrem = np.load('data/modelA/modelA_brempi0.npy')
+    temp_mA_pibrem = hp.ud_grade(np.load('data/modelA/modelA_brempi0.npy'), nside_out=128, power=-2)
+    temp_mA_ics = hp.ud_grade(np.load('data/modelA/modelA_ics.npy'), nside_out=128, power=-2)
+    
     temp_mA_pibrem /= np.mean(temp_mA_pibrem[~roi_normalize_temps])
-    temp_mA_ics = np.load('data/modelA/modelA_ics.npy')
     temp_mA_ics /= np.mean(temp_mA_ics[~roi_normalize_temps]) 
 
     logger.info("Generating training data with %s maps", n)
