@@ -21,7 +21,7 @@ from utils.utils import ring2nest
 from models.psf import KingPSF
 
 
-def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="default"):
+def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="default", ps_mask_type="0p8deg"):
     """ High-level simulation script
     """
 
@@ -35,7 +35,11 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     mask_normalize_counts = cm.make_mask_total(nside=nside, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=25.)
 
     # Get ROI mask
-    ps_mask = np.load("data/mask_3fgl_0p8deg.npy")
+    if ps_mask_type == "0p8deg":
+        ps_mask = np.load("data/mask_3fgl_0p8deg.npy")
+    elif ps_mask_type == "95pc":
+        ps_mask = np.load("data/fermi_data/fermidata_pscmask.npy")
+
     mask_roi = cm.make_mask_total(nside=nside, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=r_outer, custom_mask=ps_mask)
 
     # ROI over which templates are normalized
@@ -63,11 +67,12 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     temp_mO_ics = np.load('data/fermi_data/ModelO_r25_q1_ics.npy')
 
     # Load Model A templates
-    temp_mA_pibrem = hp.ud_grade(np.load('data/modelA/modelA_brempi0.npy'), nside_out=128, power=-2)
-    temp_mA_ics = hp.ud_grade(np.load('data/modelA/modelA_ics.npy'), nside_out=128, power=-2)
+    temp_mA_pibrem = hp.ud_grade(np.load('data/external/template_Api'), nside_out=128, power=-2)
+    temp_mA_ics = hp.ud_grade(np.load('data/external/template_Aic.npy'), nside_out=128, power=-2)
     
-    temp_mA_pibrem /= np.mean(temp_mA_pibrem[~roi_normalize_temps])
-    temp_mA_ics /= np.mean(temp_mA_ics[~roi_normalize_temps]) 
+    # Load Model F templates
+    temp_mF_pibrem = hp.ud_grade(np.load('data/external/template_Fpi'), nside_out=128, power=-2)
+    temp_mF_ics = hp.ud_grade(np.load('data/external/template_Fic.npy'), nside_out=128, power=-2)
 
     logger.info("Generating training data with %s maps", n)
 
@@ -90,12 +95,9 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
 
     # Poiss priors
 
-    if dif == "ModelO":
+    if dif in ["ModelO", "ModelA", "ModelF"]:
         # iso, bub, psc, dif_pibrem, dif_ics
         prior_poiss = [[0.001, 0.001, 0.001, 6., 1.], [1.5, 1.5, 1.5, 12., 6.]]
-    elif dif == "ModelA":
-        # iso, bub, psc, dif_pibrem, dif_ics
-        prior_poiss = [[0.001, 0.001, 0.001, 6., 0.001], [1.5, 1.5, 1.5, 12., 5.]]
     elif dif == "p6v11":
         # iso, bub, psc, dif
         prior_poiss = [[0.001, 0.001, 0.001, 11.], [1.5, 1.5, 1.5, 16.]]
@@ -137,6 +139,8 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
         temps_poiss = [temp_iso, temp_bub, temp_psc, temp_mO_pibrem, temp_mO_ics]
     elif dif == "ModelA":
         temps_poiss = [temp_iso, temp_bub, temp_psc, temp_mA_pibrem, temp_mA_ics]
+    elif dif == "ModelF":
+        temps_poiss = [temp_iso, temp_bub, temp_psc, temp_mF_pibrem, temp_mF_ics]
     elif dif == "p6v11":
         temps_poiss = [temp_iso, temp_bub, temp_psc, temp_dif]
     else:
@@ -190,7 +194,8 @@ def parse_args():
     parser.add_argument(
         "-n", type=int, default=10000, help="Number of samples to generate. Default is 10k.",
     )
-    parser.add_argument("--dif", type=str, default="ModelO", help='Diffuse model to simulate, wither "ModelO" (default) or "p6"')
+    parser.add_argument("--dif", type=str, default="ModelO", help='Diffuse model to simulate, whether "ModelO" (default) or "p6"')
+    parser.add_argument("--ps_mask_type", type=str, default="0p8deg", help='PS mask, either "0p8deg" (default) or "95pc"')
     parser.add_argument("--gamma", type=str, default="default", help='Whether to float NFW index gamma. "fix" (default, fixes to gamma=1.2), "float" (float both gammas), or "float_both" (float PS and poiss gammas separately)')
     parser.add_argument("--name", type=str, default=None, help='Sample name, like "train" or "test".')
     parser.add_argument("--dir", type=str, default=".", help="Base directory. Results will be saved in the data/samples subfolder.")
@@ -209,7 +214,7 @@ if __name__ == "__main__":
     logger.info("Hi!")
 
     name = "train" if args.name is None else args.name
-    results = simulate(n=args.n, dif=args.dif, gamma=args.gamma)
+    results = simulate(n=args.n, dif=args.dif, gamma=args.gamma, ps_mask_type=args.ps_mask_type)
     save(args.dir, name, results)
 
     logger.info("All done! Have a nice day!")
