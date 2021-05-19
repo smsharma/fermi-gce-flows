@@ -9,6 +9,10 @@ python setup.py install
 
 ## TODO
 
+[ ] Check effect of Z-scoring
+[ ] Check effect of 0.95% containment mask
+[ ] Check batchnorm
+[ ] Check simpler graph kernel
 
 <!-- - [X] Add more training options (optimization, early stopping)
 - [X] More embedding net options
