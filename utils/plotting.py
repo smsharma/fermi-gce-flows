@@ -150,8 +150,8 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         ## Fluxes plot, diffuse templates
 
         ax[i_r][3] = fig.add_subplot(gs[i_r,2])
-        ax3_min = 2.
-        ax3_max = 25.
+        ax3_min = 1.
+        ax3_max = 30.
 
         bins = np.linspace(ax3_min, ax3_max, np.int(60))
         hist_kwargs.update(bins=bins)
