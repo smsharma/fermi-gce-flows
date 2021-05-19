@@ -11,6 +11,5 @@
 source ~/.bashrc
 conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi/
-# python -u simulate.py -n 1000 --name train_ModelO_gamma_default_${SLURM_ARRAY_TASK_ID} --dir /scratch/sm8383/sbi-fermi/ --gamma default
-# python -u simulate.py -n 1000 --name train_ModelO_gamma_fix_${SLURM_ARRAY_TASK_ID} --dir /scratch/sm8383/sbi-fermi/ --gamma fix
-python -u simulate.py -n 1000 --name train_ModelA_gamma_fix_${SLURM_ARRAY_TASK_ID} --dir /scratch/sm8383/sbi-fermi/ --gamma fix --dif ModelA
+
+python -u simulate.py -n 1000 --name train_ModelF_gamma_fix_${SLURM_ARRAY_TASK_ID} --dir /scratch/sm8383/sbi-fermi/ --gamma fix --dif ModelF
