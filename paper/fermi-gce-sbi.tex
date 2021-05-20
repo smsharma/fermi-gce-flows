@@ -85,9 +85,32 @@ Recent methods have leveraged advancements in machine learning, in particular th
 
 \subsection{Conditional density estimation with normalizing flows}
 
-In this paper, we approximate the joint posterior $p(\theta\mid x)$ through a parameterized distribution $\hat p_\phi(\theta\mid s)$ conditioned on \emph{learned} summaries $s=s(x)$ from the samples $x$. This class of simulation-based inference techniques, known as conditional neural density estimation, directly models the posterior distribution given a set of samples drawn from simulator according to some prior proposal distribution $p(\theta)$.
+In this paper, we approximate the joint posterior $p(\theta\mid x)$ through a parameterized distribution $\hat p_\phi(\theta\mid s)$ conditioned on \emph{learned} summaries $s=s(x)$ from the simulated samples $x$. This class of simulation-based inference techniques, known as conditional neural density estimation, directly models the posterior distribution given a set of samples drawn from simulator according to some prior proposal distribution $p(\theta)$.
 
-We employ normalizing flows, which provide an efficient way of constructing flexible probability distributions. Specifically, we use Masked Autoregressive Flows (MAFs) for posterior estimation.
+We employ normalizing flows, which provide an efficient way of constructing flexible probability distributions. Normalizing flows model the conditional distribution $\hat p_\phi(\theta\mid s)$ as a series of invertible transformations, denoted $f$ and having a tractable inverse and Jacobian, from a base distribution $\pi_z{z}$, chosen here to be a standard Gaussian, to the target distribution:
+\begin{equation}
+    \hat{p}({\theta} \mid {x})=\pi_{z}\left(f^{-1}({\theta})\right)\left|\operatorname{det}\left(\frac{\partial f^{-1}}{\partial {\theta}}\right)\right|
+\end{equation}
+Specifically, we use Masked Autoregressive Flows (MAFs) for posterior estimation. The MAF is built upon blocks of affine transformations where the scaling and shifting factors for each dimension are computed with a Masked Autoencoder for Distribution Estimation (MADE). For a single block, the transformation is expressed as 
+\begin{equation}
+    \label{eq:maf_z}
+    z_{i}=\left(\theta_{i}-\mu_{i}\right) \cdot \exp \left(-\alpha_{i}\right)
+\end{equation}
+where $\mu_{i}=f_{\mu_{i}}\left({\theta}_{1: i-1} ; {x}\right)$ and $\alpha_i = f_{\alpha_{i}}\left({\theta}_{1: i-1} ; {x}\right)$ are scaling and shift factors modeled by a MADE according to the autoregressive condition. This allows for an analytically tractable determinant,
+\begin{equation}
+    \label{eq:det}
+    \left|\operatorname{det}\left(\frac{\partial f^{-1}}{\partial {\theta}}\right)\right|=\exp \left(-\sum_{i} \alpha_{i}\right)
+\end{equation}
+and forward sampling according to Eq.~\ref{eq:maf_z}.
+Multiple transformations can be chained together as $f=f_{1} \circ f_{2} \circ \ldots \circ f_{K}$ in order to model more expressive posteriors,
+\begin{equation}
+    \hat{p}({\theta} \mid {x})=\pi_{z}\left(f^{-1}({\theta})\right) \prod_{i=1}^{K}\left|\operatorname{det}\left(\frac{\partial f_{i}^{-1}}{\partial {z}_{i-1}}\right)\right|
+\end{equation}
+The log-probability of the posterior can be computed using Eq.~\ref{eq:det}:
+\begin{equation}
+    \log \hat{p}({\theta} \mid {x}) = \log \left[\pi_{z}\left(f^{-1}(\boldsymbol{\theta})\right)\right]-\sum_{i=1}^{K} \sum_{j=1}^{N} \alpha_{j}^{i},
+\end{equation}
+which acts as the optimization objective.
 
 \subsection{Learning summary statistics with neural networks}
 
@@ -164,6 +187,8 @@ Figure~\ref{fig:sig_inj_data} shows the results of injecting a DM signal directl
 \section{Susceptibility to mismodeling}
 \label{sec:mismodeling}
 
+The key challenge associated with Galactic Center analyses is that associated with effects of mismodeled signal and background templates. In this section we assess the susceptibility of our simulation-based inference pipeline towards these systematics, discussing foreground and signal modeling in turn. 
+
 \subsection{Foreground mismodeling}
 \label{sec:fg-mismodeling}
 
@@ -171,7 +196,7 @@ Figure~\ref{fig:sig_inj_data} shows the results of injecting a DM signal directl
 \begin{figure}
     \centering
     \includegraphics[width=0.47\textwidth]{plots/dd_mismo_map.pdf}
-    \caption{Data-driven mismodeling.}
+    \caption{The median Gaussian process description of multiplicative mismodeling associated with diffuse foreground Model O when applied to the real \Fermi data.}
     \label{fig:dd_mismo_map}
 \end{figure}
 %
@@ -200,12 +225,12 @@ The code used to obtain in this paper is available at \url{https://github.com/sm
 
 \begin{acknowledgments}
 
-We thank Florian List, Nick Rodd, and Tracy Slatyer for helpful conversations.  
+We thank Johann Brehmer, Florian List, Nick Rodd, and Tracy Slatyer for helpful conversations.  
 KC is partially supported by NSF awards ACI-1450310, OAC-1836650, and OAC-1841471, the NSF grant PHY-1505463, and the Moore-Sloan Data Science Environment at NYU. 
 SM is supported by the NSF CAREER grant PHY-1554858, NSF grants PHY-1620727 and PHY-1915409, and the Simons Foundation. 
 This work made use of the NYU IT High Performance Computing resources, services, and staff expertise. 
 This research has made use of NASA's Astrophysics Data System. 
-This research made use of the \texttt{astropy}~\cite{Price-Whelan:2018hus,Robitaille:2013mpa}, \texttt{dynesty}~\cite{Speagle_2020}, \texttt{IPython}~\cite{PER-GRA:2007}, Jupyter~\cite{Kluyver2016JupyterN}, \texttt{matplotlib}~\cite{Hunter:2007}, \texttt{mlflow}, \texttt{NPTFit}~\cite{Mishra-Sharma:2016gis}, \texttt{NumPy}~\cite{numpy:2011}, \texttt{PyTorch}~\cite{NEURIPS2019_9015}, \texttt{PyTorch Geometric}~\cite{Fey/Lenssen/2019}, \texttt{PyTorch Lightning}~\cite{william_falcon_2020_3828935}, \texttt{seaborn}~\cite{seaborn}, \texttt{pandas}~\cite{pandas:2010}, \texttt{sbi}~\cite{tejero-cantero2020sbi}, \texttt{scikit-learn}~\cite{scikit-learn}, \texttt{SciPy}~\cite{2020SciPy-NMeth}, and \texttt{tqdm}~\cite{da2019tqdm}  software packages. 
+This research made use of the \texttt{astropy}~\cite{Price-Whelan:2018hus,Robitaille:2013mpa}, \texttt{dynesty}~\cite{Speagle_2020}, \texttt{IPython}~\cite{PER-GRA:2007}, Jupyter~\cite{Kluyver2016JupyterN}, \texttt{matplotlib}~\cite{Hunter:2007}, \texttt{mlflow}, \texttt{NPTFit}~\cite{Mishra-Sharma:2016gis}, \texttt{NumPy}~\cite{numpy:2011}, \texttt{PyTorch}~\cite{NEURIPS2019_9015}, \texttt{PyTorch Geometric}~\cite{Fey/Lenssen/2019}, \texttt{PyTorch Lightning}~\cite{william_falcon_2020_3828935}, \texttt{seaborn}~\cite{seaborn}, \texttt{pandas}~\cite{pandas:2010}, \texttt{sbi}~\cite{tejero-cantero2020sbi}, \texttt{scikit-learn}~\cite{scikit-learn}, \texttt{SciPy}~\cite{2020SciPy-NMeth}, and \texttt{tqdm}~\cite{da2019tqdm}  software packages. We acknowledge the use of the code repository associated with Ref.~\cite{List:2020mzd}, in particular the associated data products and templates.\footnote{\url{https://github.com/FloList/GCE_NN}}
 \end{acknowledgments}
 
 % \appendix
