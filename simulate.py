@@ -38,7 +38,7 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     if ps_mask_type == "0p8deg":
         ps_mask = np.load("data/mask_3fgl_0p8deg.npy")
     elif ps_mask_type == "95pc":
-        ps_mask = np.load("data/fermi_data/fermidata_pscmask.npy")
+        ps_mask = np.load("data/fermi_data/fermidata_pscmask.npy") > 0
 
     mask_roi = cm.make_mask_total(nside=nside, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=r_outer, custom_mask=ps_mask)
 
