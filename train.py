@@ -197,7 +197,7 @@ def parse_args():
     parser.add_argument("--n_aux", type=int, default=2, help="Number of auxiliary variables")
     parser.add_argument("--activation", type=str, default='relu', help='Nonlinearity, "relu" or "selu"')
     parser.add_argument("--maf_num_transforms", type=int, default=4, help="Number of MAF blocks")
-    parser.add_argument("--max_num_epochs", type=int, default=48, help="Max number of training epochs")
+    parser.add_argument("--max_num_epochs", type=int, default=30, help="Max number of training epochs")
     parser.add_argument("--maf_hidden_features", type=int, default=128, help="Nodes in a MAF layer")
     parser.add_argument("--kernel_size", type=int, default=4, help="GNN  kernel size")
     parser.add_argument("--batch_size", type=int, default=64, help="Training batch size")
