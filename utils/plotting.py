@@ -351,6 +351,46 @@ def make_signal_injection_plot(posterior, x_test, x_data_test=None, theta_test=N
         plt.tight_layout()
         fig.savefig(save_filename,bbox_inches='tight',pad_inches=0.1)
 
+def make_variations_plot(posterior, x_test, theta_test=None, roi_normalize=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(6, 4), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None, ax=None, color=None):
+
+    # Extract templates and labels
+    n = SimpleNamespace(**temps_dict)
+    fermi_exp, temps_ps, temps_poiss = n.fermi_exp, n.temps_ps, n.temps_poiss
+
+    # Go row by row and plot
+
+    x_o = x_test
+                            
+    posterior_samples = posterior.sample((n_samples,), x=x_o)
+    posterior_samples = posterior_samples.detach().numpy()
+        
+    mean_counts_roi_post = np.zeros(len(posterior_samples))
+
+    for i_temp_ps, idx_ps in enumerate([6,12]):
+        
+        mean_counts_roi = posterior_samples[:, idx_ps] * np.mean(temps_ps[i_temp_ps][~roi_normalize]) / np.mean(temps_ps[i_temp_ps][~roi_counts_normalize])
+
+        mean_counts_roi_post += mean_counts_roi
+
+    for i_temp_poiss in range(len(temps_poiss)):
+
+        mean_counts_roi = posterior_samples[:, 1 + i_temp_poiss] * np.mean(temps_poiss[i_temp_poiss][~roi_normalize])
+        mean_counts_roi_post += mean_counts_roi
+
+    i_temp_ps = 0
+
+    mean_counts_roi = posterior_samples[:, 0] * np.mean(temps_ps[i_temp_ps][~roi_normalize]) / np.mean(temps_ps[i_temp_ps][~roi_counts_normalize])
+    mean_counts_roi_post += mean_counts_roi
+
+    ## Flux fractions plot
+
+    fraction_multiplier = 100 * np.mean(temps_ps[0][~roi_normalize]) / np.mean(temps_ps[0][~roi_counts_normalize]) / mean_counts_roi_post
+
+    g = plots.get_single_plotter()
+    samples = MCSamples(samples=np.transpose(np.array([posterior_samples[:, 0] * np.mean(fraction_multiplier), posterior_samples[:, 6] * np.mean(fraction_multiplier)])),names = ['DM','PS'], labels = ['DM','PS'])
+    # g.plot_2d(samples, 'DM', 'PS', filled=True, alphas=[0.5], ax=ax, colors=[cols_default[0]])
+    g.plot_2d(samples, 'DM', 'PS', filled=False, ax=ax, colors=[color, color], lws=[1.5, 1.5], ls=['-','--'], legend_labels=['Simulation', 'Simulation 2'])
+    
 def make_violin_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=1000, nside=128, coeff_ary=None, temps_dict=None):
 
     # Extract templates and labels
