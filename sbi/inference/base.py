@@ -58,7 +58,8 @@ class EstimatorNet(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         theta, x, x_aux = batch
-        x[:, :, self.mask] = 0.
+        if self.mask is not None:
+            x[:, :, self.mask] = 0.
         x_and_aux = torch.cat([x, x_aux], -1)
         if self.summary:
             x_and_aux = torch.squeeze(x_and_aux, 1)
@@ -68,7 +69,8 @@ class EstimatorNet(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         theta, x, x_aux = batch
-        x[:, :, self.mask] = 0.
+        if self.mask is not None:
+            x[:, :, self.mask] = 0.
         x_and_aux = torch.cat([x, x_aux], -1)
         if self.summary:
             x_and_aux = torch.squeeze(x_and_aux, 1)
@@ -131,7 +133,7 @@ class NeuralInference(ABC):
         return dataset
 
     @staticmethod
-    def make_dataloaders(dataset, validation_split, batch_size, num_workers=32, pin_memory=True, seed=None):
+    def make_dataloaders(dataset, validation_split, batch_size, num_workers=16, pin_memory=True, seed=None):
         if validation_split is None or validation_split <= 0.0:
             train_loader = DataLoader(
                 dataset,
