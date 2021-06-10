@@ -22,7 +22,7 @@ n_mc = 10
 for sample_name in sample_list:
     for i_mc in [-1]:
         batchn = batch + "\n"
-        batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 25 --n_live 200 --i_mc {}".format(sample_name, i_mc)
+        batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 25 --n_live 1000 --i_mc {}".format(sample_name, i_mc)
         fname = "batch/submit.batch"
         f = open(fname, "w")
         f.write(batchn)
