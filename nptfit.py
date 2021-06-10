@@ -98,7 +98,7 @@ class NPRegression:
 
         with Pool(processes=n_cpus) as pool:
 
-            sampler = NestedSampler(self.loglike, self.prior_cube, n_dim, pool=pool, queue_size=n_cpus, nlive=nlive, bound="balls", method="slice")
+            sampler = NestedSampler(self.loglike, self.prior_cube, n_dim, pool=pool, queue_size=n_cpus, nlive=nlive)
             sampler.run_nested(dlogz=0.1)
             
         # Draw posterior samples
