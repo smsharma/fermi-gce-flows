@@ -25,7 +25,7 @@ from pytorch_lightning.loggers import TensorBoardLogger, MLFlowLogger
 import mlflow
 
 
-def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, kernel_size=4, laplacian_type="normalized", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_neighbours=8, n_aux=2, maf_hidden_features=128, maf_num_transforms=4, batch_size=256, max_num_epochs=50, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe", summary=None, summary_range=None, activation="relu", conv_source="geometric", conv_type="chebconv", conv_channel_config="standard", aux_summary=None, density_estimator_arch="maf"):
+def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25., kernel_size=4, laplacian_type="normalized", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_neighbours=8, n_aux=2, maf_hidden_features=128, maf_num_transforms=4, batch_size=256, max_num_epochs=50, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe", summary=None, summary_range=None, activation="relu", conv_source="geometric", conv_type="chebconv", conv_channel_config="standard", aux_summary=None, density_estimator_arch="maf"):
 
     # Cache hyperparameters to log
     params_to_log = locals()
@@ -58,14 +58,18 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25, ker
     
     hp_mask_nside1 = hp.reorder(hp_mask_nside1, r2n=True)  # Switch to NESTED pixel order as that's required for DeepSphere batchnorm
 
-    # Create mask if reducing ROI from the one specified in the training data
-    roi_mask_reduced = cm.make_mask_total(nside=128, band_mask=True, band_mask_range=2, mask_ring=True, inner=0, outer=r_outer)
-    roi_mask_reduced = hp.reorder(roi_mask_reduced, r2n=True)
-    indices_mask_reduced = np.intersect1d(np.where(~masks_list[0] == 1), np.where(~roi_mask_reduced == 1), return_indices=True)[1]
-    a = indices_mask_reduced
-    b = np.arange(np.sum(~masks_list[0] == 1))
-    mask_reduce = torch.Tensor(np.setdiff1d(np.union1d(a, b), np.intersect1d(a, b))).type(torch.int64)
-
+    if r_outer != 25.:
+        logging.info("Masking on the fly. Slower!")
+        # Create mask if reducing ROI from the one specified in the training data
+        roi_mask_reduced = cm.make_mask_total(nside=128, band_mask=True, band_mask_range=2, mask_ring=True, inner=0, outer=r_outer)
+        roi_mask_reduced = hp.reorder(roi_mask_reduced, r2n=True)
+        indices_mask_reduced = np.intersect1d(np.where(~masks_list[0] == 1), np.where(~roi_mask_reduced == 1), return_indices=True)[1]
+        a = indices_mask_reduced
+        b = np.arange(np.sum(~masks_list[0] == 1))
+        mask_reduce = torch.Tensor(np.setdiff1d(np.union1d(a, b), np.intersect1d(a, b))).type(torch.int64)
+    else:
+        logging.info("Not masking on the fly")
+        mask_reduce = None
     # Priors hard-coded for now
 
     # iso, bub, psc, dif_pibrem, dif_ics
@@ -197,7 +201,7 @@ def parse_args():
     parser.add_argument("--n_aux", type=int, default=2, help="Number of auxiliary variables")
     parser.add_argument("--activation", type=str, default='relu', help='Nonlinearity, "relu" or "selu"')
     parser.add_argument("--maf_num_transforms", type=int, default=4, help="Number of MAF blocks")
-    parser.add_argument("--max_num_epochs", type=int, default=25, help="Max number of training epochs")
+    parser.add_argument("--max_num_epochs", type=int, default=30, help="Max number of training epochs")
     parser.add_argument("--maf_hidden_features", type=int, default=128, help="Nodes in a MAF layer")
     parser.add_argument("--kernel_size", type=int, default=4, help="GNN  kernel size")
     parser.add_argument("--batch_size", type=int, default=64, help="Training batch size")
