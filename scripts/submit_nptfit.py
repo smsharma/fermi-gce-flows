@@ -4,7 +4,7 @@ import numpy as np
 batch = """#!/bin/bash
 #SBATCH -N 1   # node count
 #SBATCH --ntasks-per-node=24
-#SBATCH -t 23:59:00
+#SBATCH -t 47:59:00
 #SBATCH --mem=24GB
 ##SBATCH --mail-type=begin
 ##SBATCH --mail-type=end
