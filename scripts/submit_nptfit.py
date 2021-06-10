@@ -6,9 +6,9 @@ batch = """#!/bin/bash
 #SBATCH --ntasks-per-node=24
 #SBATCH -t 47:59:00
 #SBATCH --mem=24GB
-##SBATCH --mail-type=begin
-##SBATCH --mail-type=end
-##SBATCH --mail-user=sm8383@nyu.edu
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+#SBATCH --mail-user=sm8383@nyu.edu
 
 module load gsl/intel/2.6 
 conda activate sbi-fermi
