@@ -53,12 +53,13 @@ def build_made(batch_x: Tensor = None, batch_y: Tensor = None, z_score_x: bool =
     return neural_net
 
 
-def build_maf(batch_x: Tensor = None, batch_y: Tensor = None, z_score_x: bool = True, z_score_y: bool = True, hidden_features: int = 50, num_transforms: int = 5, embedding_net: nn.Module = nn.Identity(), **kwargs,) -> nn.Module:
+def build_maf(batch_x: Tensor = None, batch_y: Tensor = None, z_score_x: bool = True, z_score_y: bool = True, hidden_features: int = 50, num_transforms: int = 5, embedding_net: nn.Module = nn.Identity(), 
+normalize_pixel: bool =True, **kwargs,) -> nn.Module:
     """Builds MAF p(x|y).
 
     Args:
         batch_x: Batch of xs, used to infer dimensionality and (optional) z-scoring.
-        batch_y: Batch of ys, used to infer dimensionality and (optional) z-scoring.
+        batch_y: Batch of ys, used to infer dimensionality and A(optional) z-scoring.
         z_score_x: Whether to z-score xs passing into the network.
         z_score_y: Whether to z-score ys passing into the network.
         hidden_features: Number of hidden features.
@@ -84,7 +85,7 @@ def build_maf(batch_x: Tensor = None, batch_y: Tensor = None, z_score_x: bool = 
         transform = transforms.CompositeTransform([transform_zx, transform])
 
     if z_score_y:
-        embedding_net = nn.Sequential(standardizing_net(batch_y), embedding_net)
+        embedding_net = nn.Sequential(standardizing_net(batch_y, normalize_pixel=normalize_pixel), embedding_net)
 
     distribution = distributions_.StandardNormal((x_numel,))
     neural_net = flows.Flow(transform, distribution, embedding_net)
