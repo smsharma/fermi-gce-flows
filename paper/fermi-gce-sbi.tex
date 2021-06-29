@@ -13,6 +13,7 @@
 \usepackage{blindtext}
 \usepackage{nicefrac}
 \usepackage{lipsum}
+\usepackage{bbold}
 
 \usepackage{afterpage}
 \newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
@@ -66,14 +67,14 @@ The \Fermi $\gamma$-ray Galactic Center Excess (GCE), first identified over a de
 
  Due to the high dimensionality of $\gamma$-ray data, a hand-crafted reduction of the photon map into summaries such as the probability distribution of photon counts~\cite{Lee:2014mza,Lee:2015fea} or a wavelet decomposition~\cite{Balaji:2018rwz,McDermott:2015ydv} of the photon map has traditionally been necessary to enable computationally tractable analyses. On the other hand, recent developments in machine learning have given rise to analysis techniques that can extract more information from high-dimensional datasets and, consequently, more robustly hedge against unknown systematics in the data compared to traditional analyses based on specific data summaries. Machine learning methods have shown promise for analyzing $\gamma$-ray data~\cite{Caron:2021map} and in particular focusing on understanding the nature of the GCE~\cite{List:2020mzd,Caron:2017udl}. 
  
- In this paper, we leverage recent developments in the field of simulation-based inference (SBI; see, \emph{e.g.}, Ref.~\cite{cranmer2020frontier} for a review)~\cite{Alsing:2019xrx,Brehmer:2018eca,Brehmer:2018hga,Brehmer:2018kdj,Brehmer:2020cvb,Cranmer:2015bka,cranmerFrontierSimulationbasedInference2020,durkanContrastiveLearningLikelihoodfree2020,greenbergAutomaticPosteriorTransformation2019,Hermans:2019ioj,lueckmannBenchmarkingSimulationBasedInference2021,lueckmannLikelihoodfreeInferenceEmulator2019,pacchiardiGeneralizedBayesianLikelihoodFree2021,papamakariosFastEpsilonFree2018,papamakariosSequentialNeuralLikelihood2019,wiqvistSequentialNeuralPosterior2021,zhaoValidatingConditionalDensity2021} in order to weigh in on the nature of the GCE. In particular, we employ conditional density estimation techniques based on normalizing flows~\cite{papamakarios2019normalizing,rezende2015variational} in order to characterize the contributions of various modeled components, including ``clumpy'' PS-like and ``smooth'' DM-like emission following the GCE, to the $\gamma$-ray photon sky at $\sim$GeV energies in the Galactic Center. We employ graph neural networks in order to automatically extract summary statistics from $\gamma$-ray maps optimally suited for the downstream task of estimating the parameter posteriors of various components characterizing the GCE.
+ In this paper, we leverage recent developments in the field of simulation-based inference (SBI; see, \emph{e.g.}, Ref.~\cite{cranmer2020frontier} for a review)~\cite{Alsing:2019xrx,Brehmer:2018eca,Brehmer:2018hga,Brehmer:2018kdj,Brehmer:2020cvb,Cranmer:2015bka,cranmerFrontierSimulationbasedInference2020,durkanContrastiveLearningLikelihoodfree2020,greenbergAutomaticPosteriorTransformation2019,Hermans:2019ioj,lueckmannBenchmarkingSimulationBasedInference2021,lueckmannLikelihoodfreeInferenceEmulator2019,pacchiardiGeneralizedBayesianLikelihoodFree2021,papamakariosFastEpsilonFree2018,papamakariosSequentialNeuralLikelihood2019,wiqvistSequentialNeuralPosterior2021,zhaoValidatingConditionalDensity2021} in order to weigh in on the nature of the GCE. In particular, we employ conditional density estimation techniques based on normalizing flows~\cite{papamakarios2019normalizing,rezende2015variational} in order to characterize the contributions of various modeled components, including ``clumpy'' PS-like and ``smooth'' DM-like emission following the GCE, to the $\gamma$-ray photon sky at $\sim$GeV energies in the Galactic Center. We employ graph neural networks in order to automatically extract summary statistics from $\gamma$-ray maps optimized for the downstream task of estimating the parameter posteriors of various components characterizing the GCE.
 
 This paper is organized as follows. In Sec.~\ref{sec:analysis} we describe the various components of our analysis method based on simulation-based inference. In Sec.~\ref{sec:simulations} we describe our simulation pipeline and verify our analysis on simulated data. Section~\ref{sec:data} presents results on \Fermi $\gamma$-ray data. In Sec.~\ref{sec:mismodeling} we explore the susceptibility of the analysis to mismodeling of the background and signal templates, and present systematic variations on our analysis in Sec.~\ref{sec:systematics}. We conclude in Sec.~\ref{sec:conclusion}.
 
 \section{Methodology}
 \label{sec:analysis}
 
-We begin by describing our analysis methodology, going over in turn the general principles behind simulation-based inference, posterior estimation using normalizing flows, and learning representative summary statistics from high-dimensional $\gamma$-ray maps with neural networks.
+We begin by describing our analysis methodology, going over in turn the general principles behind simulation-based inference, posterior estimation using normalizing flows, and learning representative summary statistics from high-dimensional $\gamma$-ray maps with neural networks. We then describe the various components that go into our forward model and the datasets used, concluding with an outline of our optimization procedure.
 
 \subsection{Simulation-based inference}
 
@@ -81,19 +82,19 @@ Of central interest in parameter estimation is often the probability distributio
 
 % $\theta \sim p(\theta)$, $x\sim p(x\mid\theta, z)$, $z\sim p(z\mid\theta)$.
 
-Simulation-based inference (SBI) refers to a class of methods for performing inference when the data-generating process does not have a tractable likelihood. In this setting, a model is defined through a simulator as a probabilistic program, often knows as a forward model. Samples $x$ from the simulator then implicitly define a likelihood, $x\sim p(x\mid\theta)$. In the simplest realizations of SBI, samples $x'$ generated from a given prior proposal distribution $p(\theta$) can be compared to a given dataset of interest $x$, with the approximate posterior defined by samples that most closely approximate $x$ according to some distance metric. Such methods---usually grouped under the umbrella of Approximate Bayesian Computation (ABC)---are not uncommon in astrophysics and cosmology. Nevertheless, they suffer from several downsides. The curse of dimensionality usually necessitates reduction of data to representative lower-dimensional summary statistics $s(x)$, resulting in loss of information. A notion and measure of distance between summaries from the implicit model and those derived from the dataset of interest is necessary, leading to inexact inference. Additionally, the ABC analysis must be performed anew for each new target dataset.
+Simulation-based inference (SBI) refers to a class of methods for performing inference when the data-generating process does not have a tractable likelihood. In this setting, a model is defined through a simulator as a probabilistic program, often knows as a forward model. Samples $x$ from the simulator then implicitly define a likelihood, $x\sim p(x\mid\theta)$. In the simplest realizations of SBI, samples $x'$ generated from a given prior proposal distribution $p(\theta$) can be compared to a given dataset of interest $x$, with the approximate posterior defined by samples that most closely approximate $x$ according to some distance metric. Such methods---usually grouped under the umbrella of Approximate Bayesian Computation (ABC)~\cite{10.1214/aos/1176346785}---are not uncommon in astrophysics and cosmology. Nevertheless, they suffer from several downsides. The curse of dimensionality usually necessitates reduction of data to representative lower-dimensional summary statistics $s(x)$, resulting in loss of information. A notion and measure of distance between summaries from the implicit model and those derived from the dataset of interest is necessary, leading to inexact inference. Additionally, the ABC analysis must be performed anew for each new target dataset.
 
-Recent methods have leveraged advancements in machine learning, in particular the ability of neural networks to extract useful features from high-dimensional data and flexibly approximate functions and distributions, in order to address these issues, enabling new ways of performing inference on complex models defined through simulations. See Ref.~\cite{cranmer2020frontier} for a review of recent developments.
+Recent methods have leveraged advancements in machine learning, in particular the ability of neural networks to extract useful features from high-dimensional data and flexibly approximate functions and distributions, in order to address these issues, enabling new ways of performing inference on complex models defined through simulations (see Ref.~\cite{cranmer2020frontier} for a review of recent developments).
 
 \subsection{Conditional density estimation with normalizing flows}
 
-In this paper, we approximate the joint posterior $p(\theta\mid x)$ through a parameterized distribution $\hat p_\phi(\theta\mid s)$ conditioned on \emph{learned} summaries $s=s(x)$ from the simulated samples $x$. This class of simulation-based inference techniques, known as conditional neural density estimation, directly models the posterior distribution given a set of samples drawn from simulator according to some prior proposal distribution $p(\theta)$.
+In this paper, we approximate the joint posterior $p(\theta\mid x)$ through a parameterized distribution $\hat p_\phi(\theta\mid s)$ conditioned on \emph{learned} summaries $s=s(x)$ from the simulated samples $x$. This class of simulation-based inference techniques, known as conditional neural density estimation~\cite{papamakariosFastEpsilonFree2018}, directly models the posterior distribution given a set of samples drawn from simulator drawns according to some prior proposal distribution $p(\theta)$.
 
-We employ normalizing flows, which provide an efficient way of constructing flexible probability distributions. Normalizing flows model the conditional distribution $\hat p_\phi(\theta\mid s)$ as a series of invertible transformations, denoted $f$ and having a tractable inverse and Jacobian, from a base distribution $\pi_z{z}$, chosen here to be a standard Gaussian, to the target distribution:
+We employ normalizing flows~\cite{papamakarios2019normalizing,rezende2015variational}, which provide an efficient way of constructing flexible probability distributions. Normalizing flows model the conditional distribution $\hat p_\phi(\theta\mid s)$ as a series of invertible transformations, denoted $f$ and having a tractable inverse and Jacobian, from a base distribution $\pi_z({z})$, chosen here to be a standard Gaussian $z\sim \mathcal N(0, \mathbb{1})$, to the target distribution:
 \begin{equation}
     \hat{p}({\theta} \mid {x})=\pi_{z}\left(f^{-1}({\theta})\right)\left|\operatorname{det}\left(\frac{\partial f^{-1}}{\partial {\theta}}\right)\right|
 \end{equation}
-Specifically, we use Masked Autoregressive Flows (MAFs) for posterior estimation. The MAF is built upon blocks of affine transformations where the scaling and shifting factors for each dimension are computed with a Masked Autoencoder for Distribution Estimation (MADE). For a single block, the transformation is expressed as 
+Specifically, we use Masked Autoregressive Flows (MAFs)~\cite{10.5555/3294771.3294994} for posterior estimation. The MAF is built upon blocks of affine transformations where the scaling and shifting factors for each dimension are computed with a Masked Autoencoder for Distribution Estimation (MADE)~\cite{germain2015made}. For a single block, the transformation is expressed as 
 \begin{equation}
     \label{eq:maf_z}
     z_{i}=\left(\theta_{i}-\mu_{i}\right) \cdot \exp \left(-\alpha_{i}\right)
@@ -103,29 +104,37 @@ where $\mu_{i}=f_{\mu_{i}}\left({\theta}_{1: i-1} ; {x}\right)$ and $\alpha_i = 
     \label{eq:det}
     \left|\operatorname{det}\left(\frac{\partial f^{-1}}{\partial {\theta}}\right)\right|=\exp \left(-\sum_{i} \alpha_{i}\right)
 \end{equation}
-and forward sampling according to Eq.~\ref{eq:maf_z}.
+and a forward pass through the flow according to Eq.~\eqref{eq:maf_z}.
 Multiple transformations can be composed together as $f=f_{1} \circ f_{2} \circ \ldots \circ f_{K}$ in order to model more expressive posteriors,
 \begin{equation}
-    \hat{p}({\theta} \mid {x})=\pi_{z}\left(f^{-1}({\theta})\right) \prod_{i=1}^{K}\left|\operatorname{det}\left(\frac{\partial f_{i}^{-1}}{\partial {z}_{i-1}}\right)\right|
+    \hat{p}({\theta} \mid {x})=\pi_{z}\left(f^{-1}({\theta})\right) \prod_{i=1}^{K}\left|\operatorname{det}\left(\frac{\partial f_{i}^{-1}}{\partial {z}_{i-1}}\right)\right|.
 \end{equation}
-The log-probability of the posterior can be computed using Eq.~\ref{eq:det}:
+The log-probability of the posterior can then be computed using Eq.~\eqref{eq:det}:
 \begin{equation}
     \log \hat{p}({\theta} \mid {x}) = \log \left[\pi_{z}\left(f^{-1}(\boldsymbol{\theta})\right)\right]-\sum_{i=1}^{K} \sum_{j=1}^{N} \alpha_{j}^{i},
 \end{equation}
-which acts as the optimization objective.
+which acts as the optimization objective. Here, we use 8 MAF transformations, each made up of a 2-layer MADE with 128 hidden units. Each MAF transformation is conditioned on summaries $s(x)$  extracted from the $\gamma$-ray maps (described below) by including these as inputs into each transformation block.
 
 \subsection{Learning summary statistics with neural networks}
 
-The curse of dimensionality makes it computationally prohibitive to condition the density estimation task on the the raw dataset $x$ \emph{i.e.}, the $\gamma$-ray pixel counts map in the region of interest (ROI). Representative summaries $s = s_\varphi(x)$ of the data must be extracted in order to enable a tractable analysis. Although many choices for data summaries are possible---\emph{e.g.}, a Principal Component Analysis (PCA) decomposition of the photon counts map, an angular power spectrum decomposition of the photon counts map, or simply a histogram of the photon counts---in this paper, we use a neural net to automatically learn low-dimensional summaries that are efficiently suited for the specific task at hand.
+The curse of dimensionality makes it computationally prohibitive to condition the density estimation task on the the raw dataset $x$ \emph{i.e.}, the $\gamma$-ray pixel counts map in the region of interest (ROI). Representative summaries $s = s_\varphi(x)$ of the data must therefore be extracted in order to enable a tractable analysis. Although many choices for data summaries are possible---\emph{e.g.}, a Principal Component Analysis (PCA) decomposition of the photon counts map, an angular power spectrum decomposition of the photon counts map, or simply a histogram of the photon counts---in this paper, we use a neural net to automatically learn low-dimensional summaries that are efficiently suited for the specific downstream task at hand.
 
-The \emph{DeepSphere}~\cite{defferrard2020deepsphere,Perraudin:2018rbt} architecture, with a configuration similar to that introduced and employed in Ref.~\cite{List:2020mzd}, is used and summarized briefly here. \emph{DeepSphere} is a graph-based convolutional neural network (CNN) architecture tailored to data sampled on a sphere, and in particular is able to leverage the hierarchical structure of data in the \texttt{HEALPix} representation.
+The \emph{DeepSphere}~\cite{defferrard2020deepsphere,Perraudin:2018rbt} architecture, with a configuration similar to that introduced and first employed in Ref.~\cite{List:2020mzd} for the purpose of analyzing \Fermi data in the Galactic Center region, is used and summarized briefly here. \emph{DeepSphere} is a graph-based convolutional neural network (CNN) architecture tailored to data sampled on a sphere, and in particular is able to leverage the hierarchical structure of data in the \texttt{HEALPix} representation. This makes it well-suited for our purposes.
 
-\begin{itemize}
-    \item Graph construction
-    \item Graph Fourier basis
-    \item Convolutions on graphs and Chebyshev filters
-    \item Specific architecture choices
-\end{itemize}
+The \texttt{HEALPix} sphere is represented as a weighted undirected graph $\mathcal G = (\mathcal V, \mathcal E, \boldsymbol A)$.  where $\mathcal V$ is the set of $N_\mathrm{pix} = |\mathcal V|$ vertices, $\mathcal E$ is the set of edges, and $\boldsymbol A$ is the weighted adjacency matrix. Each pixel $i$ is represented by a vertex $v_i \in \mathcal V$. Each vertex $v_i$ is then connected to the 8 (or 7) vertices $v_j$ which represent the neighboring pixels $j$ of pixel $i$, forming edges $(v_i
+, v_j) \in \mathcal E$. Given those edges, we define the weights of the adjacency matrix $\boldsymbol A$ over neighboring pixels following the weighing scheme given in Ref.~\cite{defferrard2020deepsphere}.
+
+The combinatorial graph Laplacian is defined as $\boldsymbol L = \boldsymbol D - \boldsymbol A$, where $\boldsymbol D$ is the diagonal degree matrix, and can be used to define a Fourier basis on a graph. By construction symmetric positive semi-definite, the graph Laplacian can be decomposed as $\boldsymbol L = \boldsymbol U \boldsymbol \Lambda \boldsymbol U^T$, where $\boldsymbol U$ is an orthonormal eigenvectors matrix and $\boldsymbol \Lambda$ is a diagonal eigenvalue matrix. The Laplacian eigenvectors then define the graph Fourier basis, with the graph Fourier transform $\hat{\boldsymbol x}$ of a signal $\boldsymbol x$ on a graph being its projection $\hat{\boldsymbol x} = \boldsymbol U^T \mathbf x$.
+
+Given a convolutional kernel $h$, graph convolutions can be performed in the Fourier basis as $h(\boldsymbol{L}) \boldsymbol{x}=\boldsymbol{U} h(\boldsymbol{\Lambda}) \boldsymbol{U}^{\top} \boldsymbol{x}$.
+
+The convolutional kernel $h$ is defined as Chebychev polynomials $h_{\theta}({\boldsymbol{L}}) = \sum_{k=0}^{K} \theta_{k} T_{k}({\boldsymbol{L}})$ of degree $K$ parameterized by $K + 1$ coefficients $\theta$. The graph filering operation can then be expressed as
+\begin{equation}
+    h_{\theta}(\boldsymbol{L}) \boldsymbol{x}=\boldsymbol{U}\left(\sum_{k=0}^{K} \theta_{k} T_k(\boldsymbol{\Lambda})\right) \boldsymbol{U}^{\top} \boldsymbol{x}=\sum_{k=0}^{K} \theta_{k} T_k(\boldsymbol{L}) \boldsymbol{x},
+\end{equation}
+where $T_k$ is the order-$k$ Chebyshev polynomial and $\theta_k$ are the filter coefficients to be optimized. $K=9$ is the maximum polynomial order used in our fiducial configuration.
+
+Following Ref.~\cite{Perraudin:2018rbt}, our feature extraction architecture is built out of layers which progressively coarsen the pixel representation of the $\gamma$-ray maps while increasing the number of filter channels at each step. Starting with \HEALPix resolution \texttt{nside}=128, each graph convolution operation is followed by a BatchNorm, a ReLU nonlinearity, and a max pooling operation which downsamples the representation into a coarser resolution, starting with \texttt{nside}=64 until resolution \texttt{nside}=1 after the final convolutional layer. The number of filter channels is doubled at each convolution until a maximum of 256. The final convolution is flattened and passed through a fully-connected layer with 2048 hidden units before output a desired number of summaries, which is 128 in our fiducial configuration.
 
 \subsection{Datasets and the forward model}
 \label{sec:datasets}
@@ -290,7 +299,7 @@ The results for this test are shown in Figs.~\ref{fig:sim_sbi_dm_mismo} and \ref
 
 In this work, we have leveraged recent advances in neural simulation-based inference in order to weigh in on the nature of the \Fermi Galactic Center Excess. Consistent with the previous machine learning-based analysis of Ref~\cite{List:2020mzd}, our analysis based on conditional posterior density estimation with normalizing flows shows no substantive preference for a PS-like origin for a GCE signal across the systematic variations considered. We caution however of the potential of unknown systematics, such as small-scale diffuse mismodeling, mismodeling of the GCE signal itself, and unmodeled PS populations, to bias the conclusions of our study.
 
-The code used to obtain in this paper is available at \url{https://github.com/smsharma/sbi-fermi}.
+The code used to obtain the results in this paper is available at \url{https://github.com/smsharma/sbi-fermi}.
 
 \vspace{.3cm}
 %%%%%%%%%%%%%%%
@@ -302,7 +311,7 @@ KC is partially supported by NSF awards ACI-1450310, OAC-1836650, and OAC-184147
 SM is supported by the NSF CAREER grant PHY-1554858, NSF grants PHY-1620727 and PHY-1915409, and the Simons Foundation. 
 This work made use of the NYU IT High Performance Computing resources, services, and staff expertise. 
 This research has made use of NASA's Astrophysics Data System. 
-This research made use of the \texttt{astropy}~\cite{Price-Whelan:2018hus,Robitaille:2013mpa}, \texttt{dynesty}~\cite{Speagle_2020}, \texttt{IPython}~\cite{PER-GRA:2007}, Jupyter~\cite{Kluyver2016JupyterN}, \texttt{matplotlib}~\cite{Hunter:2007}, \texttt{mlflow}, \texttt{NPTFit}~\cite{Mishra-Sharma:2016gis}, \texttt{NumPy}~\cite{harris2020array}, \texttt{pandas}~\cite{pandas:2010}, \texttt{Pyro}, \texttt{PyTorch}~\cite{NEURIPS2019_9015}, \texttt{PyTorch Geometric}~\cite{Fey/Lenssen/2019}, \texttt{PyTorch Lightning}~\cite{william_falcon_2020_3828935}, \texttt{seaborn}~\cite{seaborn}, \texttt{sbi}~\cite{tejero-cantero2020sbi}, \texttt{scikit-learn}~\cite{scikit-learn}, \texttt{SciPy}~\cite{2020SciPy-NMeth}, and \texttt{tqdm}~\cite{da2019tqdm}  software packages. We acknowledge the use of the code repository associated with Ref.~\cite{List:2020mzd}, in particular the associated data products and templates.\footnote{\url{https://github.com/FloList/GCE_NN}}
+This research made use of the \texttt{astropy}~\cite{Price-Whelan:2018hus,Robitaille:2013mpa}, \texttt{dynesty}~\cite{Speagle_2020}, \texttt{IPython}~\cite{PER-GRA:2007}, Jupyter~\cite{Kluyver2016JupyterN}, \texttt{matplotlib}~\cite{Hunter:2007}, \texttt{MLflow}~\cite{chen2020developments}, \texttt{NPTFit}~\cite{Mishra-Sharma:2016gis}, \texttt{NumPy}~\cite{harris2020array}, \texttt{pandas}~\cite{pandas:2010}, \texttt{Pyro}, \texttt{PyTorch}~\cite{NEURIPS2019_9015}, \texttt{PyTorch Geometric}~\cite{Fey/Lenssen/2019}, \texttt{PyTorch Lightning}~\cite{william_falcon_2020_3828935}, \texttt{seaborn}~\cite{seaborn}, \texttt{sbi}~\cite{tejero-cantero2020sbi}, \texttt{scikit-learn}~\cite{scikit-learn}, \texttt{SciPy}~\cite{2020SciPy-NMeth}, and \texttt{tqdm}~\cite{da2019tqdm}  software packages. We acknowledge the use of the code repository associated with Ref.~\cite{List:2020mzd}, in particular the associated data products and templates.\footnote{\url{https://github.com/FloList/GCE_NN}}
 \end{acknowledgments}
 
 % \appendix

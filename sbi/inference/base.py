@@ -12,7 +12,7 @@ import torch
 from torch import Tensor
 from torch.utils.tensorboard import SummaryWriter
 
-from sbi.inference.posteriors.base_posterior import NeuralPosterior
+# from sbi.inference.posteriors.base_posterior import NeuralPosterior
 from sbi.utils import get_log_root
 from sbi.utils.torchutils import process_device, seed_worker
 
