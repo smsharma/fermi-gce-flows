@@ -78,7 +78,7 @@ normalize_pixel: bool =True, **kwargs,) -> nn.Module:
     if x_numel == 1:
         warn(f"In one-dimensional output space, this flow is limited to Gaussians")
 
-    transform = transforms.CompositeTransform([transforms.CompositeTransform([transforms.MaskedAffineAutoregressiveTransform(features=x_numel, hidden_features=hidden_features, context_features=y_numel, num_blocks=2, use_residual_blocks=False, random_mask=False, activation=tanh, dropout_probability=0.0, use_batch_norm=True,), transforms.RandomPermutation(features=x_numel),]) for _ in range(num_transforms)])
+    transform = transforms.CompositeTransform([transforms.CompositeTransform([transforms.MaskedAffineAutoregressiveTransform(features=x_numel, hidden_features=hidden_features, context_features=y_numel, num_blocks=2, use_residual_blocks=False, random_mask=False, activation=relu, dropout_probability=0.0, use_batch_norm=True,), transforms.RandomPermutation(features=x_numel),]) for _ in range(num_transforms)])
 
     if z_score_x:
         transform_zx = standardizing_transform(batch_x)
@@ -93,7 +93,8 @@ normalize_pixel: bool =True, **kwargs,) -> nn.Module:
     return neural_net
 
 
-def build_nsf(batch_x: Tensor = None, batch_y: Tensor = None, z_score_x: bool = True, z_score_y: bool = True, hidden_features: int = 50, num_transforms: int = 5, embedding_net: nn.Module = nn.Identity(), **kwargs,) -> nn.Module:
+def build_nsf(batch_x: Tensor = None, batch_y: Tensor = None, z_score_x: bool = True, z_score_y: bool = True, hidden_features: int = 50, num_transforms: int = 5, embedding_net: nn.Module = nn.Identity(), 
+normalize_pixel: bool =True, **kwargs,) -> nn.Module:
     """Builds NSF p(x|y).
 
     Args:
@@ -124,7 +125,7 @@ def build_nsf(batch_x: Tensor = None, batch_y: Tensor = None, z_score_x: bool = 
         transform = transforms.CompositeTransform([transform_zx, transform])
 
     if z_score_y:
-        embedding_net = nn.Sequential(standardizing_net(batch_y), embedding_net)
+        embedding_net = nn.Sequential(standardizing_net(batch_y, normalize_pixel=normalize_pixel), embedding_net)
 
     distribution = distributions_.StandardNormal((x_numel,))
     neural_net = flows.Flow(transform, distribution, embedding_net)
