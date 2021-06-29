@@ -201,24 +201,14 @@ class PosteriorEstimator(NeuralInference, ABC):
     def build_posterior(
         self,
         density_estimator: Optional[TorchModule] = None,
-        rejection_sampling_parameters: Optional[Dict[str, Any]] = None,
-        sample_with_mcmc: bool = False,
-        mcmc_method: str = "slice_np",
-        mcmc_parameters: Optional[Dict[str, Any]] = None,
     ) -> DirectPosterior:
 
         if density_estimator is None:
             density_estimator = self.neural_net
 
         self._posterior = DirectPosterior(
-            method_family="snpe",
             neural_net=density_estimator,
             prior=self._prior,
-            x_shape=self.x_shape,
-            rejection_sampling_parameters=rejection_sampling_parameters,
-            sample_with_mcmc=sample_with_mcmc,
-            mcmc_method=mcmc_method,
-            mcmc_parameters=mcmc_parameters,
             device=self._device,
         )
 

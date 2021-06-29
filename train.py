@@ -19,7 +19,7 @@ import torch
 from torch import nn
 
 from sbi import utils
-from sbi.inference import PosteriorEstimator, RatioEstimator
+from sbi.inference import PosteriorEstimator
 
 from pytorch_lightning.loggers import TensorBoardLogger, MLFlowLogger
 import mlflow
@@ -142,43 +142,8 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25., ke
         density_estimator = mlflow.pytorch.load_model(model_uri)
         posterior = posterior_estimator.build_posterior(density_estimator)
 
-    elif method == "snre":
-
-        # Embedding net (feature extractor)
-        sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux=n_aux, n_params=18, activation=activation, conv_source=conv_source, conv_type=conv_type, conv_channel_config=conv_channel_config)
-
-        # If using a summary stat, don't use (overwrite) feature extractor
-        if summary is not None:
-            sg_embed = nn.Identity()
-
-        # Instantiate the neural density estimator
-        neural_classifier = utils.classifier_nn(model="mlp_mixed", embedding_net_x=sg_embed)
-
-        # Setup the inference procedure with NPE
-        posterior_estimator = RatioEstimator(prior=prior, classifier=neural_classifier, show_progress_bars=True, logging_level="INFO", device=device.type, summary_writer=mlf_logger)
-
-        # Model training
-        density_estimator = posterior_estimator.train(x=x_filename, 
-                                    x_aux=x_aux_filename, 
-                                    theta=theta_filename, 
-                                    proposal=prior, 
-                                    training_batch_size=batch_size, 
-                                    max_num_epochs=max_num_epochs, 
-                                    stop_after_epochs=stop_after_epochs, 
-                                    clip_max_norm=clip_max_norm,
-                                    validation_fraction=validation_fraction,
-                                    initial_lr=initial_lr,
-                                    optimizer_kwargs=optimizer_kwargs)
-        
-        # Save density estimator
-        mlflow.set_tracking_uri(tracking_uri)
-        with mlflow.start_run(run_id=mlf_logger.run_id):
-            mlflow.pytorch.log_model(density_estimator, "density_estimator")
-
-        # Check to make sure model can be succesfully loaded
-        model_uri = "runs:/{}/density_estimator".format(mlf_logger.run_id)
-        density_estimator = mlflow.pytorch.load_model(model_uri)
-        posterior = posterior_estimator.build_posterior(density_estimator)
+    else:
+        raise NotImplementedError
 
 def parse_args():
     parser = argparse.ArgumentParser(description="High-level script for the training of the neural likelihood ratio estimators")
@@ -193,7 +158,7 @@ def parse_args():
     parser.add_argument("--conv_source", type=str, default='deepsphere', help='Use "deepsphere" or "geometric" implementation of ChebConv layer')
     parser.add_argument("--conv_type", type=str, default='chebconv', help='Use "chebconv" or "gcn" graph convolution layers')
     parser.add_argument("--conv_channel_config", type=str, default='standard', help='Use "standard", "fewer layers", or "more_channels" GCN channel configuration')
-    parser.add_argument("--method", type=str, default='snpe', help='SBI method; "snpe" or "snre"')
+    parser.add_argument("--method", type=str, default='snpe', help='SBI method; "snpe" or "snre". "snre" not implemented yet.')
     parser.add_argument("--density_estimator", type=str, default='maf', help='Density estimator method; "maf" or "nsf"')
     parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 512], [512, 96]]", help='Specification of fully-connected embedding layers')
     parser.add_argument("--n_neighbours", type=int, default=8, help="Number of neightbours in graph.")
