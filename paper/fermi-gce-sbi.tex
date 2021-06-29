@@ -130,7 +130,7 @@ Given a convolutional kernel $h$, graph convolutions can be performed in the Fou
 
 The convolutional kernel $h$ is defined as Chebychev polynomials $h_{\theta}({\boldsymbol{L}}) = \sum_{k=0}^{K} \theta_{k} T_{k}({\boldsymbol{L}})$ of degree $K$ parameterized by $K + 1$ coefficients $\theta$. The graph filering operation can then be expressed as
 \begin{equation}
-    h_{\theta}(\boldsymbol{L}) \boldsymbol{x}=\boldsymbol{U}\left(\sum_{k=0}^{K} \theta_{k} \boldsymbol{\Lambda}^{k}\right) \boldsymbol{U}^{\top} \boldsymbol{x}=\sum_{k=0}^{K} \theta_{k} T_k(\boldsymbol{L}) \boldsymbol{x},
+    h_{\theta}(\boldsymbol{L}) \boldsymbol{x}=\boldsymbol{U}\left(\sum_{k=0}^{K} \theta_{k} T_k(\boldsymbol{\Lambda})\right) \boldsymbol{U}^{\top} \boldsymbol{x}=\sum_{k=0}^{K} \theta_{k} T_k(\boldsymbol{L}) \boldsymbol{x},
 \end{equation}
 where $T_k$ is the order-$k$ Chebyshev polynomial and $\theta_k$ are the filter coefficients to be optimized. $K=9$ is the maximum polynomial order used in our fiducial configuration.
 
