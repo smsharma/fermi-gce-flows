@@ -37,10 +37,9 @@ import mlflow.pytorch
 from tqdm import *
 
 class PosteriorEstimator(NeuralInference, ABC):
-    def __init__(self, prior, density_estimator: Union[str, Callable] = "maf", device: str = "cpu", logging_level: Union[int, str] = "WARNING", summary_writer: Optional[SummaryWriter] = None, show_progress_bars: bool = True, **unused_args):
+    def __init__(self, density_estimator: Union[str, Callable] = "maf", device: str = "cpu", logging_level: Union[int, str] = "WARNING", summary_writer: Optional[SummaryWriter] = None, show_progress_bars: bool = True, **unused_args):
 
         super().__init__(
-            prior=prior,
             device=device,
             logging_level=logging_level,
             summary_writer=summary_writer,
@@ -55,7 +54,6 @@ class PosteriorEstimator(NeuralInference, ABC):
         x,
         x_aux,
         theta,
-        proposal,
         optimizer=optim.AdamW,
         optimizer_kwargs=None,
         scheduler=optim.lr_scheduler.CosineAnnealingLR,
@@ -138,7 +136,6 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         self.model = EstimatorNet(
             net=self.neural_net,
-            proposal=proposal,
             loss=self.loss,
             initial_lr=initial_lr, 
             optimizer=optimizer, 
@@ -184,7 +181,6 @@ class PosteriorEstimator(NeuralInference, ABC):
         self.best_model = EstimatorNet.load_from_checkpoint(
             checkpoint_path=model_checkpoint.best_model_path,
             net=self.neural_net,
-            proposal=proposal,
             loss=self.loss,
             initial_lr=initial_lr, 
             optimizer=optimizer, 
@@ -200,6 +196,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
     def build_posterior(
         self,
+        prior,
         density_estimator: Optional[TorchModule] = None,
     ) -> DirectPosterior:
 
@@ -208,7 +205,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         self._posterior = DirectPosterior(
             neural_net=density_estimator,
-            prior=self._prior,
+            prior=prior,
             device=self._device,
         )
 
@@ -221,7 +218,6 @@ class PosteriorEstimator(NeuralInference, ABC):
         self,
         theta: Tensor,
         x: Tensor,
-        proposal: Optional[Any],
     ) -> Tensor:
  
         # Use posterior log prob

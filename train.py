@@ -2,7 +2,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import sys, os
+import sys
 import json
 
 sys.path.append("./")
@@ -21,7 +21,7 @@ from torch import nn
 from sbi import utils
 from sbi.inference import PosteriorEstimator
 
-from pytorch_lightning.loggers import TensorBoardLogger, MLFlowLogger
+from pytorch_lightning.loggers import MLFlowLogger
 import mlflow
 
 
@@ -70,17 +70,7 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25., ke
     else:
         logging.info("Not masking on the fly")
         mask_reduce = None
-    # Priors hard-coded for now
-
-    # iso, bub, psc, dif_pibrem, dif_ics
-    prior_poiss = [[0.001, 0.001, 0.001, 6., 1.], [1.5, 1.5, 1.5, 12., 6.]]
-
-    # gce, dsk PS priors
-    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [2.5, 20.0, 1.99, 1.99, 50.0, 4.99, 2.5, 20.0, 1.99, 1.99, 50.0, 4.99]]
-
-    # Combine priors
-    prior = utils.BoxUniform(low=torch.tensor([0.001] + prior_poiss[0] + prior_ps[0]), high=torch.tensor([2.5] + prior_poiss[1] + prior_ps[1]))
-
+        
     # MLFlow logger
     tracking_uri = "file:{}/logs/mlruns".format(data_dir)
     mlf_logger = MLFlowLogger(experiment_name=experiment_name, tracking_uri=tracking_uri)
@@ -113,13 +103,12 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25., ke
         density_estimator = utils.posterior_nn(model=density_estimator_arch, embedding_net=sg_embed, hidden_features=maf_hidden_features, num_transforms=maf_num_transforms, normalize_pixel=normalize_pixel)
 
         # Setup the inference procedure with NPE
-        posterior_estimator = PosteriorEstimator(prior=prior, density_estimator=density_estimator, show_progress_bars=True, logging_level="INFO", device=device.type, summary_writer=mlf_logger)
+        posterior_estimator = PosteriorEstimator(density_estimator=density_estimator, show_progress_bars=True, logging_level="INFO", device=device.type, summary_writer=mlf_logger)
 
         # Model training
         density_estimator = posterior_estimator.train(x=x_filename, 
                                     x_aux=x_aux_filename, 
                                     theta=theta_filename, 
-                                    proposal=prior, 
                                     training_batch_size=batch_size, 
                                     max_num_epochs=max_num_epochs, 
                                     stop_after_epochs=stop_after_epochs, 
@@ -140,7 +129,6 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25., ke
         # Check to make sure model can be succesfully loaded
         model_uri = "runs:/{}/density_estimator".format(mlf_logger.run_id)
         density_estimator = mlflow.pytorch.load_model(model_uri)
-        posterior = posterior_estimator.build_posterior(density_estimator)
 
     else:
         raise NotImplementedError

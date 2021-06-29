@@ -33,14 +33,13 @@ class EstimatorNet(pl.LightningModule):
     the neural network into a pytorch_lightning module.
     """
 
-    def __init__(self, net, proposal, loss, initial_lr, optimizer, optimizer_kwargs, scheduler, scheduler_kwargs, summary=False, mask=None):
+    def __init__(self, net, loss, initial_lr, optimizer, optimizer_kwargs, scheduler, scheduler_kwargs, summary=False, mask=None):
 
         super().__init__()
 
         self.save_hyperparameters('initial_lr')
 
         self.net = net
-        self.proposal = proposal
         self.loss = loss
 
         self.initial_lr = initial_lr
@@ -63,7 +62,7 @@ class EstimatorNet(pl.LightningModule):
         x_and_aux = torch.cat([x, x_aux], -1)
         if self.summary:
             x_and_aux = torch.squeeze(x_and_aux, 1)
-        loss = torch.mean(self.loss(theta, x_and_aux, self.proposal))
+        loss = torch.mean(self.loss(theta, x_and_aux))
         self.log('train_loss', loss, on_epoch=True)
         return loss
 
@@ -74,14 +73,14 @@ class EstimatorNet(pl.LightningModule):
         x_and_aux = torch.cat([x, x_aux], -1)
         if self.summary:
             x_and_aux = torch.squeeze(x_and_aux, 1)
-        loss = torch.mean(self.loss(theta, x_and_aux, self.proposal))
+        loss = torch.mean(self.loss(theta, x_and_aux))
         self.log('val_loss', loss, on_epoch=True)
 
 class NeuralInference(ABC):
     """Abstract base class for neural inference methods."""
 
     def __init__(
-        self, prior, device: str = "cpu", logging_level: Union[int, str] = "WARNING", summary_writer: Optional[SummaryWriter] = None, show_progress_bars: bool = True, **unused_args,
+        self, device: str = "cpu", logging_level: Union[int, str] = "WARNING", summary_writer: Optional[SummaryWriter] = None, show_progress_bars: bool = True, **unused_args,
     ):
         r"""
         Base class for inference methods.
@@ -105,21 +104,11 @@ class NeuralInference(ABC):
 
         self._device = process_device(device)
 
-        self._prior = prior
         self._posterior = None
         self._neural_net = None
-        self._x_shape = None
 
         self._show_progress_bars = show_progress_bars
 
-        # Initialize roundwise (theta, x, prior_masks) for storage of parameters,
-        # simulations and masks indicating if simulations came from prior.
-        self._theta_roundwise, self._x_roundwise, self._prior_masks = [], [], []
-        self._model_bank = []
-
-        # Initialize list that indicates the round from which simulations were drawn.
-        self._data_round_index = []
-        self._round = 0
         self.summary_writer =  summary_writer
 
     @staticmethod
