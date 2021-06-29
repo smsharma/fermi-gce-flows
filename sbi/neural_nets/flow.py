@@ -13,46 +13,6 @@ from sbi.utils.sbiutils import standardizing_net, standardizing_transform
 from sbi.utils.torchutils import create_alternating_binary_mask
 
 
-def build_made(batch_x: Tensor = None, batch_y: Tensor = None, z_score_x: bool = True, z_score_y: bool = True, hidden_features: int = 50, num_mixture_components: int = 10, embedding_net: nn.Module = nn.Identity(), **kwargs,) -> nn.Module:
-    """Builds MADE p(x|y).
-
-    Args:
-        batch_x: Batch of xs, used to infer dimensionality and (optional) z-scoring.
-        batch_y: Batch of ys, used to infer dimensionality and (optional) z-scoring.
-        z_score_x: Whether to z-score xs passing into the network.
-        z_score_y: Whether to z-score ys passing into the network.
-        hidden_features: Number of hidden features.
-        num_mixture_components: Number of mixture components.
-        embedding_net: Optional embedding network for y.
-        kwargs: Additional arguments that are passed by the build function but are not
-            relevant for mades and are therefore ignored.
-
-    Returns:
-        Neural network.
-    """
-    x_numel = batch_x[0].numel()
-    # Infer the output dimensionality of the embedding_net by making a forward pass.
-    y_numel = embedding_net(batch_y[:1]).numel()
-
-    if x_numel == 1:
-        warn(f"In one-dimensional output space, this flow is limited to Gaussians")
-
-    transform = transforms.IdentityTransform()
-
-    if z_score_x:
-        transform_zx = standardizing_transform(batch_x)
-        transform = transforms.CompositeTransform([transform_zx, transform])
-
-    if z_score_y:
-        embedding_net = nn.Sequential(standardizing_net(batch_y), embedding_net)
-
-    distribution = distributions_.MADEMoG(features=x_numel, hidden_features=hidden_features, context_features=y_numel, num_blocks=5, num_mixture_components=num_mixture_components, use_residual_blocks=True, random_mask=False, activation=relu, dropout_probability=0.0, use_batch_norm=False, custom_initialization=True,)
-
-    neural_net = flows.Flow(transform, distribution, embedding_net)
-
-    return neural_net
-
-
 def build_maf(batch_x: Tensor = None, batch_y: Tensor = None, z_score_x: bool = True, z_score_y: bool = True, hidden_features: int = 50, num_transforms: int = 5, embedding_net: nn.Module = nn.Identity(), 
 normalize_pixel: bool =True, **kwargs,) -> nn.Module:
     """Builds MAF p(x|y).

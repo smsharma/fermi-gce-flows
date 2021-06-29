@@ -6,7 +6,7 @@ from typing import Callable
 
 from torch import nn
 
-from sbi.neural_nets.flow import build_made, build_maf, build_nsf
+from sbi.neural_nets.flow import build_maf, build_nsf
 
 def posterior_nn(
     model: str,
@@ -66,8 +66,6 @@ def posterior_nn(
     )
 
     def build_fn(batch_theta, batch_x):
-        if model == "made":
-            return build_made(batch_x=batch_theta, batch_y=batch_x, **kwargs)
         if model == "maf":
             return build_maf(batch_x=batch_theta, batch_y=batch_x, **kwargs)
         elif model == "nsf":
