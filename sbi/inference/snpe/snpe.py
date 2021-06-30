@@ -112,7 +112,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         train_loader, val_loader = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
 
-        num_z_score = 5000  # Z-score using a limited random sample for memory reasons
+        num_z_score = 10000  # Z-score using a limited random sample for memory reasons
 
         logging.info("Z-scoring using up to {} random training samples for x".format(num_z_score))
 
