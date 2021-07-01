@@ -14,7 +14,7 @@ from sbi.utils.torchutils import create_alternating_binary_mask
 
 
 def build_maf(batch_x: Tensor = None, batch_y: Tensor = None, z_score_x: bool = True, z_score_y: bool = True, hidden_features: int = 50, num_transforms: int = 5, embedding_net: nn.Module = nn.Identity(), 
-normalize_pixel: bool =True, **kwargs,) -> nn.Module:
+normalize_pixel: bool = True, **kwargs,) -> nn.Module:
     """Builds MAF p(x|y).
 
     Args:
@@ -54,7 +54,7 @@ normalize_pixel: bool =True, **kwargs,) -> nn.Module:
 
 
 def build_nsf(batch_x: Tensor = None, batch_y: Tensor = None, z_score_x: bool = True, z_score_y: bool = True, hidden_features: int = 50, num_transforms: int = 5, embedding_net: nn.Module = nn.Identity(), 
-normalize_pixel: bool =True, **kwargs,) -> nn.Module:
+normalize_pixel: bool = True, **kwargs,) -> nn.Module:
     """Builds NSF p(x|y).
 
     Args:

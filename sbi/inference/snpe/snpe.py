@@ -3,31 +3,21 @@
 
 import logging
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from copy import deepcopy
-from typing import Any, Callable, Dict, NewType, Optional, Union, cast
-from warnings import warn
-import six
+from typing import Callable, Optional, Union, cast
 from collections import OrderedDict
-import os
 from pathlib import Path
 
 import torch
-from torch import Tensor, ones, optim
-from torch.nn.utils import clip_grad_norm_
-from torch.utils import data
-from torch.utils.data import Dataset, DataLoader
-from torch.utils.data.sampler import SubsetRandomSampler
+from torch import Tensor, optim
 from torch.utils.tensorboard import SummaryWriter
-from torch.utils.data.sampler import SubsetRandomSampler
-
 import numpy as np
 
 from sbi import utils as utils
 from sbi.inference import NeuralInference, EstimatorNet
 from sbi.inference.posteriors.direct_posterior import DirectPosterior
 from sbi.types import TorchModule
-from sbi.utils import x_shape_from_simulation
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
@@ -47,7 +37,7 @@ class PosteriorEstimator(NeuralInference, ABC):
             **unused_args,
         )
 
-        self._build_neural_net = density_estimator
+        self.build_neural_net = density_estimator
 
     def train(
         self,
@@ -72,7 +62,6 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         optimizer_kwargs = {} if optimizer_kwargs is None else optimizer_kwargs
         scheduler_kwargs = {'T_max':max_num_epochs} if scheduler_kwargs is None else scheduler_kwargs
-
 
         max_num_epochs = 2 ** 31 - 1 if max_num_epochs is None else max_num_epochs
         
@@ -126,11 +115,10 @@ class PosteriorEstimator(NeuralInference, ABC):
         if summary:
             x_and_aux_z_score = torch.squeeze(x_and_aux_z_score, 1)
 
-        # Call the `self._build_neural_net` which will build the neural network.
+        # Call the `self.build_neural_net` which will build the neural network.
         # This is passed into NeuralPosterior, to create a neural posterior which
         # can `sample()` and `log_prob()`. The network is accessible via `.net`.
-        self.neural_net = self._build_neural_net(theta_z_score, x_and_aux_z_score)
-        self.x_shape = x_shape_from_simulation(x_and_aux_z_score)
+        self.neural_net = self.build_neural_net(theta_z_score, x_and_aux_z_score)
 
         max_num_epochs=cast(int, max_num_epochs)
 
@@ -162,7 +150,7 @@ class PosteriorEstimator(NeuralInference, ABC):
             callbacks=[early_stop_callback, checkpoint_callback, lr_monitor],
             gradient_clip_val=clip_max_norm,
             max_epochs=max_num_epochs,
-            progress_bar_refresh_rate=self._show_progress_bars,
+            progress_bar_refresh_rate=self.show_progress_bars,
             deterministic=False,
             gpus=[0],  # Hard-coded
             num_sanity_val_steps=5,
@@ -203,16 +191,16 @@ class PosteriorEstimator(NeuralInference, ABC):
         if density_estimator is None:
             density_estimator = self.neural_net
 
-        self._posterior = DirectPosterior(
+        self.posterior = DirectPosterior(
             neural_net=density_estimator,
             prior=prior,
-            device=self._device,
+            device=self.device,
         )
 
         # Posterior in eval mode
-        self._posterior.net.eval()
+        self.posterior.net.eval()
 
-        return deepcopy(self._posterior)
+        return deepcopy(self.posterior)
 
     def loss(
         self,

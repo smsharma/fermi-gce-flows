@@ -79,8 +79,10 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25., ke
     # Specify datasets
 
     if summary is None:
+        logging.info("Not using any summaries")
         x_filename = "{}/samples/x_{}.npy".format(data_dir, sample_name)
     else:
+        logging.info("Using summary {}".format(summary))
         x_filename = "{}/samples/x_{}_{}.npy".format(data_dir, summary, sample_name)  # If using a summary
 
     x_aux_filename = "{}/samples/x_aux_{}.npy".format(data_dir, sample_name)
@@ -88,6 +90,7 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25., ke
 
     x_summary_aux_filenames = None
     if aux_summary is not None:
+        logging.info("Using additional auxiliary summaries")
         x_summary_aux_filenames = ["{}/samples/x_{}_{}.npy".format(data_dir, summary, sample_name) for summary in aux_summary]
 
     if method == "snpe":
@@ -149,7 +152,7 @@ def parse_args():
     parser.add_argument("--method", type=str, default='snpe', help='SBI method; "snpe" or "snre". "snre" not implemented yet.')
     parser.add_argument("--density_estimator", type=str, default='maf', help='Density estimator method; "maf" or "nsf"')
     parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 256]]", help='Specification of fully-connected embedding layers')
-    parser.add_argument("--n_neighbours", type=int, default=8, help="Number of neightbours in graph.")
+    parser.add_argument("--n_neighbours", type=int, default=8, help="Number of neighbours in graph.")
     parser.add_argument("--aux_summary", type=str, default="None", help='Which summaries to tack on')
     parser.add_argument("--n_aux", type=int, default=2, help="Number of auxiliary variables")
     parser.add_argument("--activation", type=str, default='relu', help='Nonlinearity, "relu" or "selu"')
@@ -157,7 +160,7 @@ def parse_args():
     parser.add_argument("--max_num_epochs", type=int, default=30, help="Max number of training epochs")
     parser.add_argument("--maf_hidden_features", type=int, default=128, help="Nodes in a MAF layer")
     parser.add_argument("--kernel_size", type=int, default=4, help="GNN  kernel size")
-    parser.add_argument("--normalize_pixel", type=int, default=1, help="Whether to do pixel-wise Z-scoring")
+    parser.add_argument("--normalize_pixel", type=int, default=1, help="Whether to do pixel-wise Z-scoring, or normalize across images.")
     parser.add_argument("--batch_size", type=int, default=64, help="Training batch size")
     parser.add_argument("--dir", type=str, default=".", help="Directory. Training data will be loaded from the data/samples subfolder, the model saved in the " "data/models subfolder.")
 
