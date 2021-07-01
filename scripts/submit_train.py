@@ -22,10 +22,11 @@ cd /scratch/sm8383/sbi-fermi/
 ##########################
 
 batch_size_list = [128]
-fc_dims_list = [[[-1, 1024], [1024, 128]], [[-1, 1024], [1024, 256]], [[-1, 512], [512, 128]]]
+fc_dims_list = [[[-1, 1024], [1024, 128]]]
 maf_num_transforms_list = [8]
 maf_hidden_features_list = [128]
 activations = ["relu"]
+flow_activations = ["tanh"]
 kernel_size_list = [4]
 n_neighbours_list = [8]
 conv_channel_configs = ["standard"]
@@ -53,14 +54,15 @@ for n_neighbours in n_neighbours_list:
                                                 for density_estimator in density_estimator_list:
                                                     for r_outer in r_outer_list:
                                                         for normalize_pixel in normalize_pixel_list:
-                                                            batchn = batch + "\n"
-                                                            batchn += "python -u train.py --sample train_ModelO_gamma_fix_1M --name gce_ModelO_gamma_fix_1M --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {} --r_outer {} --normalize_pixel {}".format(maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator, r_outer, normalize_pixel)
-                                                            fname = "batch/submit.batch"
-                                                            f = open(fname, "w")
-                                                            f.write(batchn)
-                                                            f.close()
-                                                            os.system("chmod +x " + fname)
-                                                            os.system("sbatch " + fname)
+                                                            for flow_activation in flow_activations:
+                                                                batchn = batch + "\n"
+                                                                batchn += "python -u train.py --sample train_ModelO_gamma_fix_1M --name gce_ModelO_gamma_fix_1M --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {} --r_outer {} --normalize_pixel {} --flow_activation {}".format(maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator, r_outer, normalize_pixel, flow_activation)
+                                                                fname = "batch/submit.batch"
+                                                                f = open(fname, "w")
+                                                                f.write(batchn)
+                                                                f.close()
+                                                                os.system("chmod +x " + fname)
+                                                                os.system("sbatch " + fname)
 
 # ##################
 # # Just summaries #

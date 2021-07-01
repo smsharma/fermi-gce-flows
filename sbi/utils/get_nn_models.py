@@ -17,6 +17,7 @@ def posterior_nn(
     embedding_net: nn.Module = nn.Identity(),
     num_components: int = 10,
     normalize_pixel: bool = True,
+    activation: str = "relu",
 ) -> Callable:
     r"""
     Returns a function that builds a density estimator for learning the posterior.
@@ -51,7 +52,8 @@ def posterior_nn(
                 "num_transforms",
                 "embedding_net",
                 "num_components",
-                "normalize_pixel"
+                "normalize_pixel",
+                "activation",
             ),
             (
                 z_score_theta,
@@ -61,6 +63,7 @@ def posterior_nn(
                 embedding_net,
                 num_components,
                 normalize_pixel,
+                activation,
             ),
         )
     )
