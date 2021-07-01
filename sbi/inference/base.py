@@ -102,12 +102,12 @@ class NeuralInference(ABC):
                 0.14.0 is more mature, we will remove this argument.
         """
 
-        self._device = process_device(device)
+        self.device = process_device(device)
 
-        self._posterior = None
-        self._neural_net = None
+        self.posterior = None
+        self.neural_net = None
 
-        self._show_progress_bars = show_progress_bars
+        self.show_progress_bars = show_progress_bars
 
         self.summary_writer =  summary_writer
 
