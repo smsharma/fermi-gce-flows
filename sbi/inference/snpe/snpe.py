@@ -57,7 +57,8 @@ class PosteriorEstimator(NeuralInference, ABC):
         summary=False,
         summary_range=None,
         x_summary_aux_filenames=None,
-        mask=None
+        mask=None,
+        num_workers=32,
     ) -> DirectPosterior:
 
         optimizer_kwargs = {} if optimizer_kwargs is None else optimizer_kwargs
@@ -99,7 +100,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         dataset = self.make_dataset(data)
 
-        train_loader, val_loader = self.make_dataloaders(dataset, validation_fraction, training_batch_size)
+        train_loader, val_loader = self.make_dataloaders(dataset, validation_fraction, training_batch_size, num_workers=num_workers)
 
         num_z_score = 10000  # Z-score using a limited random sample for memory reasons
 
