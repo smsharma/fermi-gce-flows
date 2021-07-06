@@ -324,8 +324,12 @@ def make_signal_injection_plot(posterior, x_test, x_data_test=None, theta_test=N
                 theta_dm_baseline = np.median(posterior_samples[:, 0])
                 theta_ps_baseline = np.median(posterior_samples[:, 6])
             else:
-                ax[i_r].axvline((theta_dm_baseline + coeff_ary[i_r]) * np.mean(fraction_multiplier), color='k', ls='dotted')
-                ax[i_r].axhline((theta_ps_baseline) * np.mean(fraction_multiplier), color='k', ls='dotted')
+                if signal_injection == "dm":
+                    ax[i_r].axvline((theta_dm_baseline + coeff_ary[i_r]) * np.mean(fraction_multiplier), color='k', ls='dotted')
+                    ax[i_r].axhline((theta_ps_baseline) * np.mean(fraction_multiplier), color='k', ls='dotted')
+                elif signal_injection == "ps":
+                    ax[i_r].axvline((theta_dm_baseline) * np.mean(fraction_multiplier), color='k', ls='dotted')
+                    ax[i_r].axhline((theta_ps_baseline + coeff_ary[i_r]) * np.mean(fraction_multiplier), color='k', ls='dotted')
 
         if not is_data:
             ax[i_r].axvline(theta_truth[0] * np.mean(fraction_multiplier), color='k', ls='dotted')
