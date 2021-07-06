@@ -195,7 +195,6 @@ class PosteriorEstimator(NeuralInference, ABC):
         self.posterior = DirectPosterior(
             neural_net=density_estimator,
             prior=prior,
-            device=self.device,
         )
 
         # Posterior in eval mode
