@@ -165,7 +165,7 @@ The forward model is thus specified by 18 parameters---6 parameters for the over
 
 \subsection{Optimization and training}
 
-$10^{6}$ training samples are generated. Models are trained with batch size 128 using the \texttt{AdamW} optimizer with initial learning rate $10^{-3}$ and weight decay $10^{-5}$. Cosine annealing is used to decay the learning rate, training for up to 100 epochs with early stopping if the validation loss has not improved after 10 epochs.
+$10^{6}$ training samples are generated. Models are trained with batch size 128 using the \texttt{AdamW} optimizer with initial learning rate $10^{-3}$ and weight decay $10^{-5}$. Cosine annealing is used to decay the learning rate, training for up to 100 epochs with early stopping if the validation loss has not improved after 10 epochs. All input features (\emph{i.e.}, individual pixels as well as auxiliary variables) are normalized to zero mean and unit variance.
 
 %
 \begin{figure*}
