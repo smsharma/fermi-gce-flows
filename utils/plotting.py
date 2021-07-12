@@ -22,7 +22,7 @@ def dnds_conv(s_ary, theta, ps_temp, roi_counts_normalize, roi_normalize):
     dnds_ary = dnds(s_ary, [A] + list(theta[1:]))
     return dnds_ary
 
-def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None, **kwargs):
+def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None, sub1=None, sub2=None, **kwargs):
 
     # Extract templates and labels
     n = SimpleNamespace(**temps_dict)
@@ -79,7 +79,7 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
             ax[i_r][0].fill_between(f_ary, np.percentile(f_ary ** 2 * dnds_ary, [2.5], axis=0)[0], np.percentile(f_ary ** 2 * dnds_ary, [97.5], axis=0)[0], alpha=0.1, color=cols_default[idx_ps])
 
             if not is_data:
-                ax[i_r][0].plot(f_ary, f_ary ** 2 * dnds_conv(s_ary, theta_truth[i_param_ps:i_param_ps+6], temps_ps[idx_ps], roi_counts_normalize, roi_normalize) * (s_f_conv / pixarea_deg), color=cols_default[idx_ps], ls='dotted', label=ps_labels[idx_ps] + " truth")
+                ax[i_r][0].plot(f_ary, f_ary ** 2 * dnds_conv(s_ary, theta_truth[i_param_ps:i_param_ps+6], temps_ps[idx_ps], roi_counts_normalize, roi_normalize) * (s_f_conv / pixarea_deg), color=cols_default[idx_ps], ls='dotted')  # , label=ps_labels[idx_ps] + " truth")
 
         ax[i_r][0].set_xscale("log")
         ax[i_r][0].set_yscale("log")
@@ -93,9 +93,9 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
             ax[i_r][0].set_xlabel(r"$F$\,[ph\,cm$^{-2}$\,s$^{-1}$]")
 
         if i_r == 0:
-            ax[i_r][0].set_title(r"\bf{Source-count distribution}")
+            ax[i_r][0].set_title(r"\bf{Source-count distributions}", fontsize=19, y=1.02)
 
-        ax[i_r][0].legend(fontsize=14)
+        ax[i_r][0].legend(fontsize=16)
 
         ## Fluxes plot, all templates except diffuse
 
@@ -135,14 +135,14 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         mean_counts_roi = posterior_samples[:, 0] * np.mean(temps_ps[i_temp_ps][~roi_normalize]) / np.mean(temps_ps[i_temp_ps][~roi_counts_normalize])
         mean_counts_roi_post += mean_counts_roi
 
-        ax[i_r][2].hist(mean_counts_roi / np.mean(fermi_exp[~roi_normalize]) / pixarea / divide_by, color=cols_default[8], label='gce',  **hist_kwargs)
+        ax[i_r][2].hist(mean_counts_roi / np.mean(fermi_exp[~roi_normalize]) / pixarea / divide_by, color=cols_default[8], label='GCE Poiss.',  **hist_kwargs)
         if not is_data:
             ax[i_r][2].axvline(theta_truth[0] * np.mean(temps_ps_sim[i_temp_ps][~roi_normalize]) / np.mean(temps_ps_sim[i_temp_ps][~roi_counts_normalize]) / np.mean(fermi_exp[~roi_normalize]) / pixarea / divide_by, color=cols_default[8], ls='dotted')
         
         if i_r == nrows - 1:
             ax[i_r][2].set_xlabel(r"Flux\,[$10^{-7}$\,ph\,cm$^{-2}$\,s$^{-1}$\,sr$^{-1}$]")
         if i_r == 0:
-            ax[i_r][2].set_title(r"\bf{Fluxes}")
+            ax[i_r][2].set_title(r"\bf{Component fluxes}", x=0.7, fontsize=19, y=1.02)
 
         ax[i_r][2].set_xlim(0, ax2_max - 0.05)
         ax[i_r][2].set_ylim(0, 3.5)
@@ -177,7 +177,7 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         handles_2, labels_2 = ax[i_r][2].get_legend_handles_labels()
         handles_3, labels_3 = ax[i_r][3].get_legend_handles_labels()
 
-        ax[i_r][2].legend(handles_2 + handles_3, labels_2 + labels_3, fontsize=14, ncol=2)
+        ax[i_r][2].legend(handles_2 + handles_3, labels_2 + labels_3, fontsize=16, ncol=1)
 
         d = .02 
         line_kwargs = dict(transform=ax[i_r][2].transAxes, color='k', lw=1.8, clip_on=False)
@@ -201,7 +201,12 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
             x_embedded[np.where(~roi_sim)] = x_d[0]
             mean_roi_counts = np.mean(x_embedded[~roi_counts_normalize])
             
-        ax[i_r][0].axvline(np.sqrt(mean_roi_counts) / np.mean(fermi_exp[~roi_normalize]), lw=1, ls='dotted', color='grey')
+        # # 1-sigma
+        # ax[i_r][0].axvline(np.sqrt(mean_roi_counts) / np.mean(fermi_exp[~roi_normalize]), lw=1, ls='dotted', color='grey')
+
+        # Single photon
+        ax[i_r][0].axvline(1 / np.mean(fermi_exp[~roi_normalize]), lw=1, ls='dotted', color='grey')
+        ax[i_r][0].text(1.1e-11, 3e-11, "1-ph", color='grey', fontsize=12, rotation=90)
 
         fraction_multiplier = 100 * np.mean(temps_ps[0][~roi_normalize]) / np.mean(temps_ps[0][~roi_counts_normalize]) / mean_counts_roi_post
 
@@ -209,6 +214,7 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         samples = MCSamples(samples=np.transpose(np.array([posterior_samples[:, 0] * fraction_multiplier, posterior_samples[:, 6] * fraction_multiplier])),names = ['DM','PS'], labels = ['DM','PS'])
         g.plot_2d(samples, 'DM', 'PS', filled=True, alphas=[0.5], ax=ax[i_r][1], colors=[cols_default[0]])
         g.plot_2d(samples, 'DM', 'PS', filled=False, ax=ax[i_r][1], colors=['k'], lws=[1.2])
+
 
         # TODO: Take span depending on mean roi counts rather than posterior
         
@@ -221,8 +227,10 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
                 ax[i_r][1].axhline((theta_ps_baseline) * np.median(fraction_multiplier), color='k', ls='dotted')
 
         if not is_data:
-            ax[i_r][1].axvline(theta_truth[0] * np.median(fraction_multiplier), color='k', ls='dotted')
-            ax[i_r][1].axhline(theta_truth[6] * np.median(fraction_multiplier), color='k', ls='dotted')
+            # ax[i_r][1].axvline(theta_truth[0] * np.median(fraction_multiplier), color='k', ls='dotted')
+            # ax[i_r][1].axhline(theta_truth[6] * np.median(fraction_multiplier), color='k', ls='dotted')
+
+            ax[i_r][1].plot([theta_truth[0] * np.median(fraction_multiplier)], [theta_truth[6] * np.median(fraction_multiplier)], marker='*', markerfacecolor=cols_default[0], markeredgecolor='k', ms=15., clip_on=False)
 
         ax[i_r][1].set_xlim(0., 15.)
         ax[i_r][1].set_ylim(0., 15.)
@@ -233,10 +241,17 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         else:
             ax[i_r][1].set_xlabel(None, fontsize=17.5)
         if i_r == 0:
-            ax[i_r][1].set_title(r"\bf{Flux fractions}")
+            ax[i_r][1].set_title(r"\bf{Flux fractions}", fontsize=19, y=1.02)
 
         ax[i_r][1].tick_params(axis='x', labelsize=17.5)
         ax[i_r][1].tick_params(axis='y', labelsize=17.5)
+
+        if i_r == 0:
+            if sub1 is not None:
+                ax[i_r][1].text(14.3, 13, sub1, fontsize=18, horizontalalignment='right')
+                
+            if sub2 is not None:
+                ax[i_r][1].text(14.3, 11.4, sub2, fontsize=18, horizontalalignment='right')
 
     # Optionally save plot
 
@@ -244,7 +259,7 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         plt.tight_layout()
         fig.savefig(save_filename,bbox_inches='tight',pad_inches=0.1)
 
-def make_signal_injection_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None):
+def make_signal_injection_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None, sub1=None, sub2=None):
 
     # Extract templates and labels
     n = SimpleNamespace(**temps_dict)
@@ -332,22 +347,33 @@ def make_signal_injection_plot(posterior, x_test, x_data_test=None, theta_test=N
                     ax[i_r].axhline((theta_ps_baseline + coeff_ary[i_r]) * np.mean(fraction_multiplier), color='k', ls='dotted')
 
         if not is_data:
-            ax[i_r].axvline(theta_truth[0] * np.mean(fraction_multiplier), color='k', ls='dotted')
-            ax[i_r].axhline(theta_truth[6] * np.mean(fraction_multiplier), color='k', ls='dotted')
+            # ax[i_r].axvline(theta_truth[0] * np.mean(fraction_multiplier), color='k', ls='dotted')
+            # ax[i_r].axhline(theta_truth[6] * np.mean(fraction_multiplier), color='k', ls='dotted')
+            ax[i_r].plot([theta_truth[0] * np.median(fraction_multiplier)], [theta_truth[6] * np.median(fraction_multiplier)], marker='*', markerfacecolor=cols_default[0], markeredgecolor='k', ms=15., clip_on=False)
 
         ax[i_r].set_xlim(0., 15.)
         ax[i_r].set_ylim(0., 15.)
 
-        ax[i_r].set_ylabel(r"PS\,[\%]", fontsize=17.5)
-        if i_r == nrows - 1:
-            ax[i_r].set_xlabel(r"DM\,[\%]", fontsize=17.5)
-        else:
-            ax[i_r].set_xlabel(None, fontsize=17.5)
         if i_r == 0:
-            ax[i_r].set_title(r"\bf{Flux fractions}")
+            ax[i_r].set_ylabel(r"PS\,[\%]", fontsize=17.5)
+        else:
+            ax[i_r].set_ylabel(None, fontsize=17.5)
+
+        ax[i_r].set_xlabel(r"DM\,[\%]", fontsize=17.5)
+
+
+        # if i_r == 0:
+        #     ax[i_r].set_title(r"\bf{Flux fractions}")
 
         ax[i_r].tick_params(axis='x', labelsize=17.5)
         ax[i_r].tick_params(axis='y', labelsize=17.5)
+
+        if i_r == 0:
+            if sub1 is not None:
+                ax[i_r].text(14.3, 13, sub1, fontsize=18, horizontalalignment='right')
+                
+            if sub2 is not None:
+                ax[i_r].text(14.3, 11.4, sub2, fontsize=18, horizontalalignment='right')
 
     # Optionally save plot
 
