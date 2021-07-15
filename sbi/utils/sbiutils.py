@@ -70,16 +70,16 @@ class Standardize(nn.Module):
         mean, std = map(torch.as_tensor, (mean, std))
         self.mean = mean
         self.std = std
-        self.normalize_pixel = normalize_pixel
+        # self.normalize_pixel = normalize_pixel
         self.register_buffer("_mean", mean)
         self.register_buffer("_std", std)
 
     def forward(self, tensor):
-        if self.normalize_pixel:
-            return (tensor - self._mean) / self._std
-        else:
-            tensor[:, :, :-2] = (tensor[:, :, :-2] - self._mean[:, :-2]) / self._std[:, :-2]
-            tensor[:, :, -2:] = (tensor[:, :, -2:] - self._mean[:, -2:]) / self._std[:, -2:]
+        # if self.normalize_pixel:
+        return (tensor - self._mean) / self._std
+        # else:
+        #     tensor[:, :, :-2] = (tensor[:, :, :-2] - self._mean[:, :-2]) / self._std[:, :-2]
+        #     tensor[:, :, -2:] = (tensor[:, :, -2:] - self._mean[:, -2:]) / self._std[:, -2:]
         return tensor
 
 def standardizing_net(batch_t: Tensor, min_std: float = 1e-7, normalize_pixel: bool = True) -> nn.Module:

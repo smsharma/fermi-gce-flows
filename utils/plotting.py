@@ -355,7 +355,11 @@ def make_signal_injection_plot(posterior, x_test, x_data_test=None, theta_test=N
         ax[i_r].set_ylim(0., 15.)
 
         if i_r == 0:
-            ax[i_r].set_ylabel(r"PS\,[\%]", fontsize=17.5)
+            # ax[i_r].set_ylabel(r"\bf{Dim PS signal} \n{PS\,[\%]}", fontsize=17.5)
+            ax[i_r].set_ylabel(r"\bf{" + sub2 + r"}"
+                    "\n"  # Newline: the backslash is interpreted as usual
+                    r"PS\,[\%]", fontsize=17.5)
+
         else:
             ax[i_r].set_ylabel(None, fontsize=17.5)
 
@@ -419,6 +423,11 @@ def make_variations_plot(posterior, x_test, theta_test=None, roi_normalize=None,
     g = plots.get_single_plotter()
     samples = MCSamples(samples=np.transpose(np.array([posterior_samples[:, 0] * np.mean(fraction_multiplier), posterior_samples[:, 6] * np.mean(fraction_multiplier)])),names = ['DM','PS'], labels = ['DM','PS'])
     # g.plot_2d(samples, 'DM', 'PS', filled=True, alphas=[0.5], ax=ax, colors=[cols_default[0]])
-    g.plot_2d(samples, 'DM', 'PS', filled=False, ax=ax, colors=[color, color], lws=[1.5, 1.5], ls=['-','--'], legend_labels=['Simulation', 'Simulation 2'])
-    
 
+    samples.updateSettings({'contours': [0.95]})
+    g.settings.num_plot_contours = 1
+    g.settings.linewidth = 1.5
+    g.settings.linewidth_contour = 1.5
+    g.plot_2d(samples, 'DM', 'PS', filled=False, ax=ax, colors=[color, color], lws=[2.5, 2.5], ls=['-','--'], legend_labels=['Simulation', 'Simulation 2'])
+    
+   
