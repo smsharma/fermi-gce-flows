@@ -274,9 +274,9 @@ We explore several systematic variations on the fiducial analysis, shown in Fig.
 
 A key challenge in $\gamma$-ray analyses of the Galactic Center analyses is that associated with effects of mismodeled signal and background templates~\cite{Lee:2015fea,Leane:2020pfc,Leane:2020nmi,Buschmann:2020adf,Chang:2019ars}. In this section we assess the susceptibility of our simulation-based inference pipeline to these systematics, exploring the effect of background and signal mismodeling in turn. 
 
-\subsubsection*{Diffuse background mismodeling}
+\subsubsection*{Diffuse foreground mismodeling}
 
-In order to test the effect of large-scale background mismodeling, we construct a data-driven model of such mismodeling and assess the ability of our method to recover either smooth or PS-like emission in the face of such mismodeling.  Following Ref.~\cite{Mishra-Sharma:2020kjb}, we perform a Poissonian template analysis on the \Fermi dataset $x$, modulating the diffuse model template $T_{\mathrm{dif}}$ as described by the bremsstrahlung and neutral pion decay components of diffuse Model O by an (exponentiated) Gaussian process (GP):
+In order to test the effect of large-scale foreground mismodeling, we construct a data-driven model of such mismodeling and assess the ability of our method to recover either smooth or PS-like emission in the face of such mismodeling.  Following Ref.~\cite{Mishra-Sharma:2020kjb}, we perform a Poissonian template analysis on the \Fermi dataset $x$, modulating the diffuse model template $T_{\mathrm{dif}}$ as described by the bremsstrahlung and neutral pion decay components of diffuse Model O by an (exponentiated) Gaussian process (GP):
 \begin{equation}
     x \sim \operatorname{Pois}\left(\sum_{i \neq \mathrm{dif}} A_{i} T_{i}+\exp \left(f\right) A_{\mathrm{dif}} T_{\mathrm{dif}}\right).
 \end{equation}
