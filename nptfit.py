@@ -73,7 +73,7 @@ class NPRegression:
 
             for i_ps in torch.arange(self.n_ps):
 
-                s_ary = torch.logspace(-2, 2, 100)
+                s_ary = torch.logspace(-2, 2, 500)
                 s_exp_temp = theta_ps[i_ps][0] * np.mean(self.temps_ps[i_ps]) / np.mean(self.temps_ps_og[i_ps][~self.roi_counts_normalize])
                 theta_ps[i_ps][0] = 1.
                 dnds_ary_temp = dnds(s_ary, theta_ps[i_ps])

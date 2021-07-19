@@ -1,17 +1,15 @@
 #!/bin/bash
-
-#SBATCH --job-name=train
-#SBATCH --nodes=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=32GB
-#SBATCH --time=47:59:00
-#SBATCH --gres=gpu:1
-##SBATCH --mail-type=begin
+#SBATCH -N 1   # node count
+#SBATCH --ntasks-per-node=24
+#SBATCH -t 47:59:00
+#SBATCH --mem=24GB
+#SBATCH --mail-type=begin
 #SBATCH --mail-type=end
-#SBATCH --mail-user=siddharthmishra19@gmail.com
+#SBATCH --mail-user=sm8383@nyu.edu
 
-source ~/.bashrc
+module load gsl/intel/2.6 
 conda activate sbi-fermi
-cd /scratch/sm8383/sbi-fermi/
 
-python -u train.py --sample train_ModelO_gamma_fix_1M --name gce_ModelO_gamma_fix_1M --maf_num_transforms 8 --maf_hidden_features 128 --fc_dims '[[-1, 2048], [2048, 128]]' --batch_size 256 --activation relu --kernel_size 5 --laplacian_type combinatorial --conv_type chebconv --conv_channel_config standard --aux_summary None --n_aux 2 --n_neighbours 8 --conv_source deepsphere --density_estimator maf --r_outer 25 --normalize_pixel 1 --flow_activation tanh --num_workers 8
+cd /scratch/sm8383/sbi-fermi
+
+python nptfit.py --sample_name fermi_data_500 --n_cpus 24 --r_outer 25 --n_live 500 --i_mc -1
