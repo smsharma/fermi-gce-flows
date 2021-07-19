@@ -6,7 +6,7 @@ batch = """#!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=32GB
-#SBATCH --time=23:59:00
+#SBATCH --time=47:59:00
 #SBATCH --gres=gpu:1
 ##SBATCH --mail-type=begin
 #SBATCH --mail-type=end
@@ -21,13 +21,13 @@ cd /scratch/sm8383/sbi-fermi/
 # Explore configurations #
 ##########################
 
-batch_size_list = [128]
-fc_dims_list = [[[-1, 1024], [1024, 128]]]
+batch_size_list = [64, 256]
+fc_dims_list = [[[-1, 1024], [1024, 256]], [[-1, 1024], [1024, 128]], [[-1, 2048], [2048, 128]]]
 maf_num_transforms_list = [8]
 maf_hidden_features_list = [128]
 activations = ["relu"]
 flow_activations = ["tanh"]
-kernel_size_list = [4]
+kernel_size_list = [5]
 n_neighbours_list = [8]
 conv_channel_configs = ["standard"]
 laplacian_types = ["combinatorial"]
