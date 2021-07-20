@@ -32,6 +32,7 @@ normalize_pixel: bool = True, activation: str = "relu", **kwargs,) -> nn.Module:
         Neural network.
     """
     x_numel = batch_x[0].numel()
+    
     # Infer the output dimensionality of the embedding_net by making a forward pass.
     y_numel = embedding_net(batch_y[:1]).numel()
 
