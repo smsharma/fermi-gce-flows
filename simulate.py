@@ -21,7 +21,7 @@ from utils.utils import ring2nest
 from models.psf import KingPSF
 
 
-def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="default", ps_mask_type="0p8deg"):
+def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="default", ps_mask_type="0p8deg", disk_type="thick"):
     """ High-level simulation script
     """
 
@@ -56,7 +56,12 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     temp_dif = np.load("data/fermi_data/template_dif.npy")
     temp_psc = np.load("data/fermi_data/template_psc.npy")
     temp_iso = np.load("data/fermi_data/template_iso.npy")
-    temp_dsk = np.load("data/fermi_data/template_dsk.npy")
+
+    if disk_type == "thick":
+        temp_dsk = np.load("data/fermi_data/template_dsk.npy")
+    elif disk_type == "thin":
+        temp_dsk = np.load("data/external/template_disk_r_s_5_z_s_0.3.npy")
+
     temp_bub = np.load("data/fermi_data/template_bub.npy")
 
     # Load exposure
@@ -91,7 +96,8 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
         raise NotImplementedError
 
     # gce, dsk PS priors
-    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [2.5, 20.0, 1.99, 1.99, 40.0, 4.99, 2.5, 20.0, 1.99, 1.99, 40.0, 4.99]]
+    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], 
+                [2.5, 20.0, 1.99, 1.99, 40.0, 4.99, 2.5, 20.0, 1.99, 1.99, 40.0, 4.99]]
 
     # Poiss priors
 
@@ -196,6 +202,7 @@ def parse_args():
     )
     parser.add_argument("--dif", type=str, default="ModelO", help='Diffuse model to simulate, whether "ModelO" (default) or "p6"')
     parser.add_argument("--ps_mask_type", type=str, default="0p8deg", help='PS mask, either "0p8deg" (default) or "95pc"')
+    parser.add_argument("--disk_type", type=str, default="thick", help='Disk type, either "thick" (default) or "thin"')
     parser.add_argument("--gamma", type=str, default="default", help='Whether to float NFW index gamma. "fix" (default, fixes to gamma=1.2), "float" (float both gammas), or "float_both" (float PS and poiss gammas separately)')
     parser.add_argument("--name", type=str, default=None, help='Sample name, like "train" or "test".')
     parser.add_argument("--dir", type=str, default=".", help="Base directory. Results will be saved in the data/samples subfolder.")
@@ -214,7 +221,7 @@ if __name__ == "__main__":
     logger.info("Hi!")
 
     name = "train" if args.name is None else args.name
-    results = simulate(n=args.n, dif=args.dif, gamma=args.gamma, ps_mask_type=args.ps_mask_type)
+    results = simulate(n=args.n, dif=args.dif, gamma=args.gamma, ps_mask_type=args.ps_mask_type, disk_type=args.disk_type)
     save(args.dir, name, results)
 
     logger.info("All done! Have a nice day!")
