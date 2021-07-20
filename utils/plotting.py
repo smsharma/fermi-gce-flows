@@ -59,6 +59,7 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
             posterior_samples = posterior[i_r]
         else:
             posterior_samples = posterior.sample((n_samples,), x=x_o, **kwargs)
+            # posterior_samples = posterior.net.sample(num_samples=n_samples, context=x_o.unsqueeze(0), **kwargs).squeeze()
             posterior_samples = posterior_samples.detach().numpy()
         
         # Counts and flux arrays
