@@ -162,11 +162,17 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     x = torch.Tensor(list(map(itemgetter(0), x_and_aux)))
     x_aux = torch.Tensor(list(map(itemgetter(1), x_and_aux)))
 
+    print(x.shape, x_aux.shape)
+
     logger.info("Converting from RING to NEST ordering...")
 
     # Convert from RING to NEST Healpix ordering, as that's required by DeepSphere pooling
     x = ring2nest(x.squeeze(), mask_sim)  # Collapse channel dimension
+
+    logger.info("Expanding dims...")
     x = np.expand_dims(x, 1)  # Reinstate channel dimension
+
+    logger.info("Populating dict...")
 
     results["x"] = x
     results["x_aux"] = x_aux

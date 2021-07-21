@@ -6,7 +6,7 @@ batch = """#!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=32GB
-#SBATCH --time=47:59:00
+#SBATCH --time=23:59:00
 #SBATCH --gres=gpu:1
 ##SBATCH --mail-type=begin
 #SBATCH --mail-type=end
@@ -21,9 +21,9 @@ cd /scratch/sm8383/sbi-fermi/
 # Explore configurations #
 ##########################
 
-batch_size_list = [64, 256]
-fc_dims_list = [[[-1, 1024], [1024, 256]], [[-1, 1024], [1024, 128]], [[-1, 2048], [2048, 128]]]
-maf_num_transforms_list = [8]
+batch_size_list = [256]
+fc_dims_list = [[[-1, 1024], [1024, 256]]]
+maf_num_transforms_list = [4]
 maf_hidden_features_list = [128]
 activations = ["relu"]
 flow_activations = ["tanh"]
@@ -56,7 +56,7 @@ for n_neighbours in n_neighbours_list:
                                                         for normalize_pixel in normalize_pixel_list:
                                                             for flow_activation in flow_activations:
                                                                 batchn = batch + "\n"
-                                                                batchn += "python -u train.py --sample train_ModelO_gamma_fix_1M --name gce_ModelO_gamma_fix_1M --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {} --r_outer {} --normalize_pixel {} --flow_activation {} --num_workers 16".format(maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator, r_outer, normalize_pixel, flow_activation)
+                                                                batchn += "python -u train.py --sample train_ModelO_gamma_fix_thin_disk_1M --name gce_ModelO_gamma_fix_thin_disk_1M --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {} --r_outer {} --normalize_pixel {} --flow_activation {} --num_workers 32 --max_num_epochs 20".format(maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator, r_outer, normalize_pixel, flow_activation)
                                                                 fname = "batch/submit.batch"
                                                                 f = open(fname, "w")
                                                                 f.write(batchn)

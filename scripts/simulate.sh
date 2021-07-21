@@ -4,7 +4,7 @@
 #SBATCH --output=simulate_%a.log
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=4GB
+#SBATCH --mem=6GB
 #SBATCH --time=05:59:00
 # #SBATCH --gres=gpu:1
 
