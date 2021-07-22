@@ -70,18 +70,17 @@ class Standardize(nn.Module):
         mean, std = map(torch.as_tensor, (mean, std))
         self.mean = mean
         self.std = std
-        # self.normalize_pixel = normalize_pixel
+        self.normalize_pixel = normalize_pixel
         self.register_buffer("_mean", mean)
         self.register_buffer("_std", std)
 
-    def forward(self, tensor):
-        # if self.normalize_pixel:
-        return (tensor - self._mean) / self._std
-        # else:
-        #     fwd_tensor = tensor.clone()
-        #     fwd_tensor[:, :, :-2] = (tensor[:, :, :-2] - self._mean[:, :-2]) / self._std[:, :-2]
-        #     fwd_tensor[:, :, -2:] = (tensor[:, :, -2:] - self._mean[:, -2:]) / self._std[:, -2:]
-        return tensor
+    def forward(self, x):
+        if self.normalize_pixel:
+            return (x - self._mean) / self._std
+        else:
+            idx_nonzero = x.nonzero(as_tuple=True)
+            x[idx_nonzero] = (x[idx_nonzero] - self._mean) / self._std
+            return x
 
 def standardizing_net(batch_t: Tensor, min_std: float = 1e-7, normalize_pixel: bool = True) -> nn.Module:
     """Builds standardizing network
@@ -98,26 +97,18 @@ def standardizing_net(batch_t: Tensor, min_std: float = 1e-7, normalize_pixel: b
 
     is_valid_t, *_ = handle_invalid_x(batch_t, True)
     
-    # if normalize_pixel:
-    t_mean = torch.mean(batch_t[is_valid_t], dim=0)
-    # else:
-    #     t_mean_1 = torch.mean(batch_t[is_valid_t, :, :-2])
-    #     t_mean_1 = t_mean_1.unsqueeze(0).unsqueeze(0)
-    #     t_mean_2 = torch.mean(batch_t[is_valid_t, :, -2:], dim=0)
-
-    #     t_mean = torch.cat([t_mean_1, t_mean_2], axis=-1)
+    if normalize_pixel:
+        t_mean = torch.mean(batch_t[is_valid_t], dim=0)
+    else:
+        t_mean = torch.mean(batch_t[is_valid_t, :, :-2])
 
     if len(batch_t > 1):
-        # if normalize_pixel:
-        t_std = torch.std(batch_t[is_valid_t], dim=0)
-        # else:
-        #     t_std_1 = torch.std(batch_t[is_valid_t, :, :-2])
-        #     t_std_1 = t_std_1.unsqueeze(0).unsqueeze(0)
-        #     t_std_2 = torch.std(batch_t[is_valid_t, :, -2:], dim=0)
-
-        #     t_std = torch.cat([t_std_1, t_std_2], axis=-1)
-
-        t_std[t_std < min_std] = min_std
+        if normalize_pixel:
+            t_std = torch.std(batch_t[is_valid_t], dim=0)
+            t_std[t_std < min_std] = min_std
+        else:
+            t_std = torch.std(batch_t[is_valid_t, :, :-2])
+        
     else:
         t_std = 1
         logging.warning(
