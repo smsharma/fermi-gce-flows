@@ -78,9 +78,10 @@ class Standardize(nn.Module):
         if self.normalize_pixel:
             return (x - self._mean) / self._std
         else:
-            idx_nonzero = x.nonzero(as_tuple=True)
-            x[idx_nonzero] = (x[idx_nonzero] - self._mean) / self._std
-            return x
+            x_clone = x.clone()
+            idx_nonzero = x_clone.nonzero(as_tuple=True)
+            x_clone[idx_nonzero] = (x_clone[idx_nonzero] - self._mean) / self._std
+            return x_clone
 
 def standardizing_net(batch_t: Tensor, min_std: float = 1e-7, normalize_pixel: bool = True) -> nn.Module:
     """Builds standardizing network
