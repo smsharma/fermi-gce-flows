@@ -234,7 +234,7 @@ The \texttt{DeepSphere} architecture~\cite{defferrard2020deepsphere,Perraudin:20
 
 The \texttt{HEALPix} sphere is represented as a weighted undirected graph $\mathcal G = (\mathcal V, \mathcal E, A)$.  where $\mathcal V$ is the set of $N_\mathrm{pix} = |\mathcal V|$ vertices, $\mathcal E$ is the set of edges, and $A$ is the weighted adjacency matrix. Each pixel $i$ is represented by a vertex $v_i \in \mathcal V$. Each vertex $v_i$ is then connected to the 8 %(or 7)
 vertices $v_j$ which represent the neighboring pixels $j$ of pixel $i$, forming edges $(v_i
-, v_j) \in \mathcal E$. Given those edges, we define the weights of the adjacency matrix $ A$ over neighboring pixels following the weighing scheme given in Ref.~\cite{defferrard2020deepsphere}.
+, v_j) \in \mathcal E$. Given those edges, we define the weights of the adjacency matrix $ A$ over neighboring pixels following the edge weighing scheme given in Ref.~\cite{defferrard2020deepsphere}.
 
 We use the combinatorial graph Laplacian, defined as $ L =  D -  A$, where $ D$ is the diagonal degree matrix, and can be used to define a Fourier basis on a graph. By construction symmetric positive semi-definite, the graph Laplacian can be decomposed as $ L =  U  \Lambda  U^T$, where $ U$ is an orthonormal eigenvector matrix and $ \Lambda$ is a diagonal eigenvalue matrix. The Laplacian eigenvectors then define the graph Fourier basis, with the graph Fourier transform $\tilde{ x}$ of a signal $ x$ on a graph being its projection $\tilde{x} =  U^T  x$.
 Given a convolutional kernel $h$, graph convolutions can be efficiently performed in the Fourier basis as $h({L}) {x}={U} h({\Lambda}) {U}^{T} {x}$.
@@ -253,7 +253,7 @@ Using a neural network-based feature extractor, we implicitly use an approximati
 
 The graph-based and normalizing flow networks are trained simultaneously. $10^{6}$ samples are generated using the prior proposal distribution, and models are optimized with batch size 128 using the \texttt{AdamW}~\cite{KingmaB14,loshchilov2018decoupled} optimizer with initial learning rate $10^{-3}$ and weight decay $10^{-5}$, using cosine annealing to decay the learning rate across epochs. Training proceeds for up to 50 epochs with early stopping if the validation loss, evaluated on 15\% of held-out samples, has not improved after 8 epochs. 
 
-After training, given a new dataset (either real or simulated \Fermi data in our ROI), the posterior is obtained by sampling the flow within the prior using rejection sampling, conditioning each flow transformation on summaries returned by the graph-based neural network with the new dataset as input.
+After training, given a new dataset (either real or simulated \Fermi data in our ROI), the posterior is obtained by drawing 10,000 samples from the flow within the prior using rejection sampling, conditioning each flow transformation on summaries returned by the graph-based neural network with the new dataset as input.
 
 %
 \begin{figure*}
