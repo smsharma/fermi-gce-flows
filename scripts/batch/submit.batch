@@ -4,7 +4,7 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=32GB
-#SBATCH --time=23:59:00
+#SBATCH --time=47:59:00
 #SBATCH --gres=gpu:1
 ##SBATCH --mail-type=begin
 #SBATCH --mail-type=end
@@ -14,4 +14,4 @@ source ~/.bashrc
 conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi/
 
-python -u train.py --sample train_ModelO_gamma_fix_thin_disk_1M --name gce_ModelO_gamma_fix_thin_disk_1M --maf_num_transforms 4 --maf_hidden_features 128 --fc_dims '[[-1, 1024], [1024, 256]]' --batch_size 256 --activation relu --kernel_size 5 --laplacian_type combinatorial --conv_type chebconv --conv_channel_config standard --aux_summary None --n_aux 2 --n_neighbours 8 --conv_source deepsphere --density_estimator maf --r_outer 25 --normalize_pixel 0 --flow_activation tanh --num_workers 16 --max_num_epochs 20
+python -u train.py --sample train_ModelO_gamma_fix_thin_disk_1M --name gce_ModelO_gamma_fix_thin_disk_1M --maf_num_transforms 4 --maf_hidden_features 128 --fc_dims '[[-1, 1024], [1024, 256]]' --batch_size 256 --activation relu --kernel_size 5 --laplacian_type combinatorial --conv_type chebconv --conv_channel_config standard --aux_summary None --n_aux 2 --n_neighbours 8 --conv_source deepsphere --density_estimator maf --r_outer 20 --normalize_pixel 0 --flow_activation tanh --num_workers 16 --max_num_epochs 15
