@@ -155,6 +155,7 @@ def parse_args():
     parser.add_argument("--ps_mask_type", action="store", default="0.8", type=str)
     parser.add_argument("--transform_prior_on_s", action="store", default=1, type=int)
     parser.add_argument("--diffuse", action="store", default="ModelO", type=str)
+    parser.add_argument("--disk_type", action="store", default="thin", type=str)
     parser.add_argument("--i_mc", action="store", default=-1, type=int)
     parser.add_argument("--psf", action="store", default="king", type=str)
 
@@ -170,7 +171,12 @@ if __name__ == "__main__":
     temp_dif = np.load("data/fermi_data/template_dif.npy")
     temp_psc = np.load("data/fermi_data/template_psc.npy")
     temp_iso = np.load("data/fermi_data/template_iso.npy")
-    temp_dsk = np.load("data/fermi_data/template_dsk.npy")
+
+    if args.disk_type == "thick":
+        temp_dsk = np.load("data/fermi_data/template_dsk.npy")
+    elif args.disk_type == "thin":
+        temp_dsk = np.load("data/external/template_disk_r_s_5_z_s_0.3.npy")
+
     temp_bub = np.load("data/fermi_data/template_bub.npy")
 
     temp_mO_pibrem = np.load('data/fermi_data/ModelO_r25_q1_pibrem.npy')

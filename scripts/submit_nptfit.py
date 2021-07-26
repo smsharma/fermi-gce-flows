@@ -16,13 +16,13 @@ conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi
 """
 
-sample_list = ["fermi_data_500"]
+sample_list = ["fermi_data_thin_disk_1000"]
 n_mc = 10
 
 for sample_name in sample_list:
     for i_mc in [-1]:
         batchn = batch + "\n"
-        batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 25 --n_live 500 --i_mc {}".format(sample_name, i_mc)
+        batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 25 --n_live 1000 --disk_type thin --i_mc {}".format(sample_name, i_mc)
         fname = "batch/submit.batch"
         f = open(fname, "w")
         f.write(batchn)
