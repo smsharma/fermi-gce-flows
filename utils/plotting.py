@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pylab
@@ -22,7 +23,7 @@ def dnds_conv(s_ary, theta, ps_temp, roi_counts_normalize, roi_normalize):
     dnds_ary = dnds(s_ary, [A] + list(theta[1:]))
     return dnds_ary
 
-def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None, sub1=None, sub2=None, **kwargs):
+def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None, sub1=None, sub2=None, combined_posterior=False, thin_factor=1, **kwargs):
 
     # Extract templates and labels
     n = SimpleNamespace(**temps_dict)
@@ -34,7 +35,12 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
     # Set up plot
 
     n_datasets = x_test.shape[0]
-    nrows = n_datasets
+
+    # If combining posteriors, plot only single row
+    if not combined_posterior:
+        nrows = n_datasets
+    else:
+        nrows = 1
 
     fig = plt.figure(constrained_layout=True, figsize=figsize)
     gs = fig.add_gridspec(nrows=nrows, ncols=4, width_ratios=[1,2,1,1])
@@ -44,8 +50,11 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
     # Go row by row and plot
 
     for i_r in range(nrows):
-
-        x_o = x_test[i_r]
+        
+        if not combined_posterior:
+            x_o = x_test[i_r]
+        else:
+            x_o = torch.mean(x_test, axis=0)
         
         if x_data_test is not None:
             x_d = x_data_test
@@ -58,10 +67,19 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         if nptf:
             posterior_samples = posterior[i_r]
         else:
-            posterior_samples = posterior.sample((n_samples,), x=x_o, **kwargs)
-            # posterior_samples = posterior.net.sample(num_samples=n_samples, context=x_o.unsqueeze(0), **kwargs).squeeze()
-            posterior_samples = posterior_samples.detach().numpy()
-        
+            if not combined_posterior:
+                posterior_samples = posterior.sample((n_samples,), x=x_o, **kwargs)
+                posterior_samples = posterior_samples.detach().numpy()
+            else:
+                posterior_samples = []
+                for i_d in range(n_datasets):
+                    posterior_samples_realiz = posterior.sample((n_samples,), x=x_test[i_d], **kwargs)
+                    posterior_samples += [posterior_samples_realiz.detach().numpy()]
+                posterior_samples = np.array(posterior_samples)
+                posterior_samples = np.concatenate(posterior_samples, axis=0)
+                thin_idx = np.random.choice(np.arange(n_samples), int(n_samples * thin_factor))
+                posterior_samples = posterior_samples[thin_idx]
+
         # Counts and flux arrays
         s_f_conv = np.mean(fermi_exp[~roi_counts_normalize])
         s_ary = np.logspace(-1, 2, 100)
