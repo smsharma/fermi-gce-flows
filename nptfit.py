@@ -179,11 +179,17 @@ if __name__ == "__main__":
 
     temp_bub = np.load("data/fermi_data/template_bub.npy")
 
+    # Load Model O templates
     temp_mO_pibrem = np.load('data/fermi_data/ModelO_r25_q1_pibrem.npy')
     temp_mO_ics = np.load('data/fermi_data/ModelO_r25_q1_ics.npy')
 
-    temp_mA_pibrem = hp.ud_grade(np.load('data/modelA/modelA_brempi0.npy'), nside_out=128, power=-2)
-    temp_mA_ics = hp.ud_grade(np.load('data/modelA/modelA_ics.npy'), nside_out=128, power=-2)
+    # Load Model A templates
+    temp_mA_pibrem = hp.ud_grade(np.load('data/external/template_Api.npy'), nside_out=128, power=-2)
+    temp_mA_ics = hp.ud_grade(np.load('data/external/template_Aic.npy'), nside_out=128, power=-2)
+    
+    # Load Model F templates
+    temp_mF_pibrem = hp.ud_grade(np.load('data/external/template_Fpi.npy'), nside_out=128, power=-2)
+    temp_mF_ics = hp.ud_grade(np.load('data/external/template_Fic.npy'), nside_out=128, power=-2)
 
     fermi_exp = np.load("data/fermi_data/fermidata_exposure.npy")
     fermi_data = np.load("data/fermi_data/fermidata_counts.npy")
@@ -213,6 +219,16 @@ if __name__ == "__main__":
     
     if args.diffuse == "ModelO":
         temps_poiss = [temp_gce, temp_iso, temp_bub, temp_psc, temp_mO_pibrem, temp_mO_ics]
+        priors_poiss = [[0., 0.001, 0.001, 0.001, 6., 1.], 
+                        [2., 1.5, 1.5, 1.5, 12., 6.]]
+        params_log_poiss = [0, 0, 0, 0, 0, 0]
+    elif args.diffuse == "ModelA":
+        temps_poiss = [temp_gce, temp_iso, temp_bub, temp_psc, temp_mA_pibrem, temp_mA_ics]
+        priors_poiss = [[0., 0.001, 0.001, 0.001, 6., 1.], 
+                        [2., 1.5, 1.5, 1.5, 12., 6.]]
+        params_log_poiss = [0, 0, 0, 0, 0, 0]
+    elif args.diffuse == "ModelF":
+        temps_poiss = [temp_gce, temp_iso, temp_bub, temp_psc, temp_mF_pibrem, temp_mF_ics]
         priors_poiss = [[0., 0.001, 0.001, 0.001, 6., 1.], 
                         [2., 1.5, 1.5, 1.5, 12., 6.]]
         params_log_poiss = [0, 0, 0, 0, 0, 0]

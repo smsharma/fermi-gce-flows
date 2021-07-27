@@ -16,13 +16,13 @@ conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi
 """
 
-sample_list = ["fermi_data_thin_disk_r_15_1000"]
+sample_list = ["fermi_data_thin_disk_ModelA_1000"]
 n_mc = 10
 
 for sample_name in sample_list:
     for i_mc in [-1]:
         batchn = batch + "\n"
-        batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 15 --n_live 1000 --disk_type thin --i_mc {}".format(sample_name, i_mc)
+        batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 25 --n_live 1000 --disk_type thin --i_mc {} --diffuse ModelA".format(sample_name, i_mc)
         fname = "batch/submit.batch"
         f = open(fname, "w")
         f.write(batchn)
@@ -30,6 +30,19 @@ for sample_name in sample_list:
         os.system("chmod +x " + fname)
         os.system("sbatch " + fname)
 
+sample_list = ["fermi_data_thin_disk_ModelF_1000"]
+n_mc = 10
+
+for sample_name in sample_list:
+    for i_mc in [-1]:
+        batchn = batch + "\n"
+        batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 25 --n_live 1000 --disk_type thin --i_mc {} --diffuse ModelF".format(sample_name, i_mc)
+        fname = "batch/submit.batch"
+        f = open(fname, "w")
+        f.write(batchn)
+        f.close()
+        os.system("chmod +x " + fname)
+        os.system("sbatch " + fname)
 
 # sample_list = ["ModelA_PS_only_mismo", "ModelA_DM_only_mismo"]
 # n_mc = 10
