@@ -21,13 +21,13 @@ cd /scratch/sm8383/sbi-fermi/
 # Explore configurations #
 ##########################
 
-batch_size_list = [256]
-fc_dims_list = [[[-1, 1024], [1024, 256]]]
-maf_num_transforms_list = [4]
+batch_size_list = [128]
+fc_dims_list = [[[-1, 1024], [1024, 128]]]
+maf_num_transforms_list = [8]
 maf_hidden_features_list = [128]
 activations = ["relu"]
 flow_activations = ["tanh"]
-kernel_size_list = [5]
+kernel_size_list = [4]
 n_neighbours_list = [8]
 conv_channel_configs = ["standard"]
 laplacian_types = ["combinatorial"]
@@ -37,7 +37,7 @@ aux_summaries = ["None"]
 n_aux_list = [2]
 density_estimator_list = ["maf"]
 r_outer_list =  [10, 15, 20]  # [25]
-normalize_pixel_list = [0]
+normalize_pixel_list = [0, 1]
 
 for n_neighbours in n_neighbours_list:
     for maf_num_transforms in maf_num_transforms_list:
