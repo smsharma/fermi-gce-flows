@@ -21,7 +21,7 @@ cd /scratch/sm8383/sbi-fermi/
 # Explore configurations #
 ##########################
 
-batch_size_list = [128]
+batch_size_list = [256]
 fc_dims_list = [[[-1, 1024], [1024, 128]]]
 maf_num_transforms_list = [8]
 maf_hidden_features_list = [128]
@@ -36,8 +36,8 @@ conv_source_list = ["deepsphere"]
 aux_summaries = ["None"]
 n_aux_list = [2]
 density_estimator_list = ["maf"]
-r_outer_list =  [10, 15]  # [25]
-normalize_pixel_list = [0, 1]
+r_outer_list =  [25]
+normalize_pixel_list = [0]
 
 for n_neighbours in n_neighbours_list:
     for maf_num_transforms in maf_num_transforms_list:
@@ -56,7 +56,7 @@ for n_neighbours in n_neighbours_list:
                                                         for normalize_pixel in normalize_pixel_list:
                                                             for flow_activation in flow_activations:
                                                                 batchn = batch + "\n"
-                                                                batchn += "python -u train.py --sample train_ModelO_gamma_fix_thin_disk_1M --name gce_ModelO_gamma_fix_thin_disk_1M --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {} --r_outer {} --normalize_pixel {} --flow_activation {} --num_workers 16 --max_num_epochs 15".format(maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator, r_outer, normalize_pixel, flow_activation)
+                                                                batchn += "python -u train.py --sample train_ModelA_gamma_fix_thin_disk_1M --name gce_ModelA_gamma_fix_thin_disk_1M --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {} --r_outer {} --normalize_pixel {} --flow_activation {} --num_workers 16 --max_num_epochs 15".format(maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator, r_outer, normalize_pixel, flow_activation)
                                                                 fname = "batch/submit.batch"
                                                                 f = open(fname, "w")
                                                                 f.write(batchn)
