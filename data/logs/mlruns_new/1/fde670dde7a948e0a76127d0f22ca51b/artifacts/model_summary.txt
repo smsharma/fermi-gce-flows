@@ -1,0 +1,119 @@
+    | Name                                                                                            | Type                                | Params
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+0   | net                                                                                             | Flow                                | 2.0 M 
+1   | net._transform                                                                                  | CompositeTransform                  | 294 K 
+2   | net._transform._transforms                                                                      | ModuleList                          | 294 K 
+3   | net._transform._transforms.0                                                                    | AffineTransform                     | 0     
+4   | net._transform._transforms.1                                                                    | CompositeTransform                  | 294 K 
+5   | net._transform._transforms.1._transforms                                                        | ModuleList                          | 294 K 
+6   | net._transform._transforms.1._transforms.0                                                      | CompositeTransform                  | 73.5 K
+7   | net._transform._transforms.1._transforms.0._transforms                                          | ModuleList                          | 73.5 K
+8   | net._transform._transforms.1._transforms.0._transforms.0                                        | MaskedAffineAutoregressiveTransform | 73.5 K
+9   | net._transform._transforms.1._transforms.0._transforms.0.autoregressive_net                     | MADE                                | 73.5 K
+10  | net._transform._transforms.1._transforms.0._transforms.0.autoregressive_net.initial_layer       | MaskedLinear                        | 2.4 K 
+11  | net._transform._transforms.1._transforms.0._transforms.0.autoregressive_net.context_layer       | Linear                              | 32.9 K
+12  | net._transform._transforms.1._transforms.0._transforms.0.autoregressive_net.blocks              | ModuleList                          | 33.5 K
+13  | net._transform._transforms.1._transforms.0._transforms.0.autoregressive_net.blocks.0            | MaskedFeedforwardBlock              | 16.8 K
+14  | net._transform._transforms.1._transforms.0._transforms.0.autoregressive_net.blocks.0.batch_norm | BatchNorm1d                         | 256   
+15  | net._transform._transforms.1._transforms.0._transforms.0.autoregressive_net.blocks.0.linear     | MaskedLinear                        | 16.5 K
+16  | net._transform._transforms.1._transforms.0._transforms.0.autoregressive_net.blocks.0.dropout    | Dropout                             | 0     
+17  | net._transform._transforms.1._transforms.0._transforms.0.autoregressive_net.blocks.1            | MaskedFeedforwardBlock              | 16.8 K
+18  | net._transform._transforms.1._transforms.0._transforms.0.autoregressive_net.blocks.1.batch_norm | BatchNorm1d                         | 256   
+19  | net._transform._transforms.1._transforms.0._transforms.0.autoregressive_net.blocks.1.linear     | MaskedLinear                        | 16.5 K
+20  | net._transform._transforms.1._transforms.0._transforms.0.autoregressive_net.blocks.1.dropout    | Dropout                             | 0     
+21  | net._transform._transforms.1._transforms.0._transforms.0.autoregressive_net.final_layer         | MaskedLinear                        | 4.6 K 
+22  | net._transform._transforms.1._transforms.0._transforms.1                                        | RandomPermutation                   | 0     
+23  | net._transform._transforms.1._transforms.1                                                      | CompositeTransform                  | 73.5 K
+24  | net._transform._transforms.1._transforms.1._transforms                                          | ModuleList                          | 73.5 K
+25  | net._transform._transforms.1._transforms.1._transforms.0                                        | MaskedAffineAutoregressiveTransform | 73.5 K
+26  | net._transform._transforms.1._transforms.1._transforms.0.autoregressive_net                     | MADE                                | 73.5 K
+27  | net._transform._transforms.1._transforms.1._transforms.0.autoregressive_net.initial_layer       | MaskedLinear                        | 2.4 K 
+28  | net._transform._transforms.1._transforms.1._transforms.0.autoregressive_net.context_layer       | Linear                              | 32.9 K
+29  | net._transform._transforms.1._transforms.1._transforms.0.autoregressive_net.blocks              | ModuleList                          | 33.5 K
+30  | net._transform._transforms.1._transforms.1._transforms.0.autoregressive_net.blocks.0            | MaskedFeedforwardBlock              | 16.8 K
+31  | net._transform._transforms.1._transforms.1._transforms.0.autoregressive_net.blocks.0.batch_norm | BatchNorm1d                         | 256   
+32  | net._transform._transforms.1._transforms.1._transforms.0.autoregressive_net.blocks.0.linear     | MaskedLinear                        | 16.5 K
+33  | net._transform._transforms.1._transforms.1._transforms.0.autoregressive_net.blocks.0.dropout    | Dropout                             | 0     
+34  | net._transform._transforms.1._transforms.1._transforms.0.autoregressive_net.blocks.1            | MaskedFeedforwardBlock              | 16.8 K
+35  | net._transform._transforms.1._transforms.1._transforms.0.autoregressive_net.blocks.1.batch_norm | BatchNorm1d                         | 256   
+36  | net._transform._transforms.1._transforms.1._transforms.0.autoregressive_net.blocks.1.linear     | MaskedLinear                        | 16.5 K
+37  | net._transform._transforms.1._transforms.1._transforms.0.autoregressive_net.blocks.1.dropout    | Dropout                             | 0     
+38  | net._transform._transforms.1._transforms.1._transforms.0.autoregressive_net.final_layer         | MaskedLinear                        | 4.6 K 
+39  | net._transform._transforms.1._transforms.1._transforms.1                                        | RandomPermutation                   | 0     
+40  | net._transform._transforms.1._transforms.2                                                      | CompositeTransform                  | 73.5 K
+41  | net._transform._transforms.1._transforms.2._transforms                                          | ModuleList                          | 73.5 K
+42  | net._transform._transforms.1._transforms.2._transforms.0                                        | MaskedAffineAutoregressiveTransform | 73.5 K
+43  | net._transform._transforms.1._transforms.2._transforms.0.autoregressive_net                     | MADE                                | 73.5 K
+44  | net._transform._transforms.1._transforms.2._transforms.0.autoregressive_net.initial_layer       | MaskedLinear                        | 2.4 K 
+45  | net._transform._transforms.1._transforms.2._transforms.0.autoregressive_net.context_layer       | Linear                              | 32.9 K
+46  | net._transform._transforms.1._transforms.2._transforms.0.autoregressive_net.blocks              | ModuleList                          | 33.5 K
+47  | net._transform._transforms.1._transforms.2._transforms.0.autoregressive_net.blocks.0            | MaskedFeedforwardBlock              | 16.8 K
+48  | net._transform._transforms.1._transforms.2._transforms.0.autoregressive_net.blocks.0.batch_norm | BatchNorm1d                         | 256   
+49  | net._transform._transforms.1._transforms.2._transforms.0.autoregressive_net.blocks.0.linear     | MaskedLinear                        | 16.5 K
+50  | net._transform._transforms.1._transforms.2._transforms.0.autoregressive_net.blocks.0.dropout    | Dropout                             | 0     
+51  | net._transform._transforms.1._transforms.2._transforms.0.autoregressive_net.blocks.1            | MaskedFeedforwardBlock              | 16.8 K
+52  | net._transform._transforms.1._transforms.2._transforms.0.autoregressive_net.blocks.1.batch_norm | BatchNorm1d                         | 256   
+53  | net._transform._transforms.1._transforms.2._transforms.0.autoregressive_net.blocks.1.linear     | MaskedLinear                        | 16.5 K
+54  | net._transform._transforms.1._transforms.2._transforms.0.autoregressive_net.blocks.1.dropout    | Dropout                             | 0     
+55  | net._transform._transforms.1._transforms.2._transforms.0.autoregressive_net.final_layer         | MaskedLinear                        | 4.6 K 
+56  | net._transform._transforms.1._transforms.2._transforms.1                                        | RandomPermutation                   | 0     
+57  | net._transform._transforms.1._transforms.3                                                      | CompositeTransform                  | 73.5 K
+58  | net._transform._transforms.1._transforms.3._transforms                                          | ModuleList                          | 73.5 K
+59  | net._transform._transforms.1._transforms.3._transforms.0                                        | MaskedAffineAutoregressiveTransform | 73.5 K
+60  | net._transform._transforms.1._transforms.3._transforms.0.autoregressive_net                     | MADE                                | 73.5 K
+61  | net._transform._transforms.1._transforms.3._transforms.0.autoregressive_net.initial_layer       | MaskedLinear                        | 2.4 K 
+62  | net._transform._transforms.1._transforms.3._transforms.0.autoregressive_net.context_layer       | Linear                              | 32.9 K
+63  | net._transform._transforms.1._transforms.3._transforms.0.autoregressive_net.blocks              | ModuleList                          | 33.5 K
+64  | net._transform._transforms.1._transforms.3._transforms.0.autoregressive_net.blocks.0            | MaskedFeedforwardBlock              | 16.8 K
+65  | net._transform._transforms.1._transforms.3._transforms.0.autoregressive_net.blocks.0.batch_norm | BatchNorm1d                         | 256   
+66  | net._transform._transforms.1._transforms.3._transforms.0.autoregressive_net.blocks.0.linear     | MaskedLinear                        | 16.5 K
+67  | net._transform._transforms.1._transforms.3._transforms.0.autoregressive_net.blocks.0.dropout    | Dropout                             | 0     
+68  | net._transform._transforms.1._transforms.3._transforms.0.autoregressive_net.blocks.1            | MaskedFeedforwardBlock              | 16.8 K
+69  | net._transform._transforms.1._transforms.3._transforms.0.autoregressive_net.blocks.1.batch_norm | BatchNorm1d                         | 256   
+70  | net._transform._transforms.1._transforms.3._transforms.0.autoregressive_net.blocks.1.linear     | MaskedLinear                        | 16.5 K
+71  | net._transform._transforms.1._transforms.3._transforms.0.autoregressive_net.blocks.1.dropout    | Dropout                             | 0     
+72  | net._transform._transforms.1._transforms.3._transforms.0.autoregressive_net.final_layer         | MaskedLinear                        | 4.6 K 
+73  | net._transform._transforms.1._transforms.3._transforms.1                                        | RandomPermutation                   | 0     
+74  | net._distribution                                                                               | StandardNormal                      | 0     
+75  | net._embedding_net                                                                              | Sequential                          | 1.7 M 
+76  | net._embedding_net.0                                                                            | Standardize                         | 0     
+77  | net._embedding_net.1                                                                            | SphericalGraphCNN                   | 1.7 M 
+78  | net._embedding_net.1.activation_function                                                        | ReLU                                | 0     
+79  | net._embedding_net.1.layer_0                                                                    | SphericalChebBNPool                 | 256   
+80  | net._embedding_net.1.layer_0.spherical_cheb                                                     | SphericalChebConv                   | 192   
+81  | net._embedding_net.1.layer_0.spherical_cheb.chebconv                                            | ChebConv                            | 192   
+82  | net._embedding_net.1.layer_0.pooling                                                            | HealpixMaxPool                      | 0     
+83  | net._embedding_net.1.layer_0.batchnorm                                                          | BatchNorm1d                         | 64    
+84  | net._embedding_net.1.layer_1                                                                    | SphericalChebBNPool                 | 10.4 K
+85  | net._embedding_net.1.layer_1.spherical_cheb                                                     | SphericalChebConv                   | 10.3 K
+86  | net._embedding_net.1.layer_1.spherical_cheb.chebconv                                            | ChebConv                            | 10.3 K
+87  | net._embedding_net.1.layer_1.batchnorm                                                          | BatchNorm1d                         | 128   
+88  | net._embedding_net.1.layer_2                                                                    | SphericalChebBNPool                 | 41.3 K
+89  | net._embedding_net.1.layer_2.spherical_cheb                                                     | SphericalChebConv                   | 41.1 K
+90  | net._embedding_net.1.layer_2.spherical_cheb.chebconv                                            | ChebConv                            | 41.1 K
+91  | net._embedding_net.1.layer_2.batchnorm                                                          | BatchNorm1d                         | 256   
+92  | net._embedding_net.1.layer_3                                                                    | SphericalChebBNPool                 | 164 K 
+93  | net._embedding_net.1.layer_3.spherical_cheb                                                     | SphericalChebConv                   | 164 K 
+94  | net._embedding_net.1.layer_3.spherical_cheb.chebconv                                            | ChebConv                            | 164 K 
+95  | net._embedding_net.1.layer_3.batchnorm                                                          | BatchNorm1d                         | 512   
+96  | net._embedding_net.1.layer_4                                                                    | SphericalChebBNPool                 | 328 K 
+97  | net._embedding_net.1.layer_4.spherical_cheb                                                     | SphericalChebConv                   | 327 K 
+98  | net._embedding_net.1.layer_4.spherical_cheb.chebconv                                            | ChebConv                            | 327 K 
+99  | net._embedding_net.1.layer_4.batchnorm                                                          | BatchNorm1d                         | 512   
+100 | net._embedding_net.1.layer_5                                                                    | SphericalChebBNPool                 | 328 K 
+101 | net._embedding_net.1.layer_5.spherical_cheb                                                     | SphericalChebConv                   | 327 K 
+102 | net._embedding_net.1.layer_5.spherical_cheb.chebconv                                            | ChebConv                            | 327 K 
+103 | net._embedding_net.1.layer_5.batchnorm                                                          | BatchNorm1d                         | 512   
+104 | net._embedding_net.1.layer_6                                                                    | SphericalChebBNPool                 | 328 K 
+105 | net._embedding_net.1.layer_6.spherical_cheb                                                     | SphericalChebConv                   | 327 K 
+106 | net._embedding_net.1.layer_6.spherical_cheb.chebconv                                            | ChebConv                            | 327 K 
+107 | net._embedding_net.1.layer_6.batchnorm                                                          | BatchNorm1d                         | 512   
+108 | net._embedding_net.1.layer_fc_0                                                                 | Sequential                          | 265 K 
+109 | net._embedding_net.1.layer_fc_0.0                                                               | Linear                              | 265 K 
+110 | net._embedding_net.1.layer_fc_1                                                                 | Sequential                          | 262 K 
+111 | net._embedding_net.1.layer_fc_1.0                                                               | Linear                              | 262 K 
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+2.0 M     Trainable params
+0         Non-trainable params
+2.0 M     Total params
+8.095     Total estimated model params size (MB)

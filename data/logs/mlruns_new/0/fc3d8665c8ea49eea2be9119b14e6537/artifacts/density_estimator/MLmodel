@@ -1,0 +1,13 @@
+artifact_path: density_estimator
+flavors:
+  python_function:
+    data: data
+    env: conda.yaml
+    loader_module: mlflow.pytorch
+    pickle_module_name: mlflow.pytorch.pickle_module
+    python_version: 3.6.13
+  pytorch:
+    model_data: data
+    pytorch_version: 1.8.1
+run_id: fc3d8665c8ea49eea2be9119b14e6537
+utc_time_created: '2021-07-02 08:28:16.272392'

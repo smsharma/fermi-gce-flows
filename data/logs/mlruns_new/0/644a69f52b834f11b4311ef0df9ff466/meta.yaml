@@ -1,0 +1,15 @@
+artifact_uri: file:./data//logs/mlruns/0/644a69f52b834f11b4311ef0df9ff466/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+name: ''
+run_id: 644a69f52b834f11b4311ef0df9ff466
+run_uuid: 644a69f52b834f11b4311ef0df9ff466
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1626653900948
+status: 1
+tags: []
+user_id: unknown
