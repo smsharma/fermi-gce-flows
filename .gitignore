@@ -157,6 +157,9 @@ venv.bak/
 mlruns
 .mlruns
 mlruns_bkp
+mlruns_new
+.mlruns_new
+mlruns_*
 .mlruns_bkp
 sbi-logs
 psf_dir

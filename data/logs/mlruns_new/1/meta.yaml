@@ -1,4 +1,0 @@
-artifact_location: file:./data//logs/mlruns/1
-experiment_id: '1'
-lifecycle_stage: active
-name: gce_ModelO_gamma_fix_thin_disk_1M
