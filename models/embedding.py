@@ -13,7 +13,7 @@ class SphericalGraphCNN(nn.Module):
     """Spherical GCNN Autoencoder.
     """
 
-    def __init__(self, nside_list, indexes_list, kernel_size=4, n_neighbours=8, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=0, n_params=0, activation="relu", nest=True, conv_source="deepsphere", conv_type="chebconv", conv_channel_config="standard"):
+    def __init__(self, nside_list, indexes_list, kernel_size=4, n_neighbours=8, laplacian_type="combinatorial", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_aux=0, n_params=0, activation="relu", nest=True, conv_source="deepsphere", conv_type="chebconv", conv_channel_config="standard", mask=None):
         """Initialization.
 
         Args:
@@ -25,6 +25,8 @@ class SphericalGraphCNN(nn.Module):
 
         self.n_aux = n_aux
         self.n_params = n_params
+
+        self.mask = mask
 
         # Specify convolutional part
 
@@ -89,7 +91,13 @@ class SphericalGraphCNN(nn.Module):
 
         # Initialize tensor
         x = x.view(-1, 16384 + self.n_aux + self.n_params, 1)
-        x_map = x[:, :16384, :]
+        x_map_temp = x[:, :16384, :]
+
+        if self.mask is not None:
+            x_map = x_map_temp.clone()
+            x_map[:, self.mask, :] = 0.
+        else:
+            x_map = x_map_temp
 
         # Convolutional layers
         for layer in self.cnn_layers:

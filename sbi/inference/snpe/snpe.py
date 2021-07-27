@@ -132,7 +132,6 @@ class PosteriorEstimator(NeuralInference, ABC):
             scheduler=scheduler, 
             scheduler_kwargs=scheduler_kwargs,
             summary=summary,
-            mask=mask
         )
 
         checkpoint_path = "{}/{}/{}/artifacts/checkpoints/".format(self.summary_writer.save_dir, self.summary_writer.experiment_id, self.summary_writer.run_id)
@@ -177,7 +176,6 @@ class PosteriorEstimator(NeuralInference, ABC):
             scheduler=scheduler, 
             scheduler_kwargs=scheduler_kwargs,
             summary=summary,
-            mask=mask
         )
 
         # Return the posterior net corresponding to the best model

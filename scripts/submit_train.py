@@ -36,7 +36,7 @@ conv_source_list = ["deepsphere"]
 aux_summaries = ["None"]
 n_aux_list = [2]
 density_estimator_list = ["maf"]
-r_outer_list =  [10, 15, 20]  # [25]
+r_outer_list =  [10, 15]  # [25]
 normalize_pixel_list = [0, 1]
 
 for n_neighbours in n_neighbours_list:
