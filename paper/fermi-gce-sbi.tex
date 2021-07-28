@@ -408,19 +408,24 @@ The median Gaussian process describing the multiplicative mismodeling obtained r
 
 The results of this test are shown in Figs.~\ref{fig:sim_sbi_dm_mismo} and \ref{fig:sim_sbi_ps_mismo}, for simulated samples consisting of purely DM-like and PS-like emission, respectively. It can be seen that while large-scale mismodeling can distort the total flux attributed to either DM or PS-like emission, preference for the true underlying nature of the signal remains robust in either case. The marginalized PS flux as well as the inferred SCD is consistent with the underlying truth in all cases. The DM flux tends to be overestimated in either case however, which may be attributed to the centrally-concentrated mismodeling as seen in Fig.~\ref{fig:dd_mismo_map}. This is also reflected in the fact that the inferred inverse Compton component flux tends to be underestimated, with the residual flux attributable to the DM template.  \SM{Specify what kind of PSs are injected.}
 
-%
-\begin{figure*}
-    \centering
-    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_mismo.pdf}
-    \caption{Same as Fig.~\ref{fig:sim_sbi_dm}, but for simulated data where the GCE consists of purely DM-like emission and the diffuse model is modulated by draws from the Gaussian process description of diffuse mismodeling. DM-like emission is inferred in each case, although the magnitude of emission is overestimated as some of the diffuse mismodeling is absorbed into the Poissonian GCE component.}
-    \label{fig:sim_sbi_dm_mismo}
-\end{figure*}
-%
+% %
+% \begin{figure*}
+%     \centering
+%     \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_mismo.pdf}
+%     \caption{Same as Fig.~\ref{fig:sim_sbi_dm}, but for simulated data where the GCE consists of purely DM-like emission and the diffuse model is modulated by draws from the Gaussian process description of diffuse mismodeling. DM-like emission is inferred in each case, although the magnitude of emission is overestimated as some of the diffuse mismodeling is absorbed into the Poissonian GCE component.}
+%     \label{fig:sim_sbi_dm_mismo}
+% \end{figure*}
+% %
 
 %
 \begin{figure*}
     \centering
-    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_ps_mismo.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_agg.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_mismo.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_asym.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_modelA_dm.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_thick_disk_mm_dm.pdf}
+
     \caption{Same as Fig.~\ref{fig:sim_sbi_dm}, but for simulated data where the GCE consists of a PS population peaking at 10 expected photon counts and the diffuse model is modulated by draws from the Gaussian process description of diffuse mismodeling. PS-like emission is inferred in each case, although a non-trivial DM component is inferred as some of the diffuse mismodeling is absorbed into the Poissonian GCE component.}
     \label{fig:sim_sbi_ps_mismo}
 \end{figure*}
@@ -433,14 +438,14 @@ Besides mismodeling of the diffuse foreground emission, another major potential 
 We test the impact of a North-South-asymmetric dark matter signal within our framework by running our pipeline on simulated datasets where the dark matter-like signal in the Northern hemisphere of the ROI is 3 times larger than that in the Southern hemisphere, larger than the $\sim 2$ preference in real data found in Refs.~\cite{Leane:2020nmi,Leane:2020pfc}. The results of this test on 3 such simulated realizations is shown in Fig.~\ref{fig:sim_sbi_dm_asym}. We see that the presence of a substantially asymmetric DM signal has only a marginal impact on the inferred posteriors, and does not lead to a spurious preference for a PS population as was found in Refs.~\cite{Leane:2020nmi,Leane:2020pfc} in the NPTF framework. We attribute this to the fact that the \texttt{DeepSphere}-based feature extractor can account for pixel-to-pixel correlations in the $\gamma$-ray counts map, and can thus be sensitive to \emph{local} PS-like structures. In contrast, the 1-point PDF-based NPTF framework, being agnostic to the ordering of the pixels, can notice spurious PS-like structures in the ``residuals'' associated with an asymmetric signal when analyzed with a symmetric template.
 As done in Ref.~\cite{Buschmann:2020adf}, we emphasize that the presence of an asymmetry in the GCE signal, if not attributed to diffuse mismodeling, would point towards astrophysical explanations of the GCE since a true dark matter signal would not be expected to be significantly asymmetric.
 
-%
-\begin{figure*}
-    \centering
-    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_asym.pdf}
-    \caption{Same as Fig.~\ref{fig:sim_sbi_dm}, but for simulated data where the GCE consists of purely DM-like emission with a North-South asymmetry; the signal in the Northern hemisphere is larger by a factor of 3. The mismodeled signal is seen to have marginal qualitative effect on the recovery of DM-like emission.}
-    \label{fig:sim_sbi_dm_asym}
-\end{figure*}
-%
+% %
+% \begin{figure*}
+%     \centering
+%     \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_asym.pdf}
+%     \caption{Same as Fig.~\ref{fig:sim_sbi_dm}, but for simulated data where the GCE consists of purely DM-like emission with a North-South asymmetry; the signal in the Northern hemisphere is larger by a factor of 3. The mismodeled signal is seen to have marginal qualitative effect on the recovery of DM-like emission.}
+%     \label{fig:sim_sbi_dm_asym}
+% \end{figure*}
+% %
 
 \section{Discussion and Conclusions}
 \label{sec:conclusion}
