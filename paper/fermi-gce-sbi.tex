@@ -327,19 +327,51 @@ The additional injected signal is seen to be reconstructed correctly within the 
 \subsection{Systematic variations on the analysis}
 \label{sec:systematics}
 
+% %
+% \begin{figure*}
+%     \centering
+%     \includegraphics[width=0.45\textwidth]{plots/data_fid_sbi_20.pdf}
+%     \includegraphics[width=0.45\textwidth]{plots/data_fid_sbi_15.pdf}
+%     \includegraphics[width=0.45\textwidth]{plots/data_fid_sbi_10.pdf}
+%     \includegraphics[width=0.45\textwidth]{plots/data_fid_sbi_20.pdf}
+%     \includegraphics[width=0.45\textwidth]{plots/data_fid_sbi_15.pdf}
+%     \includegraphics[width=0.45\textwidth]{plots/data_fid_sbi_10.pdf}
+
+%     % \includegraphics[width=0.22\textwidth]{plots/roi_var.pdf}
+%     \caption{Joint posterior for flux fraction of PS-like and DM-like emission on real \Fermi data for different diffuse models \emph{(left)} and ROI sizes \emph{(right)}. In varying diffuse models, the fiducial Model O (red) is compared with results obtained using Models A (blue) and F (green). Although the overall GCE flux is seen to varying by up to a factor of $\sim2$ between diffuse models, no evidence for PS-like emission is seen. As seen in the right panel, results remain consistent for smaller ROI sizes.}
+%     \label{fig:variations}
+% \end{figure*}
+% %
+
 %
 \begin{figure*}
     \centering
-    \includegraphics[width=0.45\textwidth]{plots/data_fid_sbi_20.pdf}
-    \includegraphics[width=0.45\textwidth]{plots/data_fid_sbi_15.pdf}
-    \includegraphics[width=0.45\textwidth]{plots/data_fid_sbi_10.pdf}
-    \includegraphics[width=0.45\textwidth]{plots/data_fid_sbi_20.pdf}
-    \includegraphics[width=0.45\textwidth]{plots/data_fid_sbi_15.pdf}
-    \includegraphics[width=0.45\textwidth]{plots/data_fid_sbi_10.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_thick.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_thick.pdf}
+    \caption{Results of the fiducial analysis on real \Fermi data. \emph{(Top row)} Analysis using neural simulation-based inference with normalizing flows, and \emph{(bottom row)} using the 1-point PDF likelihood implemented in the non-Poissonian template fitting (NPTF) framework. While moderate preference for a PS-like origin of the GCE is seen in the case of the NPTF analysis (bottom), the simulation-based inference analysis attributes a substantially smaller fraction of the GCE to PS-like emission (top).}
+    \label{fig:fid_data}
+\end{figure*}
+%
 
-    % \includegraphics[width=0.22\textwidth]{plots/roi_var.pdf}
-    \caption{Joint posterior for flux fraction of PS-like and DM-like emission on real \Fermi data for different diffuse models \emph{(left)} and ROI sizes \emph{(right)}. In varying diffuse models, the fiducial Model O (red) is compared with results obtained using Models A (blue) and F (green). Although the overall GCE flux is seen to varying by up to a factor of $\sim2$ between diffuse models, no evidence for PS-like emission is seen. As seen in the right panel, results remain consistent for smaller ROI sizes.}
-    \label{fig:variations}
+
+%
+\begin{figure*}
+    \centering
+    \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_modelA.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_modelA.pdf}
+    \caption{Results of the fiducial analysis on real \Fermi data. \emph{(Top row)} Analysis using neural simulation-based inference with normalizing flows, and \emph{(bottom row)} using the 1-point PDF likelihood implemented in the non-Poissonian template fitting (NPTF) framework. While moderate preference for a PS-like origin of the GCE is seen in the case of the NPTF analysis (bottom), the simulation-based inference analysis attributes a substantially smaller fraction of the GCE to PS-like emission (top).}
+    \label{fig:fid_data}
+\end{figure*}
+%
+
+
+%
+\begin{figure*}
+    \centering
+    \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_15deg.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_15deg.pdf}
+    \caption{Results of the fiducial analysis on real \Fermi data. \emph{(Top row)} Analysis using neural simulation-based inference with normalizing flows, and \emph{(bottom row)} using the 1-point PDF likelihood implemented in the non-Poissonian template fitting (NPTF) framework. While moderate preference for a PS-like origin of the GCE is seen in the case of the NPTF analysis (bottom), the simulation-based inference analysis attributes a substantially smaller fraction of the GCE to PS-like emission (top).}
+    \label{fig:fid_data}
 \end{figure*}
 %
 
