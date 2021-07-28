@@ -15,7 +15,8 @@
 \usepackage{lipsum}
 \usepackage{bbold}
 \usepackage{tabularx}
-\usepackage{booktabs}
+\usepackage{multirow}
+% \usepackage{booktabs}
 \usepackage{dcolumn}
 \usepackage{makecell}
 
@@ -40,7 +41,7 @@ urlcolor=linkcolor,
 \DeclareSIUnit\parsec{pc}
 
 \renewcommand{\arraystretch}{1.8}
-\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+% \newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 
 % define "struts", as suggested by Claudio Beccari in
 %    a piece in TeX and TUG News, Vol. 2, 1993.
@@ -128,31 +129,60 @@ The forward model is thus specified by a total of 18 parameters---6 parameters f
 Since PS-like and Poissonian components of the model are exactly degenerate in the limit of each PS producing $\lesssim 1$ photon counts in expectation (see Refs.~\cite{Chang:2019ars,Collin:2021ufc} for a detailed discussion of this degeneracy, in particular in the context of previously-used likelihood-based methods), rather than placing uniform priors on the overall normalization of the PS-like and GCE-correlated Poissonian components $A_{\rm GCE}$ and $A^{\rm PS}$, we place priors on the expected counts contributed per pixel for these components in order to mitigate biases caused by an induced prior preferring one model over the other and preventing the expression of the degeneracy. For the PS-like components, this is in practice done by placing a uniform prior on $\langle S_{\rm pix}^{\rm PS} \rangle = \int\,\dd S\,\langle \dd N/\dd S \rangle_{\rm pix}$ where $\langle \dd N/\dd S \rangle_{\rm pix}$ is the mean SCD per pixel of the respective PS-like component.
 
 \begin{table}[tb]
-    \footnotesize
-    \begin{center}
-    \begin{tabular}{C{2cm}C{2cm} | C{2cm}C{2cm}}
-    \multicolumn{2}{c}{\textbf{Poissonian}} & \multicolumn{2}{c}{\textbf{PS-like (GCE and disk)}}  \Tstrut\Bstrut	\\   
-    \textbf{Parameter}	 & \textbf{Prior}  & \textbf{Parameter}	&  \textbf{Prior}   \Tstrut\Bstrut	\\   
-    \Xhline{1\arrayrulewidth}
-    $\langle S_{\rm pix}^{\rm GCE} \rangle$ & [0, 2.5]\,ph  & $\langle S_{\rm pix}^{\rm PS} \rangle$ & [0, 2.5]\,ph \Tstrut\Bstrut \\
-     $A_{{\rm brem}/\pi^0}$ & [6, 12]  &  $n_1$ & [10, 20]  \Tstrut\Bstrut \\ 
-     $A_{\rm ICS}$  & [1, 6]  & $n_2$ & [1.1, 1.99] \Tstrut\Bstrut \\ 
-   $A_\text{iso}$ & [0, 1.5] &  $n_3$ & [-10, 1.99] \Tstrut\Bstrut \\
-   $A_\text{bub}$ & [0, 1.5] &  $S_{\mathrm b,1}$ & [5, 40]\,ph     \Tstrut\Bstrut \\
-    $A_\text{3FGL}$ & [0, 1.5] & $S_{\mathrm b,2}$  & [0.1, 4.99]\,ph \Tstrut\Bstrut \\
-    \end{tabular}
-    \end{center}
-    \caption{Parameter priors used for the components of the forward model described in Sec.~\ref{sec:datasets}. All priors are uniform within the ranges specified. Priors on the Poissonian components, corresponding to overall normalization, are shown in the left table column, while those of the GCE- and disk-correlated PS components, parameterized according to Eq.~\eqref{eq:scd_bpl}, are shown in the right table column. The overall normalizations of the Poissonian GCE and PS-like components are parameterized through the mean number of counts contributed by the respective components in the ROI.}
-    \label{tab:priors}
-    \end{table} 
+\footnotesize
+\begin{center}
+\begin{tabular}{cc|cc}
+\toprule
+\multicolumn{2}{c}{\textbf{Poissonian}} & \multicolumn{2}{c}{\textbf{PS-like (GCE and disk)}}\Tstrut\Bstrut	\\   
+\Xhline{1\arrayrulewidth}
+\textbf{Parameter}	 & \textbf{Prior}  & \textbf{Parameter}	&  \textbf{Prior}\Tstrut\Bstrut	\\   
+\Xhline{1\arrayrulewidth}
+$\langle S_{\rm pix}^{\rm GCE} \rangle$ & [0, 2.5]\,ph  & $\langle S_{\rm pix}^{\rm PS} \rangle$ & [0, 2.5]\,ph\Tstrut\Bstrut \\
+$A_{{\rm brem}/\pi^0}$ & [6, 12]  &  $n_1$ & [10, 20]\Tstrut\Bstrut  \\ 
+$A_{\rm ICS}$  & [1, 6]  & $n_2$ & [1.1, 1.99]\Tstrut\Bstrut  \\ 
+$A_\text{iso}$ & [0, 1.5] &  $n_3$ & [-10, 1.99]\Tstrut\Bstrut \\
+$A_\text{bub}$ & [0, 1.5] &  $S_{\mathrm b,1}$ & [5, 40]\,ph\Tstrut\Bstrut \\
+$A_\text{3FGL}$ & [0, 1.5] & $S_{\mathrm b,2}$  & [0.1, 4.99]\,ph\Tstrut\Bstrut \\
+\botrule
+\end{tabular}
+\end{center}
+\caption{Parameter priors used for the components of the forward model described in Sec.~\ref{sec:datasets}. All priors are uniform within the ranges specified. Priors on the Poissonian components, corresponding to overall normalization, are shown in the left table column, while those of the GCE- and disk-correlated PS components, parameterized according to Eq.~\eqref{eq:scd_bpl}, are shown in the right table column. The overall normalizations of the Poissonian GCE and PS-like components are parameterized through the mean number of counts contributed by the respective components in the ROI.}
+\label{tab:priors}
+\end{table} 
     
+\begin{table*}[tb]
+\footnotesize
+\begin{center}
+\begin{tabular}{cc|cccccc}
+\toprule
+\textbf{Configuration}  & \textbf{Method}  & \textbf{GCE fraction}	 & \textbf{GCE PS fraction}  & $F_{\mathrm{peak}}^\mathrm{GCE}$	&  \textbf{Disk PS fraction} &  $F_{\mathrm{peak}}^\mathrm{disk}$	&  \textbf{Posteriors}\Tstrut\Bstrut	\\   
+- & - & - & - & [ph\,cm$^{-2}$\,s$^{-1}$] & - & [ph\,cm$^{-2}$\,s$^{-1}$]	& -\Tstrut\Bstrut	\\   
+\Xhline{1\arrayrulewidth}
+\multirow{2}{*}{Fiducial} & SBI & $7.7^{0.2}_{0.6}\%$ & $30.9^{8.5}_{17.9}\%$ & $2.1^{1.1}_{2.0}$ & $5.1^{0.5}_{1.2}\%$ &  $3.7^{0.9}_{2.8}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data}}\Tstrut \\
+& NPTF & $7.7^{0.2}_{0.6}\%$ & $55.0^{8.8}_{22.9}\%$ &  $2.6^{0.9}_{1.5}$ & $5.4^{0.5}_{1.1}\%$ & $3.7^{0.9}_{1.9}$\Bstrut &\\ 
+\hline
+\multirow{2}{*}{Diffuse Model A} & SBI & $6.4^{0.2}_{0.6}\%$  & $38.9^{10.2}_{21.2}\%$  & $2.5^{1.3}_{2.3}$ & $5.6^{0.4}_{1.1}\%$ & $2.8^{1.2}_{2.4}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_modelA}}\Tstrut  \\ 
+ & NPTF & $6.7^{0.2}_{0.6}\%$ & $74.9^{6.6}_{22.5}\%$ & $3.0^{1.0}_{1.8}$ &  $5.1^{0.5}_{1.3}\%$ & $4.3^{0.6}_{2.2}$\Bstrut &\\
+ \hline
+\multirow{2}{*}{Thick disk} & SBI & $8.3^{0.2}_{0.6}\%$ & $49.5^{9.0}_{22.8}\%$ & $2.5^{1.0}_{2.2}$ & $2.8^{0.5}_{1.2}\%$ &  $3.0^{1.0}_{2.6}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_thick_disk}}\Tstrut \\
+ & NPTF & $8.2^{0.3}_{0.7}\%$ & $75.0^{7.1}_{22.6}\%$ & $3.0^{1.0}_{1.8}$ & $2.3^{0.7}_{1.1}\%$ & $3.0^{1.0}_{2.0}$\Bstrut &\\
+ \hline
+\multirow{2}{*}{$r < 15^\circ$ ROI} & SBI & $9.0^{0.3}_{0.8}\%$ & $72.9^{7.5}_{21.1}\%$ & $3.0^{1.0}_{2.3}$ & $3.3^{0.8}_{1.6}\%$ & $3.0^{1.0}_{2.6}$
+& \multirow{2}{*}{Figure~\ref{fig:fid_data_15deg}}\Tstrut \\
+ & NPTF & $10.7^{0.4}_{1.0}\%$ & $69.6^{7.3}_{18.6}\%$ & $4.0^{0.6}_{2.2}$ & $2.6^{0.7}_{1.4}\%$ & $3.3^{1.1}_{2.0}$\Bstrut &\\
+\botrule
+\end{tabular}
+\end{center}
+\caption{Parameter priors used for the components of the forward model described in Sec.~\ref{sec:datasets}. All priors are uniform within the ranges specified. Priors on the Poissonian components, corresponding to overall normalization, are shown in the left table column, while those of the GCE- and disk-correlated PS components, parameterized according to Eq.~\eqref{eq:scd_bpl}, are shown in the right table column. The overall normalizations of the Poissonian GCE and PS-like components are parameterized through the mean number of counts contributed by the respective components in the ROI.}
+\label{tab:results}
+\end{table*}     
 
 \subsection{Likelihood-based inference methods}
 \label{sec:likelihood-methods}
 
 Irrespective of domain, of central interest in parameter estimation is often the probability distribution of a set of parameters of interest $\theta$ given some data $x$---the posterior distribution $p(\theta\mid x)$. Bayes' theorem can be used to obtain the posterior as $p(\theta\mid x) = p(\theta)\, p(x\mid\theta) / \mathcal Z$, where $p(x\mid\theta)$ is the likelihood and $\mathcal Z \equiv p(x)$ is the Bayesian evidence. In practice, parameters other than $\theta$---latent variables $z$---are often involved in the data-generation process, and computing the likelihood involves marginalizing over the latent space, $p(x\mid\theta) = \int \dd z\,p(x\mid\theta, z)$. In typical problems of interest, the high dimensionality of the latent space often means that this integral is intractable, necessitating simplifications in statistical treatment as well as theoretical modeling. 
 
-The present problem is no exception. In its simplest incarnation, traditional template fitting involves modeling the counts map as a Poisson realization of a linear combination of spatial templates, $p(x|\theta = A_i) = \mathrm{Pois}\left(\sum_i A_i T_i\right)$, where the normalizations $A_i$ of the respective templates are parameters of interest and there are no additional latent variables. Inference on the parameters of interest in this case is easily admitted within a frequentist or Bayesian framework. In the model described in Sec.~\ref{sec:datasets} on the other hand, the presence of a PS population where no PS can be individually localized or characterized introduced a large number of latent variables, specifically the position of and counts emitted by each PS. Ignoring the contribution from Poissonian templates for a moment and considering only a single PS population, the likelihood in this case is formally given by
+The present problem is no exception. In its simplest incarnation, traditional template fitting models the counts map as a Poisson realization of a linear combination of spatial templates, $p(x|\theta = A_i) = \mathrm{Pois}\left(\sum_i A_i T_i\right)$, where the normalizations $A_i$ of the respective templates are parameters of interest and there are no additional latent variables. Inference on the parameters of interest in this case is easily admitted within a frequentist or Bayesian framework. In the model described in Sec.~\ref{sec:datasets} on the other hand, the presence of a PS population where no PS can be individually localized or characterized introduced a large number of latent variables, specifically the position of and counts emitted by each PS. Ignoring the contribution from Poissonian templates for a moment and considering only a single PS population, the likelihood in this case is formally given by
 \begin{equation}
     \label{eq:data_likelihood}
     p(x\mid\theta_\mathrm{PS}) = \sum_{n} \int \dd^{n} z \, p\left(n\mid\lambda\right)\,p(z\mid\theta_\mathrm{PS})\,p(x|z),
@@ -343,15 +373,6 @@ The additional injected signal is seen to be reconstructed correctly within the 
 % \end{figure*}
 % %
 
-%
-\begin{figure*}
-    \centering
-    \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_thick.pdf}
-    \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_thick.pdf}
-    \caption{Results of the fiducial analysis on real \Fermi data. \emph{(Top row)} Analysis using neural simulation-based inference with normalizing flows, and \emph{(bottom row)} using the 1-point PDF likelihood implemented in the non-Poissonian template fitting (NPTF) framework. While moderate preference for a PS-like origin of the GCE is seen in the case of the NPTF analysis (bottom), the simulation-based inference analysis attributes a substantially smaller fraction of the GCE to PS-like emission (top).}
-    \label{fig:fid_data}
-\end{figure*}
-%
 
 
 %
@@ -360,7 +381,17 @@ The additional injected signal is seen to be reconstructed correctly within the 
     \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_modelA.pdf}
     \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_modelA.pdf}
     \caption{Results of the fiducial analysis on real \Fermi data. \emph{(Top row)} Analysis using neural simulation-based inference with normalizing flows, and \emph{(bottom row)} using the 1-point PDF likelihood implemented in the non-Poissonian template fitting (NPTF) framework. While moderate preference for a PS-like origin of the GCE is seen in the case of the NPTF analysis (bottom), the simulation-based inference analysis attributes a substantially smaller fraction of the GCE to PS-like emission (top).}
-    \label{fig:fid_data}
+    \label{fig:fid_data_modelA}
+\end{figure*}
+%
+
+%
+\begin{figure*}
+    \centering
+    \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_thick.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_thick.pdf}
+    \caption{Results of the fiducial analysis on real \Fermi data. \emph{(Top row)} Analysis using neural simulation-based inference with normalizing flows, and \emph{(bottom row)} using the 1-point PDF likelihood implemented in the non-Poissonian template fitting (NPTF) framework. While moderate preference for a PS-like origin of the GCE is seen in the case of the NPTF analysis (bottom), the simulation-based inference analysis attributes a substantially smaller fraction of the GCE to PS-like emission (top).}
+    \label{fig:fid_data_thick_disk}
 \end{figure*}
 %
 
@@ -371,7 +402,7 @@ The additional injected signal is seen to be reconstructed correctly within the 
     \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_15deg.pdf}
     \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_15deg.pdf}
     \caption{Results of the fiducial analysis on real \Fermi data. \emph{(Top row)} Analysis using neural simulation-based inference with normalizing flows, and \emph{(bottom row)} using the 1-point PDF likelihood implemented in the non-Poissonian template fitting (NPTF) framework. While moderate preference for a PS-like origin of the GCE is seen in the case of the NPTF analysis (bottom), the simulation-based inference analysis attributes a substantially smaller fraction of the GCE to PS-like emission (top).}
-    \label{fig:fid_data}
+    \label{fig:fid_data_15deg}
 \end{figure*}
 %
 

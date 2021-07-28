@@ -89,10 +89,16 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
 
         ax[i_r][0] = fig.add_subplot(gs[i_r,0])
         
+        f_peaks = []
         for idx_ps, i_param_ps in enumerate([6, 12]):
 
             dnds_ary = np.array([dnds_conv(s_ary, theta, temps_ps[idx_ps], roi_counts_normalize, roi_normalize) for theta in posterior_samples[:,i_param_ps:i_param_ps+6]])
             dnds_ary *= s_f_conv / pixarea_deg
+
+            dnds_max_post = f_ary[np.argmax(dnds_ary, axis=1)]
+
+            f_peaks.append(get_latex_unc(dnds_max_post / 1e-11, add_perc=False))
+
             ax[i_r][0].plot(f_ary, np.median(f_ary ** 2 * dnds_ary, axis=0), color=cols_default[idx_ps], lw=0.8)
             ax[i_r][0].fill_between(f_ary, np.percentile(f_ary ** 2 * dnds_ary, [16], axis=0)[0], np.percentile(f_ary ** 2 * dnds_ary, [84], axis=0)[0], alpha=0.2, color=cols_default[idx_ps], label=ps_labels[idx_ps])
             ax[i_r][0].fill_between(f_ary, np.percentile(f_ary ** 2 * dnds_ary, [2.5], axis=0)[0], np.percentile(f_ary ** 2 * dnds_ary, [97.5], axis=0)[0], alpha=0.1, color=cols_default[idx_ps])
@@ -272,11 +278,41 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
             if sub2 is not None:
                 ax[i_r][1].text(14.3, 11.4, sub2, fontsize=18, horizontalalignment='right')
 
+        ## Get some numbers
+
+        ps_gce_fraction = posterior_samples[:, 6] / (posterior_samples[:, 0] + posterior_samples[:, 6])
+        gce_fraction = (posterior_samples[:, 0] + posterior_samples[:, 6]) / mean_counts_roi_post
+        disk_fraction = posterior_samples[:, 12] / mean_counts_roi_post
+
+        np.mean(fermi_exp[~roi_normalize])
+        gce_fraction = get_latex_unc(gce_fraction * 100)
+        gce_ps_fraction =  get_latex_unc(ps_gce_fraction * 100)
+        disk_ps_fraction = get_latex_unc(disk_fraction * 100)
+
+        print("{} & {} & {} & {} & {}".format(gce_fraction, gce_ps_fraction, f_peaks[0], disk_ps_fraction, f_peaks[1]))
+
+        # ps_fraction_percentile = np.percentile(ps_fraction, [18, 50, 64])
+
+        # print(ps_fraction_percentile[2] - ps_fraction_percentile[1])
+        # print(ps_fraction_percentile[1])
+        # print(ps_fraction_percentile[1] - ps_fraction_percentile[0])
+
+        # print(gce_total / mean_counts_roi_post)
+
     # Optionally save plot
 
     if save_filename is not None:
         plt.tight_layout()
         fig.savefig(save_filename,bbox_inches='tight',pad_inches=0.1)
+
+def get_latex_unc(samples, add_perc=True):
+    percentiles = np.percentile(samples, [18, 50, 64])
+    m = "{:.1f}".format(percentiles[1])
+    u = "{:.1f}".format(percentiles[2] - percentiles[1])
+    l = "{:.1f}".format(percentiles[1] - percentiles[0])
+
+
+    return ("${0}^{{{1}}}_{{{2}}}\%$".format(m, u, l) if add_perc else "${0}^{{{1}}}_{{{2}}}$".format(m, u, l))
 
 def make_signal_injection_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None, sub1=None, sub2=None):
 
@@ -520,6 +556,7 @@ def make_variations_plot(posterior, x_test, x_data_test=None, theta_test=None, r
 
             dnds_ary = np.array([dnds_conv(s_ary, theta, temps_ps[idx_ps], roi_counts_normalize, roi_normalize) for theta in posterior_samples[:,i_param_ps:i_param_ps+6]])
             dnds_ary *= s_f_conv / pixarea_deg
+
             ax[i_r][0].plot(f_ary, np.median(f_ary ** 2 * dnds_ary, axis=0), color=cols_default[idx_ps], lw=0.8)
             ax[i_r][0].fill_between(f_ary, np.percentile(f_ary ** 2 * dnds_ary, [16], axis=0)[0], np.percentile(f_ary ** 2 * dnds_ary, [84], axis=0)[0], alpha=0.2, color=cols_default[idx_ps], label=ps_labels[idx_ps])
             ax[i_r][0].fill_between(f_ary, np.percentile(f_ary ** 2 * dnds_ary, [2.5], axis=0)[0], np.percentile(f_ary ** 2 * dnds_ary, [97.5], axis=0)[0], alpha=0.1, color=cols_default[idx_ps])
