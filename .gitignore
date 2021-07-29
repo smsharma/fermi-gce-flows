@@ -8,6 +8,7 @@
 samples/
 data/samples/*
 data/models/*
+data/nptfit_samples/*
 
 # Tex
 *.aux
