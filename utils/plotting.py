@@ -314,7 +314,7 @@ def get_latex_unc(samples, add_perc=True):
     l = "{:.1f}".format(percentiles[1] - percentiles[0])
 
 
-    return ("${0}^{{{1}}}_{{{2}}}\%$".format(m, u, l) if add_perc else "${0}^{{{1}}}_{{{2}}}$".format(m, u, l))
+    return ("${0}^{{+{1}}}_{{-{2}}}\%$".format(m, u, l) if add_perc else "${0}^{{{1}}}_{{{2}}}$".format(m, u, l))
 
 def make_signal_injection_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None, sub1=None, sub2=None):
 
