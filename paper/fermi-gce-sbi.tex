@@ -148,34 +148,7 @@ $A_\text{3FGL}$ & [0, 1.5] & $S_{\mathrm b,2}$  & [0.1, 4.99]\,ph\Tstrut\Bstrut 
 \end{center}
 \caption{Parameter priors used for the components of the forward model described in Sec.~\ref{sec:datasets}. All priors are uniform within the ranges specified. Priors on the Poissonian components, corresponding to overall normalization, are shown in the left table column, while those of the GCE- and disk-correlated PS components, parameterized according to Eq.~\eqref{eq:scd_bpl}, are shown in the right table column. The overall normalizations of the Poissonian GCE and PS-like components are parameterized through the mean number of counts contributed by the respective components in the ROI.}
 \label{tab:priors}
-\end{table} 
-    
-\begin{table*}[tb]
-\footnotesize
-\begin{center}
-\begin{tabular}{cc|cccccc}
-\toprule
-\textbf{Configuration}  & \textbf{Method}  & \textbf{GCE fraction}	 & \textbf{GCE PS fraction}  & $F_{\mathrm{peak}}^\mathrm{GCE}$	&  \textbf{Disk PS fraction} &  $F_{\mathrm{peak}}^\mathrm{disk}$	&  \textbf{Posteriors}\Tstrut\Bstrut	\\   
-- & - & - & - & [ph\,cm$^{-2}$\,s$^{-1}$] & - & [ph\,cm$^{-2}$\,s$^{-1}$]	& -\Tstrut\Bstrut	\\   
-\Xhline{1\arrayrulewidth}
-\multirow{2}{*}{Fiducial} & SBI & $7.7^{0.2}_{0.6}\%$ & $30.9^{8.5}_{17.9}\%$ & $2.1^{1.1}_{2.0}$ & $5.1^{0.5}_{1.2}\%$ &  $3.7^{0.9}_{2.8}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data}}\Tstrut \\
-& NPTF & $7.7^{0.2}_{0.6}\%$ & $55.0^{8.8}_{22.9}\%$ &  $2.6^{0.9}_{1.5}$ & $5.4^{0.5}_{1.1}\%$ & $3.7^{0.9}_{1.9}$\Bstrut &\\ 
-\hline
-\multirow{2}{*}{Diffuse Model A} & SBI & $6.4^{0.2}_{0.6}\%$  & $38.9^{10.2}_{21.2}\%$  & $2.5^{1.3}_{2.3}$ & $5.6^{0.4}_{1.1}\%$ & $2.8^{1.2}_{2.4}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_modelA}}\Tstrut  \\ 
- & NPTF & $6.7^{0.2}_{0.6}\%$ & $74.9^{6.6}_{22.5}\%$ & $3.0^{1.0}_{1.8}$ &  $5.1^{0.5}_{1.3}\%$ & $4.3^{0.6}_{2.2}$\Bstrut &\\
- \hline
-\multirow{2}{*}{Thick disk} & SBI & $8.3^{0.2}_{0.6}\%$ & $49.5^{9.0}_{22.8}\%$ & $2.5^{1.0}_{2.2}$ & $2.8^{0.5}_{1.2}\%$ &  $3.0^{1.0}_{2.6}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_thick_disk}}\Tstrut \\
- & NPTF & $8.2^{0.3}_{0.7}\%$ & $75.0^{7.1}_{22.6}\%$ & $3.0^{1.0}_{1.8}$ & $2.3^{0.7}_{1.1}\%$ & $3.0^{1.0}_{2.0}$\Bstrut &\\
- \hline
-\multirow{2}{*}{$r < 15^\circ$ ROI} & SBI & $9.0^{0.3}_{0.8}\%$ & $72.9^{7.5}_{21.1}\%$ & $3.0^{1.0}_{2.3}$ & $3.3^{0.8}_{1.6}\%$ & $3.0^{1.0}_{2.6}$
-& \multirow{2}{*}{Figure~\ref{fig:fid_data_15deg}}\Tstrut \\
- & NPTF & $10.7^{0.4}_{1.0}\%$ & $69.6^{7.3}_{18.6}\%$ & $4.0^{0.6}_{2.2}$ & $2.6^{0.7}_{1.4}\%$ & $3.3^{1.1}_{2.0}$\Bstrut &\\
-\botrule
-\end{tabular}
-\end{center}
-\caption{Parameter priors used for the components of the forward model described in Sec.~\ref{sec:datasets}. All priors are uniform within the ranges specified. Priors on the Poissonian components, corresponding to overall normalization, are shown in the left table column, while those of the GCE- and disk-correlated PS components, parameterized according to Eq.~\eqref{eq:scd_bpl}, are shown in the right table column. The overall normalizations of the Poissonian GCE and PS-like components are parameterized through the mean number of counts contributed by the respective components in the ROI.}
-\label{tab:results}
-\end{table*}     
+\end{table}  
 
 \subsection{Likelihood-based inference methods}
 \label{sec:likelihood-methods}
@@ -340,6 +313,34 @@ Figure~\ref{fig:sig_inj_data} shows the results of this test, with the different
 
 The additional injected signal is seen to be reconstructed correctly within the inferred 95\% confidence interval in all four cases. For the DM signal (top row), the brightest tested DM signal is seen to partially reconstruct as PS-like, which could be attributed to the larger magnitude of Poisson fluctuations in this case mimicking the effect of an unresolved PS population. The injected PS signals (rows 2-4) are correctly reconstructed in all cases, with the dimmer PS signals showing a more prominent flat direction with Poissonian emission, as expected.
 
+    
+\begin{table*}[tb]
+    \footnotesize
+    \begin{center}
+    \begin{tabular}{cc|cccccc}
+    \toprule
+    \textbf{Configuration}  & \textbf{Method}  & \textbf{GCE fraction}	 & \textbf{GCE PS fraction}  & $F_{\mathrm{peak}}^\mathrm{GCE}$	&  \textbf{Disk PS fraction} &  $F_{\mathrm{peak}}^\mathrm{disk}$	&  \textbf{Posteriors}\Tstrut\Bstrut	\\   
+    - & - & - & - & [ph\,cm$^{-2}$\,s$^{-1}$] & - & [ph\,cm$^{-2}$\,s$^{-1}$]	& -\Tstrut\Bstrut	\\   
+    \Xhline{1\arrayrulewidth}
+    \multirow{2}{*}{Fiducial} & SBI & $7.7^{+0.2}_{-0.6}\%$ & $30.9^{+8.5}_{-17.9}\%$ & $2.1^{+1.1}_{-2.0}$ & $5.1^{+0.5}_{-1.2}\%$ &  $3.7^{+0.9}_{-2.8}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data}}\Tstrut \\
+    & NPTF & $7.7^{+0.2}_{-0.6}\%$ & $55.0^{+8.8}_{-22.9}\%$ &  $2.6^{+0.9}_{-1.5}$ & $5.4^{+0.5}_{-1.1}\%$ & $3.7^{+0.9}_{-1.9}$\Bstrut &\\ 
+    \hline
+    \multirow{2}{*}{Diffuse Model A} & SBI & $6.4^{+0.2}_{-0.6}\%$  & $38.9^{+10.2}_{-21.2}\%$  & $2.5^{+1.3}_{-2.3}$ & $5.6^{+0.4}_{-1.1}\%$ & $2.8^{+1.2}_{-2.4}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_modelA}}\Tstrut  \\ 
+     & NPTF & $6.7^{+0.2}_{-0.6}\%$ & $74.9^{+6.6}_{-22.5}\%$ & $3.0^{+1.0}_{-1.8}$ &  $5.1^{+0.5}_{-1.3}\%$ & $4.3^{+0.6}_{-2.2}$\Bstrut &\\
+     \hline
+    \multirow{2}{*}{Thick disk} & SBI & $8.3^{+0.2}_{-0.6}\%$ & $49.5^{+9.0}_{-22.8}\%$ & $2.5^{+1.0}_{-2.2}$ & $2.8^{+0.5}_{-1.2}\%$ &  $3.0^{+1.0}_{-2.6}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_thick_disk}}\Tstrut \\
+     & NPTF & $8.2^{+0.3}_{-0.7}\%$ & $75.0^{+7.1}_{-22.6}\%$ & $3.0^{+1.0}_{-1.8}$ & $2.3^{+0.7}_{-1.1}\%$ & $3.0^{+1.0}_{-2.0}$\Bstrut &\\
+     \hline
+    \multirow{2}{*}{$r < 15^\circ$ ROI} & SBI & $9.0^{+0.3}_{-0.8}\%$ & $72.9^{+7.5}_{-21.1}\%$ & $3.0^{+1.0}_{-2.3}$ & $3.3^{+0.8}_{-1.6}\%$ & $3.0^{+1.0}_{-2.6}$
+    & \multirow{2}{*}{Figure~\ref{fig:fid_data_15deg}}\Tstrut \\
+     & NPTF & $10.7^{+0.4}_{-1.0}\%$ & $69.6^{+7.3}_{-18.6}\%$ & $4.0^{+0.6}_{-2.2}$ & $2.6^{+0.7}_{-1.4}\%$ & $3.3^{+1.1}_{-2.0}$\Bstrut &\\
+        \botrule
+    \end{tabular}
+    \end{center}
+    \caption{Parameter priors used for the components of the forward model described in Sec.~\ref{sec:datasets}. All priors are uniform within the ranges specified. Priors on the Poissonian components, corresponding to overall normalization, are shown in the left table column, while those of the GCE- and disk-correlated PS components, parameterized according to Eq.~\eqref{eq:scd_bpl}, are shown in the right table column. The overall normalizations of the Poissonian GCE and PS-like components are parameterized through the mean number of counts contributed by the respective components in the ROI.}
+    \label{tab:results}
+    \end{table*}    
+
 %
 \begin{figure*}
     \centering
@@ -452,10 +453,10 @@ The results of this test are shown in Figs.~\ref{fig:sim_sbi_dm_mismo} and \ref{
 \begin{figure*}
     \centering
     \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_agg.pdf}
-    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_mismo.pdf}
-    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_asym.pdf}
     \includegraphics[width=0.95\textwidth]{plots/sim_sbi_modelA_dm.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_mismo.pdf}
     \includegraphics[width=0.95\textwidth]{plots/sim_sbi_thick_disk_mm_dm.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_asym.pdf}
 
     \caption{Same as Fig.~\ref{fig:sim_sbi_dm}, but for simulated data where the GCE consists of a PS population peaking at 10 expected photon counts and the diffuse model is modulated by draws from the Gaussian process description of diffuse mismodeling. PS-like emission is inferred in each case, although a non-trivial DM component is inferred as some of the diffuse mismodeling is absorbed into the Poissonian GCE component.}
     \label{fig:sim_sbi_ps_mismo}
@@ -495,8 +496,7 @@ The code used to obtain the results in this paper is available at \url{https://g
 
 \begin{acknowledgments}
 
-We thank Johann Brehmer, Florian List, Nick Rodd, and Tracy Slatyer for helpful conversations.  
-KC is partially supported by NSF awards ACI-1450310, OAC-1836650, and OAC-1841471, the NSF grant PHY-1505463, and the Moore-Sloan Data Science Environment at NYU. 
+We thank Johann Brehmer, Florian List, Nick Rodd, and Tracy Slatyer for helpful conversations. SM thanks the Center for Computational Astrophysics at the Flatiron Institute for their hospitality. KC is partially supported by NSF awards ACI-1450310, OAC-1836650, and OAC-1841471, the NSF grant PHY-1505463, and the Moore-Sloan Data Science Environment at NYU. 
 SM is supported by the NSF CAREER grant PHY-1554858, NSF grants PHY-1620727 and PHY-1915409, and the Simons Foundation. 
 This work made use of the NYU IT High Performance Computing resources, services, and staff expertise. 
 This research has made use of NASA's Astrophysics Data System. 
