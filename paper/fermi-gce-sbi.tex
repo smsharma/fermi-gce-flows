@@ -67,7 +67,7 @@ urlcolor=linkcolor,
 \date{\today}
 
 \begin{abstract}
-The nature of the \Fermi $\gamma$-ray Galactic Center Excess (GCE) has remained a persistent mystery for over a decade. Although the excess is broadly compatible with emission expected due to dark matter annihilation, an explanation in terms of a population of unresolved point sources, \emph{e.g.} millisecond pulsars, remains viable. The effort to uncover the origin of the GCE is hampered in particular by an incomplete understanding of diffuse emission of Galactic origin, which can lead to spurious features that make it difficult to robustly differentiate smooth emission, as expected for a dark matter origin, from more ``clumpy'' emission expected from a population of relatively bright, unresolved PSs. We use machine learning-based likelihood-free inference methods, in particular conditional density estimation with normalizing flows, in order to characterize the contribution of unresolved point sources to the GCE. Compared to traditional statistical techniques, our method attributes a significantly smaller fraction of the GCE flux to an unresolved point source population, and we place a lower bound of $29.7^{+9.8}_{-17.2}\%$ on such a contribution.
+The nature of the \Fermi $\gamma$-ray Galactic Center Excess (GCE) has remained a persistent mystery for over a decade. Although the excess is broadly compatible with emission expected due to dark matter annihilation, an explanation in terms of a population of unresolved point sources, \emph{e.g.} millisecond pulsars, remains viable. The effort to uncover the origin of the GCE is hampered in particular by an incomplete understanding of diffuse emission of Galactic origin, which can lead to spurious features that make it difficult to robustly differentiate smooth emission, as expected for a dark matter origin, from more ``clumpy'' emission expected from a population of relatively bright, unresolved PSs. We use machine learning-based likelihood-free inference methods, in particular conditional density estimation with normalizing flows, in order to characterize the contribution of unresolved point sources to the GCE. Compared to traditional statistical techniques based on the statistics of photon counts, our method attributes a smaller fraction of the GCE flux to an unresolved point source population, obtaining a lower bound of $29.7^{+9.8}_{-17.2}\%$ on such a contribution in our fiducial analysis.
 \end{abstract}
 
 \maketitle
@@ -125,7 +125,7 @@ The Galactic foreground component accounts for emission due to cosmic rays inter
 
 The final maps are obtained by combining a Poisson-fluctuated realization of the summed astrophysical templates with the simulated PS maps. The inner regions of the Galactic plane are masked at $|b| < 2^\circ$, and a radial cut $r < 25^\circ$ defines the region of interest (ROI) for the fiducial analysis. \SM{Explain rationale for ROI} We mask resolved PSs from the 3FGL catalog at a containment radius of $0.8^\circ$, approximately corresponding to 99\% confidence limit of PSF containment for the data type employed~\cite{Fermi-LAT:2015bhf}.
 
-The forward model is thus specified by a total of 18 parameters---6 parameters for the overall normalizations of the Poissonian templates, and $6\times2$ parameters modeling the source-count distribution associated with GCE-correlated and disk-correlated PS populations. The priors used in the definition of the forward model are given in Tab.~\ref{tab:priors}. Priors on the Poissonian parameters \{$A_{{\rm brem}/\pi^0}$, $A_{\rm ICS}$, $A_\text{iso}$, $A_\text{bub}$, and $A_\text{3FGL}$\} are motivated by a Poissonian fit to the real \Fermi data in order to improve sample efficiency compared to using a wider prior range. 
+The forward model is thus specified by a total of 18 parameters---6 parameters for the overall normalizations of the Poissonian templates, and $6\times2$ parameters modeling the source-count distribution associated with GCE-correlated and disk-correlated PS populations. The priors used in the definition of the forward model are given in Tab.~\ref{tab:priors}. Priors on the Poissonian normalization parameters \{$A_{{\rm brem}/\pi^0}$, $A_{\rm ICS}$, $A_\text{iso}$, $A_\text{bub}$, and $A_\text{3FGL}$\} are motivated by a Poissonian template fit to the real \Fermi data in order to improve sample efficiency. 
 
 Since PS-like and Poissonian components of the model are exactly degenerate in the limit of each PS producing $\lesssim 1$ photon counts in expectation (see Refs.~\cite{Chang:2019ars,Collin:2021ufc} for a detailed discussion of this degeneracy, in particular in the context of previously-used likelihood-based methods), rather than placing uniform priors on the overall normalization of the PS-like and GCE-correlated Poissonian components $A_{\rm GCE}$ and $A^{\rm PS}$, we place priors on the expected counts contributed per pixel for these components in order to mitigate biases caused by an induced prior preferring one model over the other and preventing the expression of the degeneracy. For the PS-like components, this is in practice done by placing a uniform prior on $\langle S_{\rm pix}^{\rm PS} \rangle = \int\,\dd S\,\langle \dd N/\dd S \rangle_{\rm pix}$ where $\langle \dd N/\dd S \rangle_{\rm pix}$ is the mean SCD per pixel of the respective PS-like component.
 
@@ -333,7 +333,7 @@ The top panel of Fig.~\ref{fig:fid_data} shows results using the neural simulati
 \centering
 \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi.pdf}
 \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf.pdf}
-\caption{Results of the fiducial analysis on real \Fermi data. \emph{(Top row)} Analysis using neural simulation-based inference with normalizing flows, and \emph{(bottom row)} using the 1-point PDF likelihood implemented in the non-Poissonian template fitting (NPTF) framework. While moderate preference for a PS-like origin of the GCE is seen in the case of the NPTF analysis (bottom), the simulation-based inference analysis attributes a substantially smaller fraction of the GCE to PS-like emission (top).}
+\caption{Results of the fiducial analysis on real \Fermi data. \emph{(Top row)} Analysis using neural simulation-based inference with normalizing flows, and \emph{(bottom row)} using the 1-point PDF likelihood implemented in the non-Poissonian template fitting (NPTF) framework. While moderate preference for a PS-like origin of the GCE is seen in the case of the NPTF analysis (bottom), the simulation-based inference analysis attributes a smaller fraction of the GCE to PS-like emission (top).}
 \label{fig:fid_data}
 \end{figure*}
 %
@@ -356,7 +356,7 @@ The additional injected signal is seen to be reconstructed correctly within the 
 \includegraphics[width=0.95\textwidth]{plots/data_sig_inj_med_ps.pdf}
 \includegraphics[width=0.95\textwidth]{plots/data_sig_inj_ps.pdf}
 \includegraphics[width=0.95\textwidth]{plots/sig_inj_chyron.pdf}
-\caption{Joint posterior for the flux fraction of PS-like and DM-like emission when an artificial DM signal is injected onto the real \Fermi data. The different rows correspond to different signal types, from top to bottom, purely DM, dim PSs (peaking at 5 expected counts per PS), moderately-bright PSs (peaking at 10 expected counts per PS), and bright PSs (peaking at 20 expected counts per PS). The leftmost panels shows the fiducial analysis on \Fermi data, with subsequent panels showing results with progressively larger signals injected onto the data. The dotted lines show the expected total emission on top of the median initial inferred flux. The additional injected DM and PS signals are seen to correctly reconstructed within the respective posterior confidence limits in all cases.}
+\caption{Joint posterior for the flux fraction of PS-like and DM-like emission when an artificial DM signal is injected onto the real \Fermi data. The different rows correspond to different signal types, from top to bottom, purely DM, dim PSs (maximum of 5 expected counts per PS), moderately-bright PSs (maximum of 10 expected counts per PS), and bright PSs (maximum of 20 expected counts per PS). The leftmost panels shows the fiducial analysis on \Fermi data, with subsequent panels showing results with progressively larger signals injected onto the data. The dotted lines show the expected total emission on top of the median initial inferred flux. The additional injected DM and PS signals are seen to correctly reconstructed within the respective posterior bounds in all cases.}
 \label{fig:sig_inj_data}
 \end{figure*}
 %
@@ -387,7 +387,7 @@ The additional injected signal is seen to be reconstructed correctly within the 
 \centering
 \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_modelA.pdf}
 \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_modelA.pdf}
-\caption{Results of the fiducial analysis on real \Fermi data. \emph{(Top row)} Analysis using neural simulation-based inference with normalizing flows, and \emph{(bottom row)} using the 1-point PDF likelihood implemented in the non-Poissonian template fitting (NPTF) framework. While moderate preference for a PS-like origin of the GCE is seen in the case of the NPTF analysis (bottom), the simulation-based inference analysis attributes a substantially smaller fraction of the GCE to PS-like emission (top).}
+\caption{Same as Fig.~\ref{fig:fid_data}, but for a model where the diffuse foreground emission is modeled using the alternative Model A.}
 \label{fig:fid_data_modelA}
 \end{figure*}
 %
@@ -398,7 +398,7 @@ The additional injected signal is seen to be reconstructed correctly within the 
 \centering
 \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_modelF.pdf}
 \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_modelF.pdf}
-\caption{Results of the fiducial analysis on real \Fermi data. \emph{(Top row)} Analysis using neural simulation-based inference with normalizing flows, and \emph{(bottom row)} using the 1-point PDF likelihood implemented in the non-Poissonian template fitting (NPTF) framework. While moderate preference for a PS-like origin of the GCE is seen in the case of the NPTF analysis (bottom), the simulation-based inference analysis attributes a substantially smaller fraction of the GCE to PS-like emission (top).}
+\caption{Same as Fig.~\ref{fig:fid_data}, but for a model where the diffuse foreground emission is modeled using the alternative Model F.}
 \label{fig:fid_data_modelF}
 \end{figure*}
 %
@@ -408,7 +408,7 @@ The additional injected signal is seen to be reconstructed correctly within the 
 \centering
 \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_thick.pdf}
 \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_thick.pdf}
-\caption{Results of the fiducial analysis on real \Fermi data. \emph{(Top row)} Analysis using neural simulation-based inference with normalizing flows, and \emph{(bottom row)} using the 1-point PDF likelihood implemented in the non-Poissonian template fitting (NPTF) framework. While moderate preference for a PS-like origin of the GCE is seen in the case of the NPTF analysis (bottom), the simulation-based inference analysis attributes a substantially smaller fraction of the GCE to PS-like emission (top).}
+\caption{Same as Fig.~\ref{fig:fid_data}, but for a model where the spatial distribution of disk-correlated PSs is modeled using a thick-disk template (scale factor $z_\mathrm{s}=1\,\mathrm{kpc}$ in Eq.~\eqref{eq:disk_spatial}) rather than the default thin-disk template ($z_\mathrm{s}=0.3\,\mathrm{kpc}$).}
 \label{fig:fid_data_thick_disk}
 \end{figure*}
 %
@@ -481,7 +481,7 @@ The results of this test are shown in the third row of Fig.~\ref{fig:sim_sbi_mis
 \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_mismo.pdf}
 \includegraphics[width=0.95\textwidth]{plots/sim_sbi_thick_disk_mm_dm.pdf}
 \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_asym.pdf}
-\caption{Same as Fig.~\ref{fig:sim_sbi_dm}, but for simulated data where the GCE consists of a PS population peaking at 10 expected photon counts and the diffuse model is modulated by draws from the Gaussian process description of diffuse mismodeling. PS-like emission is inferred in each case, although a non-trivial DM component is inferred as some of the diffuse mismodeling is absorbed into the Poissonian GCE component.}
+\caption{Effect of mismodeling on a smooth GCE within our analysis framework. Each row shows aggregate posteriors collected over 10 simulated samples; row-wise from top to bottom: \emph{(i)} No mismodeling; simulated data is constructed with the same templates as those used in the forward model. \emph{(ii)} Mock data created with diffuse Model A, showing the effect of diffuse mismodeling. \emph{(iii)} Mock data where the diffuse template, described by Model O, is modulated by draws from a Gaussian process modeling large-scale mismodeling inferred from the real \Fermi data. \emph{(iv)} Mock data where the thick-disk template is used in lieu of the thin-disk template. \emph{(v)} Mock data where the GCE signal in the Northern hemisphere is twice as large as that in the Southern hemisphere. While some PS-like emission is inferred, it is consistent with zero in all cases, and evidence for a smooth GCE is robust.}
 \label{fig:sim_sbi_mismo}
 \end{figure*}
 %
