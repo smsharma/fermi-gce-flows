@@ -165,7 +165,7 @@ where $\theta$ are the parameters of interest that characterize the counts distr
 
 The 1-point PDF framework, first introduced to $\gamma$-ray analyses in Ref.~\cite{Malyshev:2011zi} and extended in Refs.~\cite{Lee:2014mza,Lee:2015fea}, considers a simplification in terms of the pixel-wise likelihood assuming each pixel to be statistically independent. This significantly reduces the latent space dimensionality by eliminating the positions of individual PSs as latent variables, localizing them within a pixel and modulating their expected number by the modeled spatial template (\emph{e.g.}, GCE-correlated or disk-correlated in our case). We briefly outline the philosophy of this method, pointing the reader to a detailed discussed as well as numerical implementations of the method in Refs.~\cite{Lee:2015fea,Mishra-Sharma:2016gis}.
 
-Since emission from each PS can be regarded as statistically independent, the probability of a given PS, indexed $i$, emitting $x^p_i$ photons in a pixel $p$ is given by
+\SM{Specify that we differentiate the PS parameters} Since emission from each PS can be regarded as statistically independent, the probability of a given PS, indexed $i$, emitting $x^p_i$ photons in a pixel $p$ is given by
 \begin{equation}
 \label{eq:pixel-wise_likelihood}
 p(x^p_i\mid\theta_\mathrm{PS}) = \int \dd S_i \,p(S_i\mid\theta_\mathrm{PS})\,p(x^p_i|S_i),
@@ -265,7 +265,7 @@ The \texttt{DeepSphere} convolutional kernel $h$ is defined as a linear combinat
 \begin{equation}
 h_{\theta}({L}) {x}={U}\left(\sum_{k=0}^{K} \theta_{k} T_k({\Lambda})\right) {U}^{T} {x}=\sum_{k=0}^{K} \theta_{k} T_k({L}) {x}.
 \end{equation}
-We set $K=4$ as the maximum Chebyshev polynomial order, having checked that larger values do not affect the results of the analysis.
+We set $K=4$ as the maximum Chebyshev polynomial order, having checked that larger values do not quantitatively affect the results of the analysis.
 
 Following Ref.~\cite{Perraudin:2018rbt}, the feature extraction architecture is built out of layers which progressively coarsen the pixel representation of the $\gamma$-ray maps while increasing the number of filter channels at each step. The input map corresponds to the 16,384 pixels in the single pixel corresponding to \texttt{nside}=1 covering the Galactic Center region, with the masked pixels set to zero. Starting with \HEALPix resolution \texttt{nside}=128, each graph convolution operation is followed by a BatchNorm, a ReLU nonlinearity, and a max pooling operation which downsamples the representation into a coarser resolution, starting with \texttt{nside}=128 until a single pixel channel at \texttt{nside}=1 remains after the final convolutional layer. The number of filter channels is doubled at each convolution until a maximum of 256. The output of the final convolutional layer is augmented with 2 additional auxiliary variables---the log-mean and log-standard deviation of the $\gamma$-ray map within the region of interest---and passed, via a ReLU nonlinearity, through a fully-connected layer with 1024 hidden units outputting a desired number of summary features, which we take as 128 in our fiducial configuration. Pixels outside of the ROI as well as masked PSs are set to zero in the input maps. All input maps are standardized to zero mean and unit variance across the training sample.
 
@@ -274,7 +274,7 @@ Using a neural network-based feature extractor, we implicitly use an approximati
 \noindent
 \textbf{Optimization, training, and evaluation:} The graph-based and normalizing flow neural networks are trained simultaneously. $10^{6}$ samples are generated using the prior proposal distribution of parameters given in Tab.~\ref{tab:priors}, and models are optimized with batch size 128 using the \texttt{AdamW}~\cite{KingmaB14,loshchilov2018decoupled} optimizer with initial learning rate $10^{-3}$ and weight decay $10^{-5}$, using cosine annealing to decay the learning rate across epochs. Training proceeds for up to 30 epochs with early stopping if the validation loss, evaluated on 15\% of held-out samples, has not improved after 8 epochs. 
 
-After training, given a new dataset of either real or simulated \Fermi data in our ROI, the posterior is obtained by drawing 10,000 samples from the flow within the prior distribution using rejection sampling, conditioning each flow transformation on summaries extracted by the graph-based neural network with the new dataset as input. The trained model is \emph{amortized}, which means that after the upfront cost of training the neural network, the required number of posterior samples corresponding to a new dataset can be obtained on a few-second timescale.
+After training, given a new dataset of either real or simulated \Fermi data in our ROI, the posterior is obtained by drawing 10,000 samples from the flow within the prior distribution using rejection sampling, conditioning each flow transformation on summaries extracted by the graph-based neural network with the new dataset as input. The model is \emph{amortized}, which means that after the upfront cost of training the neural network, the required number of posterior samples corresponding to a new dataset can be obtained on a few-second timescale.
 
 %
 \begin{figure*}
@@ -458,7 +458,7 @@ In this section we assess the susceptibility of our simulation-based inference p
 We create mock data using diffuse Model A, and analyze it using our fiducial analysis pipeline with Model O. The aggregated results over 10 different maps are shown in the second row of Fig.~\ref{fig:sim_sbi_mismo}. We see that while the marginalized DM posterior faithfully corresponds to the true underlying value, the PS template picks up small amount of residual flux. \\
 
 \noindent
-\textbf{A data-driven test of large-scale diffuse mismodeling:}
+\textbf{A data-driven test of large-scale mismodeling:}
 In order to test the effect of large-scale foreground mismodeling, we construct a data-driven model of such mismodeling and assess the ability of our method to recover either smooth or PS-like emission in the face of such mismodeling.  Following Ref.~\cite{Mishra-Sharma:2020kjb}, we perform a Poissonian template analysis on the \Fermi dataset $x$, modulating the diffuse model template $T_{\mathrm{dif}}$, which describes the bremsstrahlung and neutral pion decay components of diffuse Model O, by an (exponentiated) Gaussian process (GP):
 \begin{equation}
 x \sim \operatorname{Pois}\left(\sum_{i \neq \mathrm{dif}} A_{i} T_{i}+\exp \left(f\right) A_{\mathrm{dif}} T_{\mathrm{dif}}\right).
@@ -466,15 +466,15 @@ x \sim \operatorname{Pois}\left(\sum_{i \neq \mathrm{dif}} A_{i} T_{i}+\exp \lef
 The other Poissonian templates $T_{i}$, including a GCE DM template and the inverse Compton component of the diffuse foreground model, are treated as before using an overall normalization factor $A_{i}$. $f \sim \mathcal{N}(m, K)$ is the GP component with mean $m$ set to zero, and the covariance $K$ described through the Mat\'ern kernel with smoothness parameter $\nu = 5/2$. We refer to Ref.~\cite{Mishra-Sharma:2020kjb} for further details of the analysis, as well a validation of the GP-augmented template fitting pipeline on simulated data.
 
 %
-\begin{figure}
+\begin{figure*}
 \centering
-\includegraphics[width=0.45\textwidth]{plots/dd_mismo_map.pdf}
-\caption{The median Gaussian process description of multiplicative mismodeling associated with diffuse foreground Model O when applied to the real \Fermi data.}
+\includegraphics[width=0.95\textwidth]{plots/dd_mismo_map.pdf}
+\caption{Fair samples from the median Gaussian process description of multiplicative mismodeling associated with diffuse foreground Model O when applied to the real \Fermi data.}
 \label{fig:dd_mismo_map}
-\end{figure}
+\end{figure*}
 %
 
-The median Gaussian process describing the multiplicative mismodeling obtained relative to the real \Fermi data when using our fiducial diffuse Model O is shown in Fig.~\ref{fig:dd_mismo_map}. The most severe mismodeling is inferred to be concentrated in the central and southern regions of the fiducial ROI. We modulate the bremsstrahlung and neutral pion decay-tracing components of Model O using samples drawn from the inferred Gaussian process, producing simulated data with the aim of mocking up the scenario of large-scale diffuse mismodeling. These simulated samples are then analyzed with our standard pipeline, using the unmodulated Model O to model the diffuse emission.
+Five fair samples from the Gaussian process describing multiplicative mismodeling relative to the real \Fermi data when using our fiducial diffuse Model O are shown in Fig.~\ref{fig:dd_mismo_map}. The largest mismodeling by magnitude in this case is inferred to be concentrated in the southern regions of the fiducial ROI. In order to test the effect of such mismodeling on recovery of a DM signal we modulate the bremsstrahlung and neutral pion decay-tracing components of Model O using samples drawn from the inferred Gaussian process. These simulated samples are then analyzed with our standard pipeline, using the unmodulated Model O to model the diffuse emission.
 
 The results of this test are shown in the third row of Fig.~\ref{fig:sim_sbi_mismo}. It can be seen that while large-scale mismodeling can distort the total flux attributed to DM-like emission, preference for a smooth origin of the signal remains robust. The DM flux tends to be overestimated however, which may be attributed to the centrally-concentrated mismodeling as seen in Fig.~\ref{fig:dd_mismo_map}. This is also reflected in the fact that the inferred inverse Compton flux tends to be underestimated, with the residual flux attributable to the DM template. \\
 
