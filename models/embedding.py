@@ -93,11 +93,11 @@ class SphericalGraphCNN(nn.Module):
         x = x.view(-1, 16384 + self.n_aux + self.n_params, 1)
         x_map_temp = x[:, :16384, :]
 
-        # if self.mask is not None:
-        #     x_map = x_map_temp.clone()
-        #     x_map[:, self.mask, :] = 0.
-        # else:
-        x_map = x_map_temp
+        if self.mask is not None:
+            x_map = x_map_temp.clone()
+            x_map[:, self.mask, :] = 0.
+        else:
+            x_map = x_map_temp
 
         # Convolutional layers
         for layer in self.cnn_layers:
