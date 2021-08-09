@@ -473,7 +473,7 @@ The other Poissonian templates $T_{i}$, including a GCE DM template and the inve
 \begin{figure*}
 \centering
 \includegraphics[width=0.95\textwidth]{plots/dd_mismo_map.pdf}
-\caption{Fair samples from the Gaussian process description of multiplicative mismodeling associated with diffuse foreground Model O when applied to the real \Fermi data.}
+\caption{Fair samples from the Gaussian process description of large-scale multiplicative mismodeling associated with the gas-correlated component of diffuse foreground Model O when applied to the real \Fermi data.}
 \label{fig:dd_mismo_map}
 \end{figure*}
 %
@@ -538,7 +538,6 @@ Several improvements to the framework presented here are possible. The inclusion
 While we have considered a simulated-based inference framework based on posterior density estimation with normalizing flows, alternative frameworks based on likelihood-ratio estimation~\cite{Brehmer:2018eca,Brehmer:2018hga,Brehmer:2018kdj,Cranmer:2015bka, Hermans:2019ioj,Miller:2020hua,Miller:2021hys} or flow-based likelihood estimation~\cite{winkler2019learning,papamakarios2019sequential} can provide complementary ways to characterize the $\gamma$-ray PS population in the Galactic Center. Additionally, the use of sequential active-learning methods~\cite{papamakarios2019sequential} and methods that make use of additional latent information from the simulator~\cite{Brehmer:2018eca,Brehmer:2018hga,Brehmer:2018kdj,Brehmer:2019xox,Stoye:2018ovl} can significantly improve the sample efficiency of simulations and allow for extensions to more complex latent spaces, which will be important in particular for an energy-binned analysis and when including additional degrees of freedom for the astrophysical background models. 
 
 Since diffuse mismodeling is the largest source of uncertainty in any analysis that aims to characterize the GCE, we also note the possibility of using adversarial learning methods~\cite{Louppe:2016ylz} to account for systematic differences between the modeled and real \Fermi data. Alternatively, generative modeling of the diffuse foreground either in a Gaussian process-based data-driven framework or using, \emph{e.g.}, autoencoders trained on an ensemble of plausible diffuse models, can provide a principled way to account for the large latent space associated with diffuse emission modeling. Similarly, motivated by quantitative variations in our results on \Fermi data when using different disk templates, self-consistently accounting for plausible variations in the spatial distribution of disk-correlated PSs can strengthen the results of our analysis when it comes to characterizing the PS population in the Galactic Center. 
-
 These extensions can lead to a more robust characterization of an unresolved PS population in the Galactic Center region associated with the GCE, and we leave their study to future work.
 
 The code used to obtain the results in this paper is available at \url{https://github.com/smsharma/fermi-flows}.
@@ -551,11 +550,12 @@ The code used to obtain the results in this paper is available at \url{https://g
 \begin{acknowledgments}
 
 We thank Johann Brehmer, Florian List, Nick Rodd, and Tracy Slatyer for helpful conversations. 
-SM would like to thank the Center for Computational Astrophysics (Flatiron Institute) for their hospitality while this work was being performed. 
+SM would like to thank the Center for Computational Astrophysics at the Flatiron Institute for their hospitality while this work was being performed. 
 This work was performed in part at the Aspen Center for Physics, which is supported by National Science Foundation grant PHY-1607611.
 The participation of SM at the Aspen Center for Physics was supported by the Simons Foundation.
 KC is partially supported by NSF awards ACI-1450310, OAC-1836650, and OAC-1841471, the NSF grant PHY-1505463, and the Moore-Sloan Data Science Environment at NYU. 
 SM is supported by the NSF CAREER grant PHY-1554858, NSF grants PHY-1620727 and PHY-1915409, and the Simons Foundation. 
+We thank the \Fermi-LAT Collaboration for making publicly available the $\gamma$-ray data used in this work.
 This work made use of the NYU IT High Performance Computing resources, services, and staff expertise. 
 This research has made use of NASA's Astrophysics Data System. 
 This research made use of the \texttt{astropy}~\cite{Price-Whelan:2018hus,Robitaille:2013mpa}, \texttt{dynesty}~\cite{Speagle_2020}, \texttt{getdist}~\cite{Lewis:2019xzd}, \texttt{IPython}~\cite{PER-GRA:2007}, Jupyter~\cite{Kluyver2016JupyterN}, \texttt{matplotlib}~\cite{Hunter:2007}, \texttt{MLflow}~\cite{chen2020developments}, \texttt{nflows}~\cite{nflows}, \texttt{NPTFit}~\cite{Mishra-Sharma:2016gis}, \texttt{NumPy}~\cite{harris2020array}, \texttt{pandas}~\cite{pandas:2010}, \texttt{Pyro}~\cite{bingham2018pyro}, \texttt{PyTorch}~\cite{NEURIPS2019_9015}, \texttt{PyTorch Geometric}~\cite{Fey/Lenssen/2019}, \texttt{PyTorch Lightning}~\cite{william_falcon_2020_3828935}, \texttt{seaborn}~\cite{seaborn}, \texttt{sbi}~\cite{tejero-cantero2020sbi}, \texttt{scikit-learn}~\cite{scikit-learn}, \texttt{SciPy}~\cite{2020SciPy-NMeth}, and \texttt{tqdm}~\cite{da2019tqdm} software packages. We acknowledge the use of the code repository associated with Ref.~\cite{List:2020mzd}, in particular the associated data products and templates.\footnote{\url{https://github.com/FloList/GCE_NN}} We acknowledge the use of the code repository associated with Ref.~\cite{defferrard2020deepsphere}, in particular the implementation of the \texttt{DeepSphere} graph convolutional kernel.\footnote{\url{https://github.com/deepsphere/deepsphere-pytorch}}
