@@ -233,10 +233,10 @@ In this paper we use Masked Autoregressive Flows (MAFs)~\cite{10.5555/3294771.32
 \label{eq:maf_z}
 \theta_{i}=z_{i}\cdot \exp \alpha_{i}+\mu_{i} 
 \end{equation}
-where $\mu_{i}=f_{\mu_{i}}\left({\theta}_{1: i-1}\right)$ and $\alpha_i = f_{\alpha_{i}}\left({\theta}_{1: i-1}\right)$ are scaling and shift factors modeled by neural networks where the autoregressive property is enforced by masking out connections using the recipe introduced in Ref.~\cite{germain2015made}. The inverse transformation is easily identified from Eq.~\eqref{eq:maf_z}. This allows for an analytically tractable Jacobian determinant,
+where $\mu_{i}=f_{\mu_{i}}\left({\theta}_{1: i-1}\right)$ and $\alpha_i = f_{\alpha_{i}}\left({\theta}_{1: i-1}\right)$ are scaling and shift factors modeled by neural networks where the autoregressive property is enforced by masking out connections using the recipe introduced in Ref.~\cite{germain2015made}. The inverse transformation is easily identified from Eq.~\eqref{eq:maf_z}. This allows for an analytically tractable Jacobian determinant, for an $N$-dimensional distribution given by
 \begin{equation}
 \label{eq:det}
-\left|\operatorname{det}\left(\frac{\partial f^{-1}}{\partial {\theta}}\right)\right|=\exp \left(-\sum_{i} \alpha_{i}\right)
+\left|\operatorname{det}\left(\frac{\partial f^{-1}}{\partial {\theta}}\right)\right|=\exp \left(-\sum_{i=1}^N \alpha_{i}\right)
 \end{equation}
 and a forward pass through the flow according to Eq.~\eqref{eq:maf_z}.
 Multiple transformations $f_j$ can be composed together in order to model more expressive posteriors,
