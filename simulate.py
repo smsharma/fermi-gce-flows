@@ -101,9 +101,12 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
 
     # Poiss priors
 
-    if dif in ["ModelO", "ModelA", "ModelF"]:
+    if dif in ["ModelO", "ModelF"]:
         # iso, bub, psc, dif_pibrem, dif_ics
         prior_poiss = [[0.001, 0.001, 0.001, 6., 1.], [1.5, 1.5, 1.5, 12., 6.]]
+    elif dif == "ModelA":
+        # iso, bub, psc, dif_pibrem, dif_ics
+        prior_poiss = [[0.001, 0.001, 0.001, 6., 3.], [1.5, 1.5, 1.5, 12., 8.]]
     elif dif == "p6v11":
         # iso, bub, psc, dif
         prior_poiss = [[0.001, 0.001, 0.001, 11.], [1.5, 1.5, 1.5, 16.]]
