@@ -160,14 +160,15 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         mean_counts_roi = posterior_samples[:, 0] * np.mean(temps_ps[i_temp_ps][~roi_normalize]) / np.mean(temps_ps[i_temp_ps][~roi_counts_normalize])
         mean_counts_roi_post += mean_counts_roi
 
-        ax[i_r][2].hist(mean_counts_roi / np.mean(fermi_exp[~roi_normalize]) / pixarea / divide_by, color=cols_default[8], label='GCE Poiss.',  **hist_kwargs)
+        ax[i_r][2].hist(mean_counts_roi / np.mean(fermi_exp[~roi_normalize]) / pixarea / divide_by, color=cols_default[8], label='GCE DM',  **hist_kwargs)
         if not is_data:
             ax[i_r][2].axvline(theta_truth[0] * np.mean(temps_ps_sim[i_temp_ps][~roi_normalize]) / np.mean(temps_ps_sim[i_temp_ps][~roi_counts_normalize]) / np.mean(fermi_exp[~roi_normalize]) / pixarea / divide_by, color=cols_default[8], ls='dotted')
         
         if i_r == nrows - 1:
-            ax[i_r][2].set_xlabel(r"Flux\,[$10^{-7}$\,ph\,cm$^{-2}$\,s$^{-1}$\,sr$^{-1}$]")
+            ax[i_r][2].set_xlabel(r"Intensity\,[$10^{-7}$\,ph\,cm$^{-2}$\,s$^{-1}$\,sr$^{-1}$]")
+            ax[i_r][2].xaxis.set_label_coords(0.8, -0.15)
         if i_r == 0:
-            ax[i_r][2].set_title(r"\bf{Component fluxes}", x=0.7, fontsize=19, y=1.02)
+            ax[i_r][2].set_title(r"\bf{Component intensities}", x=0.7, fontsize=19, y=1.02)
 
         ax[i_r][2].set_xlim(0, ax2_max - 0.05)
         ax[i_r][2].set_ylim(0, 2.8)
@@ -201,9 +202,16 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
 
         handles_2, labels_2 = ax[i_r][2].get_legend_handles_labels()
         handles_3, labels_3 = ax[i_r][3].get_legend_handles_labels()
+
+        handles = handles_2 + handles_3
+        labels = labels_2 + labels_3
+
+        # Move GCE DM label to be after GCE PS label
+        handles.insert(1, handles.pop(4))
+        labels.insert(1, labels.pop(4))
         
         if i_r == 0:
-            ax[i_r][2].legend(handles_2 + handles_3, labels_2 + labels_3, fontsize=16, ncol=1)
+            ax[i_r][2].legend(handles, labels, fontsize=16, ncol=1)
 
         d = .02 
         line_kwargs = dict(transform=ax[i_r][2].transAxes, color='k', lw=1.8, clip_on=False)
