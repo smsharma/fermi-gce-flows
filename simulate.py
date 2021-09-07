@@ -67,6 +67,9 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     # Load exposure
     fermi_exp = np.load("data/fermi_data/fermidata_exposure.npy")
 
+    # Rescaling factor to remove exposure from PS templates
+    rescale = fermi_exp / np.mean(fermi_exp)
+
     # Load Model O templates
     temp_mO_pibrem = np.load('data/fermi_data/ModelO_r25_q1_pibrem.npy')
     temp_mO_ics = np.load('data/fermi_data/ModelO_r25_q1_ics.npy')
@@ -122,24 +125,24 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
 
     if gamma == "default":
         temps_gce_poiss = [temp_gce] * n
-        temps_gce_ps = [temp_gce] * n
+        temps_gce_ps = [temp_gce / rescale] * n
     elif gamma == "fix":
         temp_gce = get_NFW2_template(gamma=1.2, exp_map=fermi_exp, roi_normalize=roi_normalize_temps)
         temps_gce_poiss = [temp_gce] * n
-        temps_gce_ps = [temp_gce] * n
+        temps_gce_ps = [temp_gce / rescale] * n
     elif gamma == "float":
         temps_gce = [get_NFW2_template(gamma=gamma.detach().numpy(), exp_map=fermi_exp, roi_normalize=roi_normalize_temps) for gamma in tqdm(thetas[:, -1])]
         temps_gce_poiss = temps_gce
-        temps_gce_ps = temps_gce
+        temps_gce_ps = temps_gce / rescale
     elif gamma == "float_both":
         temps_gce_poiss = [get_NFW2_template(gamma=gamma.detach().numpy(), exp_map=fermi_exp, roi_normalize=roi_normalize_temps) for gamma in tqdm(thetas[:, -2])]
-        temps_gce_ps = [get_NFW2_template(gamma=gamma.detach().numpy(), exp_map=fermi_exp, roi_normalize=roi_normalize_temps) for gamma in tqdm(thetas[:, -1])]
+        temps_gce_ps = [get_NFW2_template(gamma=gamma.detach().numpy(), exp_map=fermi_exp, roi_normalize=roi_normalize_temps) / rescale for gamma in tqdm(thetas[:, -1])]
     else:
         raise NotImplementedError
 
     # List of templates except GCE template
 
-    temps_ps = [temp_dsk]
+    temps_ps = [temp_dsk / rescale]
 
     if dif == "ModelO":
         temps_poiss = [temp_iso, temp_bub, temp_psc, temp_mO_pibrem, temp_mO_ics]
