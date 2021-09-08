@@ -12,5 +12,5 @@ source ~/.bashrc
 conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi
 
-./combine_samples.py --regex train_ModelO_gamma_fix_thin_disk_rescale_1M 'train_ModelO_gamma_fix_thin_disk_rescale_\d+' --dir /scratch/sm8383/sbi-fermi/
+./combine_samples.py --regex train_ModelO_gamma_fix_rescale_1M 'train_ModelO_gamma_fix_rescale_\d+' --dir /scratch/sm8383/sbi-fermi/
 
