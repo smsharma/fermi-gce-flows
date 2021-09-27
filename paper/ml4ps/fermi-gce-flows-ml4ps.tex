@@ -30,7 +30,7 @@ linktocpage=true,
 pdfproducer=medialab,
 }
 
-\title{Characterizing $\gamma$-rays maps of the Galactic Center \\ with neural density estimation}
+\title{Characterizing $\gamma$-ray maps of the Galactic Center \\ with neural density estimation}
 
 \author{
 Siddharth Mishra-Sharma \\
@@ -61,7 +61,7 @@ The high dimensionality of $\gamma$-ray data has traditionally necessitated a de
 
 Here, we showcase a complementary approach that leverages recent developments in simulation-based inference (SBI, also referred to as likelihood-free inference; see, \emph{e.g.}, Ref.~\cite{cranmer2020frontier} for a recent review)
 %  ~\cite{Alsing:2019xrx,Brehmer:2018eca,Brehmer:2018hga,Brehmer:2018kdj,Brehmer:2020cvb,Cranmer:2015bka,cranmerFrontierSimulationbasedInference2020,durkanContrastiveLearningLikelihoodfree2020,greenbergAutomaticPosteriorTransformation2019,Hermans:2019ioj,lueckmannBenchmarkingSimulationBasedInference2021,lueckmannLikelihoodfreeInferenceEmulator2019,pacchiardiGeneralizedBayesianLikelihoodFree2021,papamakariosFastEpsilonFree2018,papamakariosSequentialNeuralLikelihood2019,wiqvistSequentialNeuralPosterior2021,zhaoValidatingConditionalDensity2021} 
-in order to weigh in on the nature of the GCE. In particular, we use conditional density estimation techniques based on normalizing flows~\cite{papamakarios2019normalizing,rezende2015variational} to characterize the contributions of various modeled components, including ``clumpy'' PS-like and ``smooth'' DM-like emission spatially tracing the GCE, to the $\gamma$-ray photon sky at $\sim\mathrm{GeV}$ energies in the Galactic Center region. Rather than using hand-crafted summary statistics, we employ a graph-based convolutional neural network architecture (previously utilized in Refs.~\cite{List:2020mzd,List:2021aer}) in order to extract summary statistics from $\gamma$-ray maps optimized for the downstream task of estimating the distribution of parameters characterizing the contribution of modeled components to the GCE. Unlike traditional approaches based on the statistics of photon counts, this approach lets us capture more of the information contained in a model of the Galactic Center emission, and in particular implicitly uses the distribution of correlations between pixels as an additional discriminating handle. As we show in our extended paper~\cite{Mishra-Sharma:InProgress} alongside more details and validation tests on the analysis, this fact makes our method more resilient to certain systematic uncertainties associated with model misspecification in real \Fermi data.
+in order to weigh in on the nature of the GCE. In particular, we use conditional density estimation techniques based on normalizing flows~\cite{papamakarios2019normalizing,rezende2015variational} to characterize the contributions of various modeled components, including ``clumpy'' PS-like and ``smooth'' DM-like emission spatially tracing the GCE, to the $\gamma$-ray photon sky at $\sim\mathrm{GeV}$ energies in the Galactic Center region. Rather than using hand-crafted summary statistics, we employ a graph-based convolutional neural network architecture (previously utilized in Refs.~\cite{List:2020mzd,List:2021aer}) in order to extract summary statistics from $\gamma$-ray maps optimized for the downstream task of estimating the distribution of parameters characterizing the contribution of modeled components to the GCE. Unlike traditional approaches based on the statistics of photon counts, this approach lets us capture more of the information contained in a model of the Galactic Center emission, and in particular implicitly uses the distribution of correlations between pixels as an additional discriminating handle. As we show in our extended paper alongside more details and validation tests on the analysis, this fact makes our method more resilient to certain systematic uncertainties associated with model misspecification in real \Fermi data.
 
 \section{Model and inference}
 \label{sec:model}
@@ -129,11 +129,11 @@ The top panel of Fig.~\ref{fig:fid_data} shows results using the neural simulati
 \section{Discussion}
 \label{sec:conclusions}
 
-We have leveraged recent advances in neural simulation-based inference in order to jointly characterize a putative DM-like signal and PS population associated with the observed \Fermi Galactic Center Excess. While broadly consistent with results of the traditional method, our method shows a reduced preference for PS-like emission correlated with the GCE. In our extended work~\cite{Mishra-Sharma:InProgress}, we present additional details of our analysis, including a validation of our pipeline on simulated data as well as a discussion of the impact of model misspecification within our framework. We show there that, owing to the fact that it can extract more information from the forward model, our method is less sensitive to certain forms of model misspecification than traditional approaches.
+We have leveraged recent advances in neural simulation-based inference in order to jointly characterize a putative DM-like signal and PS population associated with the observed \Fermi Galactic Center Excess. While broadly consistent with results of the traditional method, our method shows a reduced preference for PS-like emission correlated with the GCE. In our extended work, we present additional details of our analysis, including a validation of our pipeline on simulated data as well as a discussion of the impact of model misspecification within our framework. We show there that, owing to the fact that it can extract more information from the forward model, our method can be less sensitive to certain forms of model misspecification compared to traditional approaches.
 
 As in any Galactic Center $\gamma$-ray analysis, we caution of the potential of unknown systematics, such as mismodeling on the scale of the size of the LAT point-spread function, to bias the results and conclusions of our analysis. Although machine learning-based analyses can utilize more of the information encoded in the forward model, and in particular in the present case can take advantage of pixel-to-pixel correlations, this can also make them more susceptible to specific modeled features compared to traditional techniques based on data reduction to hand-crafted data summaries. We leave a more detailed investigation of the impact of these effects to future work.
 
-Code used for reproducing the results presented in this paper is available at \url{https://github.com/smsharma/fermi-gce-flows}. 
+Code used for reproducing the results presented in this paper is available at \url{https://github.com/xxx/yyy}. 
 
 \begin{ack}
 SM benefitted from the hospitality of the Center for Computational Astrophysics at the Flatiron Institute while this work was being performed. 
@@ -190,7 +190,7 @@ software packages.
 \item If you ran experiments...
 \begin{enumerate}
   \item Did you include the code, data, and instructions needed to reproduce the main experimental results (either in the supplemental material or as a URL)?
-    \answerYes{The code repository associated with this paper and needed to reproduce all the results is linked in Sec.~\ref{sec:conclusions}.}
+    \answerYes{The code repository associated with this paper and needed to reproduce all the results will be linked in Sec.~\ref{sec:conclusions}. At review stage, it is redacted in order to maintain anonymity.}
   \item Did you specify all the training details (e.g., data splits, hyperparameters, how they were chosen)?
     \answerYes{These are described in Sec.~\ref{sec:experiments}.}
 	\item Did you report error bars (e.g., with respect to the random seed after running experiments multiple times)?
