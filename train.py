@@ -4,25 +4,23 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import sys
 import json
+import logging
+import argparse
 
 sys.path.append("./")
 
-import logging
-import argparse
 import numpy as np
-
 import healpy as hp
-from models.embedding import SphericalGraphCNN
-from utils import create_mask as cm
-
 import torch
 from torch import nn
+from pytorch_lightning.loggers import MLFlowLogger
+import mlflow
 
+from models.embedding import SphericalGraphCNN
+from utils import create_mask as cm
 from sbi import utils
 from sbi.inference import PosteriorEstimator
 
-from pytorch_lightning.loggers import MLFlowLogger
-import mlflow
 
 
 def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25., kernel_size=4, laplacian_type="normalized", fc_dims=[[-1, 2048], [2048, 512], [512, 96]], n_neighbours=8, n_aux=2, maf_hidden_features=128, maf_num_transforms=4, batch_size=256, max_num_epochs=50, stop_after_epochs=8, clip_max_norm=1., validation_fraction=0.2, initial_lr=1e-3, device=None, optimizer_kwargs={'weight_decay': 1e-5}, method="snpe", summary=None, summary_range=None, activation="relu", conv_source="geometric", conv_type="chebconv", conv_channel_config="standard", aux_summary=None, density_estimator_arch="maf", normalize_pixel=True, flow_activation="relu", num_workers=32, new_masking_scheme=True):
@@ -34,8 +32,6 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25., ke
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     logging.info("")
-    logging.info("")
-    logging.info("")
     logging.info("Creating estimator")
     logging.info("")
 
@@ -45,22 +41,22 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25., ke
     indexes_list = []
     masks_list = []
 
-    assert (nside_max & (nside_max - 1) == 0) and nside_max != 0, "Invalid nside"
+    assert (nside_max != 0) and (nside_max & (nside_max - 1) == 0), "Invalid nside"
 
     nside_list = [int(nside_max / (2 ** i)) for i in np.arange(hp.nside2order(nside_max))]
 
     # Build indexes corresponding to subsequent nsides
     for nside in nside_list:
         hp_mask = hp.ud_grade(hp_mask_nside1, nside)
-        hp_mask = hp.reorder(hp_mask, r2n=True)  # Switch to NESTED pixel order as that's required for DeepSphere batchnorm
+        hp_mask = hp.reorder(hp_mask, r2n=True)  # Switch to NESTED pixel ordering as that's required for DeepSphere batchnorm
         masks_list.append(hp_mask)
         indexes_list.append(np.arange(hp.nside2npix(nside))[~hp_mask])
     
-    hp_mask_nside1 = hp.reorder(hp_mask_nside1, r2n=True)  # Switch to NESTED pixel order as that's required for DeepSphere batchnorm
-
+    hp_mask_nside1 = hp.reorder(hp_mask_nside1, r2n=True)  # Switch to NESTED pixel ordering as that's required for DeepSphere batchnorm
+    
+    # Create mask if reducing ROI from the one specified in the training data
     if r_outer != 25.:
         logging.info("Masking on the fly. Slower!")
-        # Create mask if reducing ROI from the one specified in the training data
         roi_mask_reduced = cm.make_mask_total(nside=128, band_mask=True, band_mask_range=2, mask_ring=True, inner=0, outer=r_outer)
         roi_mask_reduced = hp.reorder(roi_mask_reduced, r2n=True)
         indices_mask_reduced = np.intersect1d(np.where(~masks_list[0] == 1), np.where(~roi_mask_reduced == 1), return_indices=True)[1]
@@ -98,7 +94,7 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25., ke
         # Embedding net (feature extractor)
         sg_embed = SphericalGraphCNN(nside_list, indexes_list, kernel_size=kernel_size, laplacian_type=laplacian_type, fc_dims=fc_dims, n_aux=n_aux, activation=activation, conv_source=conv_source, conv_type=conv_type, conv_channel_config=conv_channel_config, n_neighbours=n_neighbours, mask=mask_reduce)
 
-        # If using a summary stat, don't use (overwrite) feature extractor
+        # If using a summary stat, don't use (overwrite) the feature extractor
         if summary is not None:
             sg_embed = nn.Identity()
 
@@ -138,34 +134,34 @@ def train(data_dir, experiment_name, sample_name, nside_max=128, r_outer=25., ke
         raise NotImplementedError
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="High-level script for the training of the neural likelihood ratio estimators")
+    parser = argparse.ArgumentParser(description="Script to train conditional density estimator")
 
-    # Main options
-    parser.add_argument("--sample", type=str, help='Sample name, like "train"')
-    parser.add_argument("--summary", type=str, default=None, help='Whether using a summary statistic')
-    parser.add_argument("--summary_range", type=str, default="None", help='Whether to use only a subset of the summary stats')
-    parser.add_argument("--name", type=str, default='test', help='Experiment name')
-    parser.add_argument("--r_outer", type=float, default=25., help="Additional mask to reduce map to.")
-    parser.add_argument("--laplacian_type", type=str, default='combinatorial', help='"normalized" or "combinatorial" Laplacian')
-    parser.add_argument("--conv_source", type=str, default='deepsphere', help='Use "deepsphere" or "geometric" implementation of ChebConv layer')
-    parser.add_argument("--conv_type", type=str, default='chebconv', help='Use "chebconv" or "gcn" graph convolution layers')
-    parser.add_argument("--conv_channel_config", type=str, default='standard', help='Use "standard", "fewer layers", or "more_channels" GCN channel configuration')
+    # Command line arguments
+    parser.add_argument("--sample", type=str, help='Sample name')
+    parser.add_argument("--summary", type=str, default=None, help='Whether using a summary statistic, and if so its name')
+    parser.add_argument("--summary_range", type=str, default="None", help='Whether to use only a subset of the summary stats, and if so its designated index')
+    parser.add_argument("--name", type=str, default='test', help='Name used to store experiment')
+    parser.add_argument("--r_outer", type=float, default=25., help="Additional radius mask to reduce map to")
+    parser.add_argument("--laplacian_type", type=str, default='combinatorial', help='Whether to use "normalized" or "combinatorial" graph Laplacian')
+    parser.add_argument("--conv_source", type=str, default='deepsphere', help='Use "deepsphere" (from the repo) or "geometric" (from PyG) implementation of ChebConv layer')
+    parser.add_argument("--conv_type", type=str, default='chebconv', help='Use "chebconv" or "gcn" graph convolutional layers')
+    parser.add_argument("--conv_channel_config", type=str, default='standard', help='Use "standard", "fewer_layers", or "more_channels" GCN channel configuration')
     parser.add_argument("--method", type=str, default='snpe', help='SBI method; "snpe" or "snre". "snre" not implemented yet.')
-    parser.add_argument("--density_estimator", type=str, default='maf', help='Density estimator method; "maf" or "nsf"')
+    parser.add_argument("--density_estimator", type=str, default='maf', help='Type of flow transformation; "maf" or "nsf"')
     parser.add_argument("--fc_dims", type=str, default="[[-1, 2048], [2048, 256]]", help='Specification of fully-connected embedding layers')
-    parser.add_argument("--n_neighbours", type=int, default=8, help="Number of neighbours in graph.")
-    parser.add_argument("--aux_summary", type=str, default="None", help='Which summaries to tack on')
+    parser.add_argument("--n_neighbours", type=int, default=8, help="Number of neighbours in graph; 8, 20, or 40")
+    parser.add_argument("--aux_summary", type=str, default="None", help='Which summaries to tack on as conditioning contexts')
     parser.add_argument("--n_aux", type=int, default=2, help="Number of auxiliary variables")
-    parser.add_argument("--activation", type=str, default='relu', help='Nonlinearity, "relu" or "selu"')
-    parser.add_argument("--flow_activation", type=str, default='relu', help='Flow nonlinearity, "relu" or "tanh"')
+    parser.add_argument("--activation", type=str, default='relu', help='Feature extractor nonlinearity; "relu" or "selu"')
+    parser.add_argument("--flow_activation", type=str, default='relu', help='Flow nonlinearity; "relu" or "tanh"')
     parser.add_argument("--maf_num_transforms", type=int, default=4, help="Number of MAF blocks")
     parser.add_argument("--max_num_epochs", type=int, default=30, help="Max number of training epochs")
-    parser.add_argument("--maf_hidden_features", type=int, default=128, help="Nodes in a MAF layer")
-    parser.add_argument("--kernel_size", type=int, default=4, help="GNN  kernel size")
-    parser.add_argument("--normalize_pixel", type=int, default=1, help="Whether to do pixel-wise Z-scoring, or normalize across images.")
-    parser.add_argument("--num_workers", type=int, default=32, help="Number of workers in dataloader.")
+    parser.add_argument("--maf_hidden_features", type=int, default=128, help="Hidden nodes in a MAF layer")
+    parser.add_argument("--kernel_size", type=int, default=4, help="GNN kernel size")
+    parser.add_argument("--normalize_pixel", type=int, default=1, help="Whether to do Z-scoring pixel-wise, or across the pixel dimension as well")
+    parser.add_argument("--num_workers", type=int, default=32, help="Number of workers in dataloader")
     parser.add_argument("--batch_size", type=int, default=64, help="Training batch size")
-    parser.add_argument("--dir", type=str, default=".", help="Directory. Training data will be loaded from the data/samples subfolder, the model saved in the " "data/models subfolder.")
+    parser.add_argument("--dir", type=str, default=".", help="Directory; training data will be loaded from the data/samples subfolder, model saved in the data/models subfolder")
 
     # Training option
     return parser.parse_args()
@@ -177,6 +173,8 @@ if __name__ == "__main__":
     logging.info("Hi!")
 
     args = parse_args()
+
+    # Munge command line arguments
 
     if args.summary_range != "None":
         args.summary_range = list(json.loads(args.summary_range))
@@ -195,4 +193,4 @@ if __name__ == "__main__":
 
     train(data_dir="{}/data/".format(args.dir), sample_name=args.sample, experiment_name=args.name, fc_dims=args.fc_dims, batch_size=args.batch_size, maf_num_transforms=args.maf_num_transforms, maf_hidden_features=args.maf_hidden_features, method=args.method, summary=args.summary, summary_range=args.summary_range, activation=args.activation, kernel_size=args.kernel_size, max_num_epochs=args.max_num_epochs, laplacian_type=args.laplacian_type, conv_source=args.conv_source, conv_type=args.conv_type, conv_channel_config=args.conv_channel_config, aux_summary=args.aux_summary, n_aux=args.n_aux, n_neighbours=args.n_neighbours, density_estimator_arch=args.density_estimator, r_outer=args.r_outer, normalize_pixel=args.normalize_pixel, flow_activation=args.flow_activation, num_workers=args.num_workers)
 
-    logging.info("All done! Have a nice day!")
+    logging.info("All done!")
