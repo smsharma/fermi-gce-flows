@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=6GB
-#SBATCH --time=05:59:00
+#SBATCH --time=10:59:00
 # #SBATCH --gres=gpu:1
 
 source ~/.bashrc
