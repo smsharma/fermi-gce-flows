@@ -21,7 +21,7 @@ from utils.utils import ring2nest
 from models.psf import KingPSF
 
 
-def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="default", ps_mask_type="0p8deg", disk_type="thick"):
+def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="default", ps_mask_type="0p8deg", disk_type="thick", new_ps_priors=False):
     """ High-level simulation script
     """
 
@@ -99,8 +99,12 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
         raise NotImplementedError
 
     # gce, dsk PS priors
-    prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], 
-                [2.5, 20.0, 1.99, 1.99, 40.0, 4.99, 2.5, 20.0, 1.99, 1.99, 40.0, 4.99]]
+    if new_ps_priors:
+        prior_ps = [[0.001, 10.0, 1.1, -5.0, 1.0, 0.1, 0.001, 10.0, 1.1, -5.0, 1.0, 0.1], 
+                    [2.5, 20.0, 1.99, 1.99, 30.0, 0.99, 2.5, 20.0, 1.99, 1.99, 30.0, 0.99]]
+    else:
+        prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], 
+                    [2.5, 20.0, 1.99, 1.99, 40.0, 4.99, 2.5, 20.0, 1.99, 1.99, 40.0, 4.99]]
 
     # Poiss priors
 
@@ -216,6 +220,7 @@ def parse_args():
     parser.add_argument("--name", type=str, default=None, help='Sample name, like "train" or "test".')
     parser.add_argument("--dir", type=str, default=".", help="Base directory. Results will be saved in the data/samples subfolder.")
     parser.add_argument("--debug", action="store_true", help="Prints debug output.")
+    parser.add_argument("--new_ps_priors", type=int, default=0, help='Whether to use new set of PS priors')
 
     return parser.parse_args()
 
@@ -230,7 +235,7 @@ if __name__ == "__main__":
     logger.info("Hi!")
 
     name = "train" if args.name is None else args.name
-    results = simulate(n=args.n, dif=args.dif, gamma=args.gamma, ps_mask_type=args.ps_mask_type, disk_type=args.disk_type)
+    results = simulate(n=args.n, dif=args.dif, gamma=args.gamma, ps_mask_type=args.ps_mask_type, disk_type=args.disk_type, new_ps_priors=args.new_ps_priors)
     save(args.dir, name, results)
 
     logger.info("All done! Have a nice day!")
