@@ -6,9 +6,9 @@ batch = """#!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=32GB
-#SBATCH --time=47:59:00
+#SBATCH --time=13:59:00
 #SBATCH --gres=gpu:1
-##SBATCH --mail-type=begin
+#SBATCH --mail-type=begin
 #SBATCH --mail-type=end
 #SBATCH --mail-user=siddharthmishra19@gmail.com
 
