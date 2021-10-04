@@ -95,7 +95,7 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
             dnds_ary = np.array([dnds_conv(s_ary, theta, temps_ps[idx_ps], roi_counts_normalize, roi_normalize) for theta in posterior_samples[:,i_param_ps:i_param_ps+6]])
             dnds_ary *= s_f_conv / pixarea_deg
 
-            dnds_max_post = f_ary[np.argmax(dnds_ary, axis=1)]
+            dnds_max_post = f_ary[np.argmax(f_ary * dnds_ary, axis=1)]
 
             f_peaks.append(get_latex_unc(dnds_max_post / 1e-11, add_perc=False))
 

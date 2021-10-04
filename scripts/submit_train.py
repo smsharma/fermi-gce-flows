@@ -6,7 +6,7 @@ batch = """#!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=32GB
-#SBATCH --time=13:59:00
+#SBATCH --time=32:59:00
 #SBATCH --gres=gpu:1
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end
@@ -56,7 +56,7 @@ for n_neighbours in n_neighbours_list:
                                                         for normalize_pixel in normalize_pixel_list:
                                                             for flow_activation in flow_activations:
                                                                 batchn = batch + "\n"
-                                                                batchn += "python -u train.py --sample train_ModelO_gamma_fix_thin_disk_rescale_new_ps_priors_1M --name gce_ModelO_gamma_fix_thin_disk_rescale_new_ps_priors_1M --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {} --r_outer {} --normalize_pixel {} --flow_activation {} --num_workers 16 --max_num_epochs 11".format(maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator, r_outer, normalize_pixel, flow_activation)
+                                                                batchn += "python -u train.py --sample train_ModelO_gamma_fix_thin_disk_rescale_new_ps_priors_1M --name gce_ModelO_gamma_fix_thin_disk_rescale_new_ps_priors_1M --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {} --r_outer {} --normalize_pixel {} --flow_activation {} --num_workers 16 --max_num_epochs 30".format(maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator, r_outer, normalize_pixel, flow_activation)
                                                                 fname = "batch/submit.batch"
                                                                 f = open(fname, "w")
                                                                 f.write(batchn)
