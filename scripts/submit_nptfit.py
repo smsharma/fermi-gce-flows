@@ -16,13 +16,12 @@ conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi
 """
 
-sample_list = ["fermi_data_ModelA_1000"]
-n_mc = 10
+sample_list = ["fermi_data_thin_disk_new_ps_priors_1000"]
 
 for sample_name in sample_list:
     for i_mc in [-1]:
         batchn = batch + "\n"
-        batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 25 --n_live 1000 --disk_type thick --i_mc {} --diffuse ModelA".format(sample_name, i_mc)
+        batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 25 --n_live 1000 --disk_type thin --i_mc {} --diffuse ModelO --new_ps_priors 1".format(sample_name, i_mc)
         fname = "batch/submit.batch"
         f = open(fname, "w")
         f.write(batchn)
@@ -30,27 +29,25 @@ for sample_name in sample_list:
         os.system("chmod +x " + fname)
         os.system("sbatch " + fname)
 
-sample_list = ["fermi_data_ModelF_1000"]
-n_mc = 10
-
-for sample_name in sample_list:
-    for i_mc in [-1]:
-        batchn = batch + "\n"
-        batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 25 --n_live 1000 --disk_type thick --i_mc {} --diffuse ModelF".format(sample_name, i_mc)
-        fname = "batch/submit.batch"
-        f = open(fname, "w")
-        f.write(batchn)
-        f.close()
-        os.system("chmod +x " + fname)
-        os.system("sbatch " + fname)
-
-# sample_list = ["ModelA_PS_only_mismo", "ModelA_DM_only_mismo"]
-# n_mc = 10
+# sample_list = ["fermi_data_ModelA_1000"]
 
 # for sample_name in sample_list:
-#     for i_mc in range(n_mc):
+#     for i_mc in [-1]:
 #         batchn = batch + "\n"
-#         batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 25 --n_live 200 --i_mc {}".format(sample_name, i_mc)
+#         batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 25 --n_live 1000 --disk_type thick --i_mc {} --diffuse ModelA".format(sample_name, i_mc)
+#         fname = "batch/submit.batch"
+#         f = open(fname, "w")
+#         f.write(batchn)
+#         f.close()
+#         os.system("chmod +x " + fname)
+#         os.system("sbatch " + fname)
+
+# sample_list = ["fermi_data_ModelF_1000"]
+
+# for sample_name in sample_list:
+#     for i_mc in [-1]:
+#         batchn = batch + "\n"
+#         batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 25 --n_live 1000 --disk_type thick --i_mc {} --diffuse ModelF".format(sample_name, i_mc)
 #         fname = "batch/submit.batch"
 #         f = open(fname, "w")
 #         f.write(batchn)

@@ -19,7 +19,7 @@ cols_default = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 def dnds_conv(s_ary, theta, ps_temp, roi_counts_normalize, roi_normalize):
     dnds_ary = dnds(s_ary, [1] + list(theta[1:]))
-    A = theta[0] / np.trapz(s_ary * dnds_ary, s_ary) / np.mean(ps_temp[~roi_counts_normalize]) ** 2 * np.mean(ps_temp[~roi_normalize])
+    A = theta[0] / np.trapz(s_ary * dnds_ary, s_ary) / np.mean(ps_temp[~roi_counts_normalize]) * np.mean(ps_temp[~roi_normalize])
     dnds_ary = dnds(s_ary, [A] + list(theta[1:]))
     return dnds_ary
 
@@ -90,14 +90,23 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         ax[i_r][0] = fig.add_subplot(gs[i_r,0])
         
         f_peaks = []
+        f_upper_break = []
         for idx_ps, i_param_ps in enumerate([6, 12]):
+            
+            # print(posterior_samples[:,i_param_ps])
 
             dnds_ary = np.array([dnds_conv(s_ary, theta, temps_ps[idx_ps], roi_counts_normalize, roi_normalize) for theta in posterior_samples[:,i_param_ps:i_param_ps+6]])
+
+            # sb2 = 5.
+            # print(np.trapz(s_ary[s_ary < sb2] * (dnds_ary.T)[s_ary < sb2].T, s_ary[s_ary < sb2], axis=1) / posterior_samples[:,i_param_ps],)
+            # print(np.percentile(np.trapz(s_ary[s_ary < sb2] * (dnds_ary.T)[s_ary < sb2].T, s_ary[s_ary < sb2], axis=1) / posterior_samples[:,i_param_ps], [16, 50, 84]))
+
             dnds_ary *= s_f_conv / pixarea_deg
 
             dnds_max_post = f_ary[np.argmax(f_ary * dnds_ary, axis=1)]
 
             f_peaks.append(get_latex_unc(dnds_max_post / 1e-11, add_perc=False))
+            f_upper_break.append(get_latex_unc(posterior_samples[:,i_param_ps + 4] / s_f_conv / 1e-10, add_perc=False))  # Get upper break post
 
             ax[i_r][0].plot(f_ary, np.median(f_ary ** 2 * dnds_ary, axis=0), color=cols_default[idx_ps], lw=1.5)
             ax[i_r][0].fill_between(f_ary, np.percentile(f_ary ** 2 * dnds_ary, [16], axis=0)[0], np.percentile(f_ary ** 2 * dnds_ary, [84], axis=0)[0], alpha=0.2, color=cols_default[idx_ps], label=ps_labels[idx_ps])
@@ -121,6 +130,15 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         if i_r == 0:
             ax[i_r][0].set_title(r"\bf{Source-count distributions}", fontsize=19, y=1.02)
             ax[i_r][0].legend(fontsize=16, loc='lower right', frameon=True, framealpha=0.8)
+
+        f_to_s = lambda f: f / s_f_conv
+        s_to_f = lambda s: s * s_f_conv
+
+        secax = ax[i_r][0].secondary_xaxis('top', functions=(s_to_f, f_to_s))
+        # secax.set_xlabel(r'$S$\,[ph]')
+
+        ax[i_r][0].tick_params(axis='x', which='both', top=False, labeltop=False)
+        secax.tick_params(axis='x', labeltop=False)
 
         ## Fluxes plot, all templates except diffuse
 
@@ -270,9 +288,9 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         ax[i_r][1].set_xlim(0., 15.)
         ax[i_r][1].set_ylim(0., 15.)
 
-        ax[i_r][1].set_ylabel(r"PS\,[\%]", fontsize=17.5)
+        ax[i_r][1].set_ylabel(r"PS-like\,[\%]", fontsize=17.5)
         if i_r == nrows - 1:
-            ax[i_r][1].set_xlabel(r"DM\,[\%]", fontsize=17.5)
+            ax[i_r][1].set_xlabel(r"DM-like\,[\%]", fontsize=17.5)
         else:
             ax[i_r][1].set_xlabel(None, fontsize=17.5)
         if i_r == 0:
@@ -299,7 +317,7 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         gce_ps_fraction =  get_latex_unc(ps_gce_fraction * 100)
         disk_ps_fraction = get_latex_unc(disk_fraction * 100)
 
-        print("{} & {} & {} & {} & {}".format(gce_fraction, gce_ps_fraction, f_peaks[0], disk_ps_fraction, f_peaks[1]))
+        print("{} & {} & {} & {} & {}".format(gce_fraction, gce_ps_fraction, f_upper_break[0], disk_ps_fraction, f_upper_break[1]))
 
         # ps_fraction_percentile = np.percentile(ps_fraction, [18, 50, 64])
 
@@ -322,7 +340,7 @@ def get_latex_unc(samples, add_perc=True):
     l = "{:.1f}".format(percentiles[1] - percentiles[0])
 
 
-    return ("${0}^{{+{1}}}_{{-{2}}}\%$".format(m, u, l) if add_perc else "${0}^{{{1}}}_{{{2}}}$".format(m, u, l))
+    return ("${0}^{{+{1}}}_{{-{2}}}\%$".format(m, u, l) if add_perc else "${0}^{{+{1}}}_{{-{2}}}$".format(m, u, l))
 
 def make_signal_injection_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None, sub1=None, sub2=None):
 

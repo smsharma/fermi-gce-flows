@@ -158,6 +158,7 @@ def parse_args():
     parser.add_argument("--disk_type", action="store", default="thin", type=str)
     parser.add_argument("--i_mc", action="store", default=-1, type=int)
     parser.add_argument("--psf", action="store", default="king", type=str)
+    parser.add_argument("--new_ps_priors", action="store", default=0, type=int)
 
     return parser.parse_args()
 
@@ -242,8 +243,13 @@ if __name__ == "__main__":
     
     rescale = (fermi_exp / np.mean(fermi_exp))
     temps_ps = [temp_gce / rescale, temp_dsk / rescale]
-    priors_ps = [[0., 10.0, 1.1, -10.0, 5.0, 0.1, 0., 10.0, 1.1, -10.0, 5.0, 0.1], 
-                [2., 20.0, 1.99, 0.99, 50.0, 4.99, 2., 20.0, 1.99, 0.99, 50.0, 4.99]]
+
+    if args.new_ps_priors:
+        prior_ps = [[0.001, 10.0, 1.1, -10.0, 1.0, 0.1, 0.001, 10.0, 1.1, -10.0, 1.0, 0.1], 
+                    [2.5, 20.0, 1.99, 1.99, 30.0, 0.99, 2.5, 20.0, 1.99, 1.99, 30.0, 0.99]]
+    else:
+        priors_ps = [[0., 10.0, 1.1, -10.0, 5.0, 0.1, 0., 10.0, 1.1, -10.0, 5.0, 0.1], 
+                    [2., 20.0, 1.99, 0.99, 50.0, 4.99, 2., 20.0, 1.99, 0.99, 50.0, 4.99]]
 
     param_log = np.array(params_log_poiss + [0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0 ,0, 0])
 
