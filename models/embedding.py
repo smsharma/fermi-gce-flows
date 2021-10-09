@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
+import numpy as np
 
 from models.healpix_pool_unpool import Healpix
 from models.laplacians import get_healpix_laplacians
@@ -103,8 +104,9 @@ class SphericalGraphCNN(nn.Module):
             x_map = x_map_temp
 
         # Convolutional layers
-        for layer in self.cnn_layers:
+        for i_layer, layer in enumerate(self.cnn_layers):
             x_map = layer(x_map)
+            np.save("../data/x_map_" + str(i_layer) + ".npy", x_map.detach().numpy())
 
         # Concatenate auxiliary variable along last dimension
         if (self.n_aux != 0) or (self.n_params != 0):

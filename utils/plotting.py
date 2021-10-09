@@ -93,13 +93,17 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         f_upper_break = []
         for idx_ps, i_param_ps in enumerate([6, 12]):
             
-            # print(posterior_samples[:,i_param_ps])
 
             dnds_ary = np.array([dnds_conv(s_ary, theta, temps_ps[idx_ps], roi_counts_normalize, roi_normalize) for theta in posterior_samples[:,i_param_ps:i_param_ps+6]])
 
-            # sb2 = 5.
-            # print(np.trapz(s_ary[s_ary < sb2] * (dnds_ary.T)[s_ary < sb2].T, s_ary[s_ary < sb2], axis=1) / posterior_samples[:,i_param_ps],)
-            # print(np.percentile(np.trapz(s_ary[s_ary < sb2] * (dnds_ary.T)[s_ary < sb2].T, s_ary[s_ary < sb2], axis=1) / posterior_samples[:,i_param_ps], [16, 50, 84]))
+            sb2 = 5.
+            if idx_ps == 0:
+                np.savez("/Users/smsharma/Desktop/post.npz", post_tot=posterior_samples[:,i_param_ps],
+                                               post_dm=posterior_samples[:,i_param_ps - 6],
+                                               integ_below=np.trapz(s_ary[s_ary < sb2] * (dnds_ary.T)[s_ary < sb2].T, s_ary[s_ary < sb2], axis=1))
+
+                print(np.percentile(posterior_samples[:,i_param_ps], [16, 50, 84]))
+                print(np.percentile(np.trapz(s_ary[s_ary < sb2] * (dnds_ary.T)[s_ary < sb2].T, s_ary[s_ary < sb2], axis=1), [16, 50, 84]))
 
             dnds_ary *= s_f_conv / pixarea_deg
 
