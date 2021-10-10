@@ -91,7 +91,7 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         
         f_peaks = []
         f_upper_break = []
-        
+
         for idx_ps, i_param_ps in enumerate([6, 12]):
             
 
@@ -117,13 +117,15 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
 
             f_peaks.append(get_latex_unc(dnds_max_post / 1e-11, add_perc=False))
             f_upper_break.append(get_latex_unc(posterior_samples[:,i_param_ps + 4] / s_f_conv / 1e-10, add_perc=False))  # Get upper break post
+            
+            pow_factor = 2
 
-            ax[i_r][0].plot(f_ary, np.median(f_ary ** 2 * dnds_ary, axis=0), color=cols_default[idx_ps], lw=1.5)
-            ax[i_r][0].fill_between(f_ary, np.percentile(f_ary ** 2 * dnds_ary, [16], axis=0)[0], np.percentile(f_ary ** 2 * dnds_ary, [84], axis=0)[0], alpha=0.2, color=cols_default[idx_ps], label=ps_labels[idx_ps])
-            ax[i_r][0].fill_between(f_ary, np.percentile(f_ary ** 2 * dnds_ary, [2.5], axis=0)[0], np.percentile(f_ary ** 2 * dnds_ary, [97.5], axis=0)[0], alpha=0.1, color=cols_default[idx_ps])
+            ax[i_r][0].plot(f_ary, np.median(f_ary ** pow_factor * dnds_ary, axis=0), color=cols_default[idx_ps], lw=1.5)
+            ax[i_r][0].fill_between(f_ary, np.percentile(f_ary ** pow_factor * dnds_ary, [16], axis=0)[0], np.percentile(f_ary ** pow_factor * dnds_ary, [84], axis=0)[0], alpha=0.2, color=cols_default[idx_ps], label=ps_labels[idx_ps])
+            ax[i_r][0].fill_between(f_ary, np.percentile(f_ary ** pow_factor * dnds_ary, [2.5], axis=0)[0], np.percentile(f_ary ** pow_factor * dnds_ary, [97.5], axis=0)[0], alpha=0.1, color=cols_default[idx_ps])
 
             if not is_data:
-                ax[i_r][0].plot(f_ary, f_ary ** 2 * dnds_conv(s_ary, theta_truth[i_param_ps:i_param_ps+6], temps_ps[idx_ps], roi_counts_normalize, roi_normalize) * (s_f_conv / pixarea_deg), color=cols_default[idx_ps], ls='dotted')  # , label=ps_labels[idx_ps] + " truth")
+                ax[i_r][0].plot(f_ary, f_ary ** pow_factor * dnds_conv(s_ary, theta_truth[i_param_ps:i_param_ps+6], temps_ps[idx_ps], roi_counts_normalize, roi_normalize) * (s_f_conv / pixarea_deg), color=cols_default[idx_ps], ls='dotted')  # , label=ps_labels[idx_ps] + " truth")
 
         ax[i_r][0].set_xscale("log")
         ax[i_r][0].set_yscale("log")

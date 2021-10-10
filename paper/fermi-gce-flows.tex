@@ -9,7 +9,6 @@
 \usepackage{fancyhdr}
 \usepackage{braket}
 \usepackage{graphicx}
-\usepackage{siunitx}
 \usepackage{blindtext}
 \usepackage{nicefrac}
 \usepackage{lipsum}
@@ -21,9 +20,6 @@
 \usepackage{makecell}
 
 \usepackage{afterpage}
-% \newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
-% \newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
-% \newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 \usepackage{longtable}
 \setlength{\LTcapwidth}{\textwidth}
 
@@ -36,16 +32,14 @@ urlcolor=linkcolor,
 ,linktocpage=true
 ,pdfproducer=medialab}
 
-\DeclareSIUnit \h {\ensuremath{\mathit{h}}}
-\DeclareSIUnit\electronvolt{e\kern-.05em V}
-\DeclareSIUnit\parsec{pc}
-
+% \newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 % \newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+% \newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 
 % define "struts", as suggested by Claudio Beccari in
 %    a piece in TeX and TUG News, Vol. 2, 1993.
 \newcommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
-\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' strut
+\newcommand\Bstrut{\rule[-1.6ex]{0pt}{0pt}}   % = `bottom' strut
 
 \renewcommand{\arraystretch}{1.8}
 \newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
@@ -131,7 +125,7 @@ The Galactic foreground component accounts for $\gamma$ rays produced due to cos
 The diffuse emission templates have been pre-smoothed with the \Fermi point-spread function (PSF) at 2 GeV for the dataset employed, modeled as a pair of King functions\footnote{\url{https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_LAT_IRFs/IRF_PSF.html}}. The total diffuse emission in a given pixel $p$, $x^p$, is modeled as a Poisson realization of a linear combination of the diffuse templates $T^p_i$, with $i$ indexing the individual templates, their corresponding normalizations $A_i$ regarded as parameters of the forward model; $x^p \sim \mathrm{Pois}\left(x^p\mid\sum_i A_i T^p_i\right)$. \\ 
 
 \noindent
-\textbf{PS emission forward model:} Assuming the locations of individual PSs are not known a-priori, the statistics of multiple PS populations can be completely specified through \emph{(i)} their spatial distribution, described by templates $T^p$ discretized over pixels $p$, \emph{(ii)} the distribution of expected photon counts $S$ contributed by each PS, $p(S)$, and \emph{(iii)} the distribution of the number of PSs for each population.  Additionally, the modeled instrumental point-spread function quantifies the spatial distribution of photon counts sourced by individual PS around its location due to the finite angular resolution of the LAT instrument.
+\textbf{PS emission forward model:} Assuming the locations of individual PSs are not known \emph{a-priori}, the statistics of multiple PS populations can be completely specified through \emph{(i)} their spatial distribution, described by templates $T^p$ discretized over pixels $p$, \emph{(ii)} the distribution of expected photon counts $S$ contributed by each PS, $p(S)$, and \emph{(iii)} the distribution of the number of PSs for each population.  Additionally, the modeled instrumental point-spread function quantifies the spatial distribution of photon counts sourced by individual PS around its location due to the finite angular resolution of the LAT instrument.
 
 Here, we parameterize the distributions of photon counts $S$ contributed by each PS through a doubly-broken power law,
 \begin{equation}
@@ -144,14 +138,14 @@ p(S\mid\theta_\mathrm{PS})\propto \left\{\begin{array}{lc}
 \end{equation}
 specified by the break locations $\{S_{\mathrm b, 1}, S_{\mathrm b, 2}\}$, spectral indices (slopes) $\{n_1, n_2, n_3\}$, and appropriately normalized to unity. Together, we denote these parameters by $\theta_\mathrm{PS}$.
 
-The PS component of the simulated \Fermi map is created as follows, practically implemented using the code package \texttt{NPTFit-Sim}~\cite{NPTFit-Sim}. The total number of PSs to be simulated is drawn as $n \sim \mathrm{Pois}(n\mid n_\mathrm{pix}\lambda)$, where $n_\mathrm{pix}$ is the number of pixels in the ROI and $\lambda$ is the mean number of PSs per pixel. The sample of PS angular positions $\{r_n\}$ is drawn from a PDF constructed by linearly interpolating the relevant pixel-wise spatial template $T^p$; $\{r_n\} \sim p(r) \propto T(r)$. The expected number of photons emitted by each PS, indexed by $i$, is drawn by first sampling from the mean source-count distribution in Eq.~\eqref{eq:scd_bpl}, $S \sim p\left({S}\mid\theta_\mathrm{PS}\right)$, and scaling this as ${S_i} = S \epsilon(r_i) / \langle \epsilon \rangle$ to account for variations in the \Fermi exposure at the sampled PS positions, $\epsilon(r_i)$, over the mean exposure $\langle \epsilon \rangle$ in the ROI. The actual sample of photon counts emitted by the simulated PSs, $\{x_n\}$, is taken to be a Poisson realization of this expectation; ${x_i} \sim \mathrm{Pois}\left({x_i}\mid {S_i}\right)$. Given the angular positions of and photon counts emitted by PSs $\{r_n, x_n\}$, the radial coordinates of photons relative to the positions of PSs are drawn following the modeled \Fermi PSF, with the azimuthal coordinates sampled uniformly assuming a spherically-symmetric PSF. The procedure is repeated for each PS population, and the final simulated PS map is constructed by binning the sampled photon positions within the ROI according to the pixelization scheme used. In practice, in order to avoid computational costs associated with simulating a large number of low-flux PSs, the dim component of the PS population is accounted for in the DM-like component for accounting purposes, described in the smooth emission forward model.
+The PS component of the simulated \Fermi map is created as follows, practically implemented using the code package \texttt{NPTFit-Sim}~\cite{NPTFit-Sim}. The total number of PSs to be simulated is drawn as $n \sim \mathrm{Pois}(n\mid n_\mathrm{pix}\lambda)$, where $n_\mathrm{pix}$ is the number of pixels in the ROI and $\lambda$ is the mean number of PSs per pixel. The sample of PS angular positions $\{r_n\}$ is drawn from a PDF constructed by linearly interpolating the relevant pixel-wise spatial template $T^p$; $\{r_n\} \sim p(r) \propto T(r)$. The expected number of photons emitted by each PS, indexed by $i$, is drawn by first sampling from the mean PDF of expected photon counts in Eq.~\eqref{eq:scd_bpl}, $S \sim p\left({S}\mid\theta_\mathrm{PS}\right)$, and scaling this as ${S_i} = S \epsilon(r_i) / \langle \epsilon \rangle$ to account for variations in the \Fermi exposure at the sampled PS positions, $\epsilon(r_i)$, over the mean exposure $\langle \epsilon \rangle$ in the ROI. The actual sample of photon counts emitted by the simulated PSs, $\{x_n\}$, is taken to be a Poisson realization of this expectation; ${x_i} \sim \mathrm{Pois}\left({x_i}\mid {S_i}\right)$. Given the angular positions of and photon counts emitted by PSs $\{r_n, x_n\}$, the radial coordinates of photons relative to the positions of PSs are drawn following the modeled \Fermi PSF, with the azimuthal coordinates sampled uniformly assuming a spherically-symmetric PSF. The procedure is repeated for each PS population, and the final simulated PS map is constructed by binning the sampled photon positions within the ROI according to the pixelization scheme used. In practice, in order to avoid computational costs associated with simulating a large number of low-flux PSs, the dim component of the PS population is accounted for in the DM-like component for accounting purposes, described in the smooth emission forward model.
 
 In the NPTF literature, modeled PS populations are often compactly described through the so-called source-count distribution (SCD) $\dd^2 N /\dd S \dd\Omega$, which quantifies the differential number density of sources per unit angular area emitting $S$ photons in expectation. The source-count distribution jointly describes the distribution of photon counts from individual PSs $p(S\mid\theta_\mathrm{PS})$ and their mean per-pixel abundance $\lambda$, and is related to these as
 \begin{equation}
 \label{eq:scd_ps}
 \frac{\dd^2 N}{\dd S\dd\Omega}=\lambda \, p(S\mid\theta_\mathrm{PS}) / \Omega_\mathrm{pix}
 \end{equation}
-where the the pixel area $\Omega_\mathrm{pix}$ is used to convert the per-pixel source count to per-area, rendering it agnostic to pixel size. We will present our results in terms of the source fluxes ($\dd^2 N /\dd F\dd\Omega$) rather than expected counts ($\dd^2 N /\dd S\dd\Omega$), with the conversion $S = \langle \epsilon \rangle F$ where $\langle \epsilon \rangle$ is the mean exposure in the region considered. In the analysis ROI used here, the mean exposure is $\langle \epsilon \rangle \simeq 7.1\times 10^{10}\,\mathrm{cm}^{2}\,\mathrm{s}$.
+where the the pixel area $\Omega_\mathrm{pix}$ is used to convert the per-pixel source count to per-area, rendering it agnostic to pixel size. We will present our results in terms of the source fluxes ($\dd^2 N /\dd F\dd\Omega$) rather than expected counts ($\dd^2 N /\dd S\dd\Omega$), with the conversion $S = \langle \epsilon \rangle F$ where $\langle \epsilon \rangle$ is the mean exposure in the region considered. In the analysis ROI used here, the mean exposure is $\langle \epsilon \rangle \simeq 7.1\times 10^{10}\,\mathrm{cm}^{2}\,\mathrm{s}$. For brevity, we will denote the distribution as $\dd N /\dd F$, leaving the per-area normalization implicit. 
 
 In this paper, we consider two independent PS populations: \emph{(i)}~those spatially correlated with the GCE, modeled the same as the Poissonian counterpart using a line of sight integral of the (squared) generalized NFW profile in Eq.~\eqref{eq:nfw} with $\gamma = 1.2$, and \emph{(ii)}~those spatially correlated with the Galactic disk, modeled by a doubly-exponential profile motivated by studies of the spatial distribution of Galactic millisecond pulsar populations~\cite{Lorimer:2006qs, Bartels:2018xom},
 \begin{equation}
@@ -165,12 +159,12 @@ where $R$ and $z$ are the radial and vertical Galactic cylindrical coordinates a
 
 Emission from a PS population is nearly degenerate but still statistically distinguishable from that following a Poisson distribution when associated with sources emitting $\sim 0.1$--$1$ counts in expectation~\cite{List:2021aer}; in practice, however, residual effects of model misspecification and degeneracies between multiple PS populations can make characterizing the source-count distribution in this low-photon regime challenging~\cite{Chang:2019ars}. The dimmer break, $S_{\mathrm{b}, 2} \in  [0.1, 4.99]$\,photons, therefore specifies a regime where we do attempt to explicitly characterize the PS population. This is enforced by allowing for a lowest slope $n_3 \in [-10, 1.99]$ that is steeply falling with decreasing $S$, encouraging the SCD to turn off in this regime. This gives preference to the smooth component in absorbing flux close to and below the single photon regime, and our analysis therefore conservatively aims to estimate a \emph{lower bound} on the contribution of PS-like emission to the GCE by primarily considering the relatively bright regime of the GCE source-count distribution. In order to quantify the effect of the prior in the low-photon regime, we also explore an alternative specification where the lower range of the upper break prior is brought down to a single photon, $S_{\mathrm{b}, 1}  \in  [1, 30]$\,photons, giving relatively more weight to the PS component close to the degeneracy regime. In App.~\ref{app:priors}, we show how the various prior choices map onto the source-count as well as cumulative source-count distributions for the baseline and alternative prior configurations.
 
-The overall abundance of PSs associated with a modeled population is specified as follows. Rather than sampling the expected number of PSs per pixel $\lambda$ with a uniform prior, we instead uniformly sample a related parameter $\langle S^{\rm PS} \rangle = \int\,\dd S\,S\,\lambda \, p(S\mid\theta_\mathrm{PS})$, the expected number of photon counts contributed by the PS population per pixel. Similarly, for the Poissonian GCE component, the template normalization $A_\mathrm{GCE}$ is reparameterized through a constant multiplicative factor into the mean per-pixel expected counts $\langle S^{\rm Poiss}_\mathrm{GCE} \rangle$. This is done in order to place the flux distribution of the PS-like component $\langle S^{\gtrsim 1\,\mathrm{ph}} \rangle$ on the same `footing' as that associate with smooth emission $\langle S^{\lesssim 1\,\mathrm{ph}} \rangle$. Since a uniform prior on $\lambda$ would not correspond to a uniform prior on $\langle S^{\rm PS} \rangle$, these reparameterizations a-priori distribute photons approximately uniformly among the regimes $\langle S^{\lesssim 1\,\mathrm{ph}} \rangle$ and $\langle S^{\gtrsim 1\,\mathrm{ph}} \rangle$. We note here the possibility of using other prior prescription proposed in the literature, \emph{e.g.} in Ref.~\cite{Collin:2021ufc} where, in addition to enforcing an equivalence between dim PSs and smooth emission (rather than enforcing a distinction between relatively-bright PSs and smooth emission as done here), the SCD slopes are specified in terms of the angles between adjacent parts of the broken power law representing the SCD and the break positions are specified as a fraction relative to the brightest break.
+The overall abundance of PSs associated with a modeled population is specified as follows. Rather than sampling the expected number of PSs per pixel $\lambda$ with a uniform prior, we instead uniformly sample a related parameter $\langle S^{\rm PS} \rangle = \int\,\dd S\,S\,\lambda \, p(S\mid\theta_\mathrm{PS})$, the expected number of photon counts contributed by the PS population per pixel. Similarly, for the Poissonian GCE component, the template normalization $A_\mathrm{GCE}$ is reparameterized through a constant multiplicative factor into the mean per-pixel expected counts $\langle S^{\rm Poiss}_\mathrm{GCE} \rangle$. This is done in order to place the flux distribution of the PS-like component $\langle S^{\gtrsim 1\,\mathrm{ph}} \rangle$ on the same `footing' as that associate with smooth emission $\langle S^{\lesssim 1\,\mathrm{ph}} \rangle$. Since a uniform prior on $\lambda$ would not correspond to a uniform prior on $\langle S^{\rm PS} \rangle$, these reparameterizations \emph{a-priori} distribute photons approximately uniformly among the regimes $\langle S^{\lesssim 1\,\mathrm{ph}} \rangle$ and $\langle S^{\gtrsim 1\,\mathrm{ph}} \rangle$. We note here the possibility of using other prior prescription proposed in the literature, \emph{e.g.} in Ref.~\cite{Collin:2021ufc} where, in addition to enforcing an equivalence between dim PSs and smooth emission (rather than enforcing a distinction between relatively-bright PSs and smooth emission as done here), the SCD slopes are specified in terms of the angles between adjacent parts of the broken power law representing the SCD and the break positions are specified as a fraction relative to the brightest break.
 
 The forward model is thus specified by a total of 18 parameters---6 for the overall normalizations of the Poissonian templates $\{\langle S_{\rm GCE}^{\rm Poiss} \rangle$, $A_{{\rm brem}/\pi^0}$, $A_{\rm ICS}$, $A_\text{iso}$, $A_\text{bub}$, $A_\text{3FGL}\}$, and $6\times2$ parameters modeling the source-count distributions associated with GCE-correlated and disk-correlated PS populations $\{\langle S^{\rm PS} \rangle, n_1, n_2, n_3, S_{\mathrm b, 1}, S_{\mathrm b, 2}\}$. The priors used in the forward model are specified in Tab.~\ref{tab:priors}. In order to improve sample efficiency, priors on the contribution of each component are motivated by posteriors obtained from a Poissonian template fit to the real \Fermi data. 
 
 \begin{table}[tb]
-\small
+\footnotesize
 \begin{center}
 \begin{tabular}{C{2cm}C{2cm} | C{2cm}C{2cm}}
 \toprule
@@ -367,35 +361,35 @@ The top panel of Fig.~\ref{fig:fid_data} shows results using the neural simulati
 
 %
 \begin{table*}[!t]
-\small
-\begin{center}
-\begin{tabular}{cc|cccccc}
-\toprule
-\textbf{Configuration}  & \textbf{Method}  & \textbf{GCE fraction}	 & \textbf{GCE PS fraction}  & $F_{\mathrm{b}, 1}^\mathrm{GCE}\times 10^{10}$	&  \textbf{Disk PS fraction} &  $F_{\mathrm{b}, 1}^\mathrm{Disk}\times 10^{10}$	&  \textbf{Posteriors}\Tstrut\Bstrut	\\   
-- & - & - & - & [ph\,cm$^{-2}$\,s$^{-1}$] & - & [ph\,cm$^{-2}$\,s$^{-1}$]	& -\Tstrut\Bstrut	\\   
-\Xhline{1\arrayrulewidth}
-\multirow{2}{*}{Baseline} & SBI & $7.8^{+0.2}_{-0.6}\%$ & $38.0^{+8.7}_{-19.2}\%$ & $1.3^{+0.2}_{-0.4}$ & $5.0^{+0.5}_{-1.1}\%$ & $2.2^{+0.2}_{-0.5}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data}}\Tstrut \\
-& NPTF & $7.7^{+0.2}_{-0.6}\%$ & $55.0^{+8.8}_{-22.9}\%$ & $1.1^{+0.1}_{-0.2}$ & $5.4^{+0.5}_{-1.1}\%$ & $2.0^{+0.2}_{-0.5}$\Bstrut &\\ 
-\hline
-\multirow{2}{*}{Diffuse Model A} & SBI & $6.4^{+0.2}_{-0.6}\%$ & $47.5^{+9.9}_{-25.1}\%$ & $1.3^{+0.3}_{-0.4}$ & $4.9^{+0.5}_{-1.2}\%$ & $2.4^{+0.2}_{-0.5}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_modelA}}\Tstrut  \\ 
-& NPTF & $6.7^{+0.2}_{-0.6}\%$ & $74.9^{+6.6}_{-22.5}\%$ & $1.1^{+0.1}_{-0.2}$ & $5.1^{+0.5}_{-1.3}\%$ & $2.2^{+0.2}_{-0.5}$\Bstrut &\\
-\hline
-\multirow{2}{*}{Diffuse Model F} & SBI & $4.7^{+0.2}_{-0.6}\%$ & $62.2^{+10.2}_{-26.4}\%$ & $1.5^{+0.3}_{-0.5}$ & $5.2^{+0.5}_{-1.1}\%$ & $2.5^{+0.2}_{-0.5}$
-& \multirow{2}{*}{Figure~\ref{fig:fid_data_modelF}}\Tstrut \\
-& NPTF & $5.2^{+0.2}_{-0.5}\%$ & $67.5^{+8.6}_{-26.7}\%$ & $1.1^{+0.2}_{-0.3}$ & $6.4^{+0.5}_{-1.1}\%$ & $2.0^{+0.2}_{-0.4}$\Bstrut &\\
-\hline
-\multirow{2}{*}{Thick disk} & SBI & $7.9^{+0.3}_{-0.6}\%$ & $51.9^{+8.5}_{-22.2}\%$ & $1.4^{+0.2}_{-0.4}$ & $3.2^{+0.5}_{-1.2}\%$ & $2.5^{+0.3}_{-0.6}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_thick_disk}}\Tstrut \\
-& NPTF & $8.2^{+0.3}_{-0.7}\%$ & $75.0^{+7.1}_{-22.6}\%$ & $1.1^{+0.1}_{-0.2}$ & $2.3^{+0.7}_{-1.1}\%$ & $3.1^{+0.6}_{-1.2}$\Bstrut &\\
-\hline
-\multirow{2}{*}{Alt. priors} & SBI & $7.7^{+0.2}_{-0.6}\%$ & $54.3^{+11.9}_{-27.4}\%$ & $0.9^{+0.2}_{-0.4}$ & $5.9^{+0.5}_{-1.1}\%$ & $2.4^{+0.2}_{-0.4}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_alt_priors}}\Tstrut \\
-& NPTF & $7.9^{+0.2}_{-0.6}\%$ & $77.7^{+6.5}_{-21.4}\%$ & $0.9^{+0.1}_{-0.3}$ & $5.9^{+0.5}_{-1.1}\%$ & $2.3^{+0.2}_{-0.4}$\Bstrut &\\
-\botrule
-\end{tabular}
-\end{center}
-\caption{Inferred values for the GCE flux as a fraction of the total flux, the GCE PS-like flux as a fraction of the total GCE flux, the position of the upper source count flux break $F_{\mathrm{b}, 1}$ for the GCE and disk PS components, and the disk flux as a fraction of the total flux. For the baseline configuration as well as the various systematic variations explored, the median along with the 16th and 84th posterior percentile values are shown for the simulation-based inference and NPTF analyses.}
-\label{tab:results}
-\end{table*}    
-%
+    \footnotesize
+    \begin{center}
+    \begin{tabular}{C{2.3cm}C{2cm}|C{2cm}C{2cm}C{2.2cm}C{2cm}C{2.2cm}C{2cm}}
+    \toprule
+    \textbf{Configuration}  & \textbf{Method}  & $\dfrac{\textbf{GCE}}{\textbf{Total}}$	 & $\dfrac{\textbf{GCE PS}}{\textbf{GCE}}$  & $F_{\mathrm{b}, 1}^\mathrm{GCE}$	&   $\dfrac{\textbf{Disk PS}}{\textbf{Total}}$ &  $F_{\mathrm{b}, 1}^\mathrm{Disk}$	&  \textbf{Posteriors}\rule{0pt}{4.5ex}	\\[-2mm]
+    - & - & \scriptsize{[\%]} & \scriptsize{[\%]} & \scriptsize{[$10^{-10}$\,ph\,cm$^{-2}$\,s$^{-1}$]} & \scriptsize{[\%]} & \scriptsize{[$10^{-10}$\,ph\,cm$^{-2}$\,s$^{-1}$]}	& -\Tstrut\Bstrut \\
+    \Xhline{1\arrayrulewidth}
+    \multirow{2}{*}{Baseline} & SBI & $7.8^{+0.2}_{-0.6}$ & $38.0^{+8.7}_{-19.2}$ & $1.3^{+0.2}_{-0.4}$ & $5.0^{+0.5}_{-1.1}$ & $2.2^{+0.2}_{-0.5}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data}}\Tstrut \\
+    & NPTF & $7.7^{+0.2}_{-0.6}$ & $55.0^{+8.8}_{-22.9}$ & $1.1^{+0.1}_{-0.2}$ & $5.4^{+0.5}_{-1.1}$ & $2.0^{+0.2}_{-0.5}$\Bstrut &\\ 
+    \hline
+    \multirow{2}{*}{Dif. Model A} & SBI & $6.4^{+0.2}_{-0.6}$ & $47.5^{+9.9}_{-25.1}$ & $1.3^{+0.3}_{-0.4}$ & $4.9^{+0.5}_{-1.2}$ & $2.4^{+0.2}_{-0.5}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_modelA}}\Tstrut  \\ 
+    & NPTF & $6.7^{+0.2}_{-0.6}$ & $74.9^{+6.6}_{-22.5}$ & $1.1^{+0.1}_{-0.2}$ & $5.1^{+0.5}_{-1.3}$ & $2.2^{+0.2}_{-0.5}$\Bstrut &\\
+    \hline
+    \multirow{2}{*}{Dif. Model F} & SBI & $4.7^{+0.2}_{-0.6}$ & $62.2^{+10.2}_{-26.4}$ & $1.5^{+0.3}_{-0.5}$ & $5.2^{+0.5}_{-1.1}$ & $2.5^{+0.2}_{-0.5}$
+    & \multirow{2}{*}{Figure~\ref{fig:fid_data_modelF}}\Tstrut \\
+    & NPTF & $5.2^{+0.2}_{-0.5}$ & $67.5^{+8.6}_{-26.7}$ & $1.1^{+0.2}_{-0.3}$ & $6.4^{+0.5}_{-1.1}$ & $2.0^{+0.2}_{-0.4}$\Bstrut &\\
+    \hline
+    \multirow{2}{*}{Thick disk} & SBI & $7.9^{+0.3}_{-0.6}$ & $51.9^{+8.5}_{-22.2}$ & $1.4^{+0.2}_{-0.4}$ & $3.2^{+0.5}_{-1.2}$ & $2.5^{+0.3}_{-0.6}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_thick_disk}}\Tstrut \\
+    & NPTF & $8.2^{+0.3}_{-0.7}$ & $75.0^{+7.1}_{-22.6}$ & $1.1^{+0.1}_{-0.2}$ & $2.3^{+0.7}_{-1.1}$ & $3.1^{+0.6}_{-1.2}$\Bstrut &\\
+    \hline
+    \multirow{2}{*}{Alt. priors} & SBI & $7.7^{+0.2}_{-0.6}$ & $54.3^{+11.9}_{-27.4}$ & $0.9^{+0.2}_{-0.4}$ & $5.9^{+0.5}_{-1.1}$ & $2.4^{+0.2}_{-0.4}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_alt_priors}}\Tstrut \\
+    & NPTF & $7.9^{+0.2}_{-0.6}$ & $77.7^{+6.5}_{-21.4}$ & $0.9^{+0.1}_{-0.3}$ & $5.9^{+0.5}_{-1.1}$ & $2.3^{+0.2}_{-0.4}$\Bstrut &\\
+    \botrule
+    \end{tabular}
+    \end{center}
+    \caption{Inferred values for the GCE flux as a fraction of the total flux, the GCE PS-like flux as a fraction of the total GCE flux, the position of the upper source count flux break $F_{\mathrm{b}, 1}$ for the GCE and disk PS components, and the disk flux as a fraction of the total flux. For the baseline configuration as well as the various systematic variations explored, the median along with the 16th and 84th posterior percentile values are shown for the simulation-based inference (SBI) and NPTF analyses.}
+    \label{tab:results}
+    \end{table*}    
+    %
 
 %
 \begin{figure*}
@@ -547,9 +541,9 @@ As done in Ref.~\cite{Buschmann:2020adf}, we emphasize that the presence of an a
 \section{Discussion and conclusions}
 \label{sec:conclusion}
 
-In this paper, we have leveraged recent advances in neural simulation-based inference in order to jointly characterize a putative DM-like signal and PS population associated with the observed \Fermi Galactic Center Excess. Consistent with Ref.~\cite{List:2020mzd} which used a Bayesian neural network and first leveraged a \texttt{DeepSphere}-based feature extraction architecture for analyzing $\gamma$-ray data in the Galactic Center region, our analysis based on conditional posterior density estimation with normalizing flows finds a reduced contribution associated with a potential population of unresolved PSs to the GCE compared to previous analyses based on the photon statistics of the $\gamma$-ray map. In particular, depending on the analysis configuration, we find a median value of $\sim30$--$50\%$ as the fraction of GCE emission that can be attributed to a PS population, with the inferred source-count distribution peaking at smaller fluxes $\sim 1 \times 10^{-10}$\,ph\,cm$^{-2}$\,s$^{-1}$ compared to values found in previous analyses based on the non-Poissonian template fitting (NPTF) framework~\cite{Lee:2015fea}, where the SCD is seen to peak just below the threshold for resolution of individual PSs, $\sim 2$--$3\times 10^{-10}$\,ph\,cm$^{-2}$\,s$^{-1}$. The NPTF analyses performed in this work find a similarly dim source-count distribution, in all cases however attributing a larger fraction $\sim50$--$75\%$ of the GCE to a PS population as compared to the corresponding SBI analyses.
+In this paper, we have leveraged recent advances in neural simulation-based inference in order to jointly characterize a putative DM-like signal and PS population associated with the observed \Fermi Galactic Center Excess. Consistent with Ref.~\cite{List:2020mzd} which used a Bayesian neural network and first leveraged a \texttt{DeepSphere}-based feature extraction architecture for analyzing $\gamma$-ray data in the Galactic Center region, our analysis based on conditional posterior density estimation with normalizing flows finds a reduced contribution associated with a potential population of unresolved PSs to the GCE compared to previous analyses based on the photon statistics of the $\gamma$-ray map. In particular, depending on the analysis configuration, we find a median value of $\sim40$--$60\%$ as the fraction of GCE emission that can be attributed to a PS population, with the brightest unresolved sources inferred to be at smaller fluxes $\sim 10^{-10}$\,ph\,cm$^{-2}$\,s$^{-1}$ compared to values found in previous analyses based on the non-Poissonian template fitting (NPTF) framework~\cite{Lee:2015fea}, where the SCD is seen to peak just below the threshold for resolution of individual PSs, $\sim 2$--$3\times 10^{-10}$\,ph\,cm$^{-2}$\,s$^{-1}$. The NPTF analyses performed in this work find a similarly dimmer source-count distribution, in all cases however attributing a larger fraction $\sim50$--$80\%$ of the GCE to a PS population as compared to the corresponding SBI analyses. Even though the SBI analyses presented here generically attributed a smaller fraction of the GCE flux to PSs, we note that there is significant overlap within posterior uncertainties, as can be seen from Tab.~\ref{tab:results}.
 
-The results of this paper are broadly consistent with and complementary to those obtained in Ref.~\cite{List:2021aer}, which used a \texttt{DeepSphere}-based architecture which was, in contrast to our parametric approach, combined with a novel neural network-based approach to inferring the counts distributions associated to PS populations using histograms with modeled uncertainties~\cite{list2021earth}. Their approach does not explicitly distinguish between Poissonian and PS-like components, treating emission associated with the inferred counts PDF below some threshold as effectively Poissonian. While this makes a direct comparison to the results of their analysis challenging, the overall conclusions regarding the fraction of emission that can be attributed to PSs and the characteristics of the GCE and disk source-count distributions are qualitatively similar between the two studies. In particular, both papers find a dimmer GCE-correlated source-count distribution, with a smaller lower bound $\gtrsim \mathcal O(30\%)$ on the fraction of the total GCE emission associated to PSs compared to previous studies based on the NPTF.
+The results of this paper are broadly consistent with and complementary to those obtained in Ref.~\cite{List:2021aer}, which used a \texttt{DeepSphere}-based architecture which was, in contrast to our parametric approach, combined with a novel neural network-based approach to inferring the counts distributions associated to PS populations using histograms with modeled uncertainties~\cite{list2021earth}. Their approach does not explicitly distinguish between Poissonian and PS-like components, treating emission associated with the inferred counts PDF below some threshold as effectively Poissonian. While this makes a direct comparison to the results of their analysis challenging, the overall conclusions regarding the fraction of emission that can be attributed to PSs and the characteristics of the GCE and disk source-count distributions are qualitatively similar between the two studies. In particular, both papers find a dimmer GCE-correlated source-count distribution, with a smaller lower bound $\gtrsim \mathcal O(40\%)$ on the fraction of the total GCE emission associated to PSs compared to previous studies based on the NPTF.
 
 Our qualitative conclusions are robust to the systematic variations we have explored, including different models for the diffuse foreground and spatial distribution of disk-correlated PS emission. We used a novel Gaussian process-based method to construct a data-driven model of large-scale spatial mismodeling, finding our method to be resilient to such effects when it comes to inferring the presence of a DM-like. As in any Galactic Center $\gamma$-ray analysis, we caution of the potential of unknown systematics, such as mismodeling on the scale of the size of the \Fermi-LAT point-spread function, to bias the results and conclusions of our analysis. Although machine learning-based analyses can utilize more of the information encoded in the forward model, and in particular in the present case can take advantage of pixel-to-pixel correlations, this can also make them more susceptible to specific modeled features compared to traditional techniques based on data reduction to hand-crafted data summaries. We leave a more detailed investigation of the impact of these effects to future work.
 
