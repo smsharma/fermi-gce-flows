@@ -23,7 +23,7 @@ def dnds_conv(s_ary, theta, ps_temp, roi_counts_normalize, roi_normalize):
     dnds_ary = dnds(s_ary, [A] + list(theta[1:]))
     return dnds_ary
 
-def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None, sub1=None, sub2=None, combined_posterior=False, thin_factor=1, **kwargs):
+def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None, sub1=None, sub2=None, combined_posterior=False, thin_factor=1, legend_fontsize=16, show_legend=True, **kwargs):
 
     # Extract templates and labels
     n = SimpleNamespace(**temps_dict)
@@ -241,7 +241,8 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         labels.insert(1, labels.pop(4))
         
         if i_r == 0:
-            ax[i_r][2].legend(handles, labels, fontsize=16, ncol=1)
+            if show_legend:
+                ax[i_r][2].legend(handles, labels, fontsize=legend_fontsize, ncol=1)
 
         d = .02 
         line_kwargs = dict(transform=ax[i_r][2].transAxes, color='k', lw=1.8, clip_on=False)
@@ -264,7 +265,9 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
             x_embedded = np.zeros(hp.nside2npix(128))
             x_embedded[np.where(~roi_sim)] = x_d[0]
             mean_roi_counts = np.mean(x_embedded[~roi_counts_normalize])
-            
+        
+        print(np.sqrt(mean_roi_counts) / np.mean(fermi_exp[~roi_normalize]), mean_roi_counts, np.mean(fermi_exp[~roi_normalize]))
+
         # 1-sigma
         ax[i_r][0].axvline(np.sqrt(mean_roi_counts) / np.mean(fermi_exp[~roi_normalize]), lw=1, ls='dashed', color='grey')
         ax[i_r][0].text(3.8e-11, 6.5e-11, "`1-$\sigma$'", color='grey', fontsize=14, rotation=90)
@@ -325,9 +328,9 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         disk_fraction = posterior_samples[:, 12] / mean_counts_roi_post
 
         np.mean(fermi_exp[~roi_normalize])
-        gce_fraction = get_latex_unc(gce_fraction * 100)
-        gce_ps_fraction =  get_latex_unc(ps_gce_fraction * 100)
-        disk_ps_fraction = get_latex_unc(disk_fraction * 100)
+        gce_fraction = get_latex_unc(gce_fraction * 100, add_perc=False)
+        gce_ps_fraction =  get_latex_unc(ps_gce_fraction * 100, add_perc=False)
+        disk_ps_fraction = get_latex_unc(disk_fraction * 100, add_perc=False)
 
         print("{} & {} & {} & {} & {}".format(gce_fraction, gce_ps_fraction, f_upper_break[0], disk_ps_fraction, f_upper_break[1]))
 
@@ -472,7 +475,7 @@ def make_signal_injection_plot(posterior, x_test, x_data_test=None, theta_test=N
                 ax[i_r].text(14.3, 13, sub1, fontsize=18, horizontalalignment='right')
                 
             if sub2 is not None:
-                ax[i_r].text(14.3, 11.4, sub2, fontsize=18, horizontalalignment='right')
+                ax[i_r].text(14.3, 11.2, sub2, fontsize=18, horizontalalignment='right')
 
     # Optionally save plot
 

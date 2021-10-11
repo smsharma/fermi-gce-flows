@@ -13,7 +13,7 @@ def simulator(theta, temps_poiss, temps_ps, mask_sim, mask_normalize_counts, mas
     aux_vars = np.zeros(2)
     s_ary = np.logspace(-1, 2, 100)
 
-    good_map = False
+    good_map = False  # Check so map doesn't contain all zeros or nans or infs
 
     while not good_map:
         
@@ -37,7 +37,8 @@ def simulator(theta, temps_poiss, temps_ps, mask_sim, mask_normalize_counts, mas
             dnds_ary.append(dnds_ary_temp)
             idx_theta_ps += 6
 
-        exp_map_norm = exp_map / np.mean(exp_map)
+        exp_map_norm = exp_map / np.mean(exp_map)  #  * exp_ratio
+
         # Draw PSs and simulate map
         sm = SimulateMap(temps_poiss, [norm_gce] + list(norms_poiss), [s_ary] * len(temps_ps), dnds_ary, temps_ps, psf_r_func, exp_map_norm)
         the_map_temp = sm.create_map()
