@@ -1,7 +1,7 @@
 %% This BibTeX bibliography file was created using BibDesk.
 %% http://bibdesk.sourceforge.net/
 
-%% Created for Siddharth Mishra-Sharma at 2021-10-12 11:30:14 -0400 
+%% Created for Siddharth Mishra-Sharma at 2021-10-12 11:49:05 -0400 
 
 
 %% Saved with string encoding Unicode (UTF-8) 
@@ -13,6 +13,49 @@
 
 @string{june = {June}}
 
+
+@inproceedings{10.5555/3157096.3157212,
+	Abstract = {Many statistical models can be simulated forwards but have intractable likelihoods.
+Approximate Bayesian Computation (ABC) methods are used to infer properties of these
+models from data. Traditionally these methods approximate the posterior over parameters
+by conditioning on data being inside an ε-ball around the observed data, which is
+only correct in the limit ε → 0. Monte Carlo methods can then draw samples from the
+approximate posterior to approximate predictions or error bars on parameters. These
+algorithms critically slow down as ε → 0, and in practice draw samples from a broader
+distribution than the posterior. We propose a new approach to likelihood-free inference
+based on Bayesian conditional density estimation. Preliminary inferences based on
+limited simulation data are used to guide later simulations. In some cases, learning
+an accurate parametric representation of the entire true posterior distribution requires
+fewer model simulations than Monte Carlo ABC methods need to produce a single sample
+from an approximate posterior.},
+	Address = {Red Hook, NY, USA},
+	Archiveprefix = {arXiv},
+	Author = {Papamakarios, George and Murray, Iain},
+	Booktitle = {Proceedings of the 30th International Conference on Neural Information Processing Systems},
+	Date-Added = {2021-10-12 11:45:38 -0400},
+	Date-Modified = {2021-10-12 11:49:03 -0400},
+	Eprint = {1605.06376},
+	Isbn = {9781510838819},
+	Location = {Barcelona, Spain},
+	Numpages = {9},
+	Pages = {1036--1044},
+	Primaryclass = {stat.ML},
+	Publisher = {Curran Associates Inc.},
+	Series = {NIPS'16},
+	Title = {Fast $\epsilon$-Free Inference of Simulation Models with Bayesian Conditional Density Estimation},
+	Url = {https://proceedings.neurips.cc/paper/2016/hash/6aca97005c68f1206823815f66102863-Abstract.html},
+	Year = {2016}}
+
+@article{Cranmer:2015bka,
+	Archiveprefix = {arXiv},
+	Author = {Cranmer, Kyle and Pavez, Juan and Louppe, Gilles},
+	Date-Added = {2021-10-12 11:44:10 -0400},
+	Date-Modified = {2021-10-12 11:44:10 -0400},
+	Eprint = {1506.02169},
+	Month = {6},
+	Primaryclass = {stat.AP},
+	Title = {{Approximating Likelihood Ratios with Calibrated Discriminative Classifiers}},
+	Year = {2015}}
 
 @inproceedings{List2021,
 	Archiveprefix = {arXiv},
@@ -1086,23 +1129,6 @@ analytics functions for extracting insights from millions of ML experiments.},
 	Year = {2020},
 	Bdsk-Url-1 = {http://arxiv.org/abs/2002.03712}}
 
-@article{papamakariosFastEpsilonFree2018,
-	Abstract = {Many statistical models can be simulated forwards but have intractable likelihoods. Approximate Bayesian Computation (ABC) methods are used to infer properties of these models from data. Traditionally these methods approximate the posterior over parameters by conditioning on data being inside an \${\textbackslash}epsilon\$-ball around the observed data, which is only correct in the limit \${\textbackslash}epsilon{\textbackslash}!{\textbackslash}rightarrow{\textbackslash}!0\$. Monte Carlo methods can then draw samples from the approximate posterior to approximate predictions or error bars on parameters. These algorithms critically slow down as \${\textbackslash}epsilon{\textbackslash}!{\textbackslash}rightarrow{\textbackslash}!0\$, and in practice draw samples from a broader distribution than the posterior. We propose a new approach to likelihood-free inference based on Bayesian conditional density estimation. Preliminary inferences based on limited simulation data are used to guide later simulations. In some cases, learning an accurate parametric representation of the entire true posterior distribution requires fewer model simulations than Monte Carlo ABC methods need to produce a single sample from an approximate posterior.},
-	Annote = {Comment: Appeared at NIPS 2016. Fixed typo in Eq (37)},
-	Author = {Papamakarios, George and Murray, Iain},
-	Date-Added = {2021-06-10 12:21:39 -0400},
-	Date-Modified = {2021-06-10 12:21:39 -0400},
-	File = {2018_Fast \$-epsilon\$-free Inference of Simulation Models with Bayesian Conditional_Papamakarios, Murray.pdf:/Users/smsharma/Dropbox/Papers/2018_Fast \$-epsilon\$-free Inference of Simulation Models with Bayesian Conditional_Papamakarios, Murray.pdf:application/pdf;2018_Fast \$-epsilon\$-free Inference of Simulation Models with Bayesian Conditional_Papamakarios, Murray.pdf:/Users/smsharma/Dropbox/Papers/Simulation-based inference/2018_Fast \$-epsilon\$-free Inference of Simulation Models with Bayesian Conditional_Papamakarios, Murray.pdf:application/pdf;arXiv.org Snapshot:/Users/smsharma/Zotero/storage/KSC5B4AB/1605.html:text/html;arXiv.org Snapshot:/Users/smsharma/Zotero/storage/ZZVL8I7I/1605.html:text/html},
-	Journal = {arXiv:1605.06376 [cs, stat]},
-	Keywords = {Statistics - Machine Learning, Computer Science - Machine Learning, Statistics - Computation},
-	Month = apr,
-	Note = {arXiv: 1605.06376},
-	Title = {Fast \${\textbackslash}epsilon\$-free {Inference} of {Simulation} {Models} with {Bayesian} {Conditional} {Density} {Estimation}},
-	Url = {http://arxiv.org/abs/1605.06376},
-	Urldate = {2020-10-13},
-	Year = {2018},
-	Bdsk-Url-1 = {http://arxiv.org/abs/1605.06376}}
-
 @article{greenbergAutomaticPosteriorTransformation2019,
 	Abstract = {How can one perform Bayesian inference on stochastic simulators with intractable likelihoods? A recent approach is to learn the posterior from adaptively proposed simulations using neural network-based conditional density estimators. However, existing methods are limited to a narrow range of proposal distributions or require importance weighting that can limit performance in practice. Here we present automatic posterior transformation (APT), a new sequential neural posterior estimation method for simulation-based inference. APT can modify the posterior estimate using arbitrary, dynamically updated proposals, and is compatible with powerful flow-based density estimators. It is more flexible, scalable and efficient than previous simulation-based inference techniques. APT can operate directly on high-dimensional time series and image data, opening up new applications for likelihood-free inference.},
 	Author = {Greenberg, David S. and Nonnenmacher, Marcel and Macke, Jakob H.},
@@ -1152,23 +1178,6 @@ analytics functions for extracting insights from millions of ML experiments.},
 	Urldate = {2020-12-22},
 	Year = {2019},
 	Bdsk-Url-1 = {http://arxiv.org/abs/1805.09294}}
-
-@article{Cranmer:2015bka,
-	Abstract = {In many fields of science, generalized likelihood ratio tests are established tools for statistical inference. At the same time, it has become increasingly common that a simulator (or generative model) is used to describe complex processes that tie parameters \${\textbackslash}theta\$ of an underlying theory and measurement apparatus to high-dimensional observations \${\textbackslash}mathbf\{x\}{\textbackslash}in {\textbackslash}mathbb\{R\}{\textasciicircum}p\$. However, simulator often do not provide a way to evaluate the likelihood function for a given observation \${\textbackslash}mathbf\{x\}\$, which motivates a new class of likelihood-free inference algorithms. In this paper, we show that likelihood ratios are invariant under a specific class of dimensionality reduction maps \${\textbackslash}mathbb\{R\}{\textasciicircum}p {\textbackslash}mapsto {\textbackslash}mathbb\{R\}\$. As a direct consequence, we show that discriminative classifiers can be used to approximate the generalized likelihood ratio statistic when only a generative model for the data is available. This leads to a new machine learning-based approach to likelihood-free inference that is complementary to Approximate Bayesian Computation, and which does not require a prior on the model parameters. Experimental results on artificial problems with known exact likelihoods illustrate the potential of the proposed method.},
-	Annote = {Comment: 35 pages, 5 figures},
-	Author = {Cranmer, Kyle and Pavez, Juan and Louppe, Gilles},
-	Date-Added = {2021-06-10 12:21:39 -0400},
-	Date-Modified = {2021-06-10 12:21:39 -0400},
-	File = {2016_Approximating Likelihood Ratios with Calibrated Discriminative Classifiers_Cranmer, Pavez, Louppe.pdf:/Users/smsharma/Dropbox/Papers/2016_Approximating Likelihood Ratios with Calibrated Discriminative Classifiers_Cranmer, Pavez, Louppe.pdf:application/pdf;arXiv.org Snapshot:/Users/smsharma/Zotero/storage/TZ77SBHQ/1506.html:text/html},
-	Journal = {arXiv:1506.02169 [physics, stat]},
-	Keywords = {Physics - Data Analysis, Statistics and Probability, Statistics - Machine Learning, 62P35, 62F99, 62H30, Statistics - Applications},
-	Month = mar,
-	Note = {arXiv: 1506.02169},
-	Title = {Approximating {Likelihood} {Ratios} with {Calibrated} {Discriminative} {Classifiers}},
-	Url = {http://arxiv.org/abs/1506.02169},
-	Urldate = {2020-12-22},
-	Year = {2016},
-	Bdsk-Url-1 = {http://arxiv.org/abs/1506.02169}}
 
 @article{lueckmannBenchmarkingSimulationBasedInference2021,
 	Abstract = {Recent advances in probabilistic modelling have led to a large number of simulation-based inference algorithms which do not require numerical evaluation of likelihoods. However, a public benchmark with appropriate performance metrics for such 'likelihood-free' algorithms has been lacking. This has made it difficult to compare algorithms and identify their strengths and weaknesses. We set out to fill this gap: We provide a benchmark with inference tasks and suitable performance metrics, with an initial selection of algorithms including recent approaches employing neural networks and classical Approximate Bayesian Computation methods. We found that the choice of performance metric is critical, that even state-of-the-art algorithms have substantial room for improvement, and that sequential estimation improves sample efficiency. Neural network-based approaches generally exhibit better performance, but there is no uniformly best algorithm. We provide practical advice and highlight the potential of the benchmark to diagnose problems and improve algorithms. The results can be explored interactively on a companion website. All code is open source, making it possible to contribute further benchmark tasks and inference algorithms.},

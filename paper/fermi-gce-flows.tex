@@ -251,11 +251,11 @@ Recent advances in machine learning, particularly the proliferation of neural ne
 
 \subsection{Conditional density estimation with normalizing flows}
 
-We approximate the joint posterior $p(\theta\mid x)$ over the parameters of interest $\theta$ through a distribution $\hat p_\phi(\theta\mid s)$ conditioned on summaries $s=s(x)$ from simulated samples $\{x\}$, parameterized by $\phi$ and modeled by a neural network. This class of simulation-based inference techniques, known as conditional density estimation~\cite{papamakariosFastEpsilonFree2018,cranmer_kyle_2016_198541}, directly models the posterior distribution given a set of samples $\{x\}\sim p(x\mid\theta)$ produced from the forward model, where parameters $\theta$ are sampled according to some prior proposal distribution $\{\theta\}\sim p(\theta)$. We note that, given the absence of explicit labels associated with the sampled parameters of interest, estimating the probability density is an example of an unsupervised learning problem. \\
+We approximate the joint posterior $p(\theta\mid x)$ over the parameters of interest $\theta$ through a distribution $\hat p_\phi(\theta\mid s)$ conditioned on summaries $s=s(x)$ from simulated samples $\{x\}$, parameterized by $\phi$ and modeled by a neural network. This class of simulation-based inference techniques, known as conditional density estimation~\cite{10.5555/3157096.3157212,cranmer_kyle_2016_198541}, directly models the posterior distribution given a set of samples $\{x\}\sim p(x\mid\theta)$ produced from the forward model, where parameters $\theta$ are sampled according to some prior proposal distribution $\{\theta\}\sim p(\theta)$. We note that, given the absence of explicit labels associated with the sampled parameters of interest, estimating the probability density is an example of an unsupervised learning problem. \\
 
 \noindent
 \textbf{Normalizing flows:}
-In this paper we employ normalizing flows~\cite{papamakarios2019normalizing,rezende2015variational}, a class of models that provide an efficient way of constructing flexible and expressive high-dimensional probability distributions. Normalizing flows model the (conditional) distribution over the parameters of interest $\hat p_\phi(\theta\mid s)$ as a series of transformations, denoted by $f$ such that $\theta = f(u)$, from a simple base distribution $\pi({u})$ to the target distribution. Suppressing the conditional dependence on $s$ for the moment for simplicity, we have
+In this paper we employ normalizing flows~\cite{papamakarios2019normalizing,DBLP:conf/icml/RezendeM15}, a class of models that provide an efficient way of constructing flexible and expressive high-dimensional probability distributions. Normalizing flows model the (conditional) distribution over the parameters of interest $\hat p_\phi(\theta\mid s)$ as a series of transformations, denoted by $f$ such that $\theta = f(u)$, from a simple base distribution $\pi({u})$ to the target distribution. Suppressing the conditional dependence on $s$ for the moment for simplicity, we have
 \begin{equation}
 \label{eq:flow_transformation}
 \hat{p}({\theta})=\pi(u)\left|\operatorname{det}\left(\frac{\partial u}{\partial {\theta}}\right)\right|=\pi(f^{-1}({\theta}))\left|\operatorname{det}J_{f^{-1}}(\theta)\right|
@@ -325,7 +325,7 @@ Using a convolutional neural network-based feature extractor, we implicitly use 
 After training, given a new dataset of either real or simulated \Fermi data in our ROI, the posterior is obtained by drawing 20,000 samples from the flow within the prior distribution using rejection sampling, conditioning each flow transformation on summaries extracted by the convolutional neural network with the new dataset as input. The model is \emph{amortized}, which means that after the upfront cost of training the neural network, the required number of posterior samples corresponding to a new dataset can be obtained on a few-second timescale. This makes it efficient to validate the performance of a trained model using mock data, which we do in the following section before applying the method to \Fermi data.
 
 %
-\begin{figure*}
+\begin{figure*}[!htbp]
 \centering
 \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm.pdf}
 \caption{Results of the analysis on simulated \Fermi data where the GCE consists of purely DM-like emission, with different rows corresponding to five different simulated realizations. The left column shows the inferred source-count distribution posteriors for GCE-correlated (red) and disk-correlated (blue) PSs. Dashed vertical lines corresponding to the flux associated with 1 expected photon count per source and the approximate 1-$\sigma$ threshold for detecting individual sources are shown for reference. Solid lines correspond to the inferred median, and the lighter and darker bands represent the middle-68\% and 95\% posterior containments respectively, evaluated point-wise in flux $F$. The middle panel shows the posteriors for the Poissonian templates. The right panel shows the joins posterior on the flux fractions of DM-like and PS-like emission. The dotted lines (in the left two columns) and the stars (in the right column) correspond to the true simulated quantities. DM-like emission is successfully inferred in each case, with the other parameter posteriors corresponding faithfully to the true simulated values.} 
@@ -344,7 +344,7 @@ The overall flux of all modeled components is seen to be consistent with the tru
 Figure~\ref{fig:sim_sbi_ps} shows the corresponding results for simulated data containing PS-like emission correlated with the GCE. We see that PS-like emission is successfully inferred in each case, while at the same time exemplifying a degeneracy with the Poissonian component. Furthermore, as seen in the left column, the method is able to characterize the contribution of the two modeled PS components through the inferred source-count distribution. Some degeneracy between GCE- and disk-correlated PSs is seen, although the true SCDs are seen to lie within the 95\% posterior containment interval of the inferred source-count distributions in each case. The inferred posteriors for the contribution of the DM-like component are seen to be compatible with zero.
 
 %
-\begin{figure*}
+\begin{figure*}[!htbp]
 \centering
 \includegraphics[width=0.95\textwidth]{plots/sim_sbi_ps.pdf}
 \caption{Same as Fig.~\ref{fig:sim_sbi_dm}, but for five simulated realization of \Fermi data where the GCE consists of predominantly PS-like emission. PS-like emission is inferred in each case, with the other posteriors corresponding faithfully to their true simulated quantities. The GCE-correlated source-count distribution is also seen to be successfully recovered in the left panel. We note that, as detailed towards the end of Sec.~\ref{sec:datasets}, PS flux below $\sim 5$ photons is partially accounted for by the smooth DM-like component, which is responsible for the sharp turn-off in the modeled as well as inferred SCD with decreasing flux.}
@@ -393,7 +393,7 @@ The top panel of Fig.~\ref{fig:fid_data} shows results using the neural simulati
     %
 
 %
-\begin{figure*}
+\begin{figure*}[!htbp]
 \centering
 \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi.pdf}
 \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf.pdf}
@@ -412,7 +412,7 @@ Figure~\ref{fig:sig_inj_data} shows the results of this test, with the different
 The additional injected signal is seen to be reconstructed correctly within the inferred 95\% confidence interval in all four cases. For the DM signal (top row), the brightest tested DM signal is seen to partially reconstruct as PS-like, which could be attributed to the larger magnitude of Poisson fluctuations in this case mimicking the effect of an unresolved PS population. The injected PS signals (rows 2--4) are correctly reconstructed in all cases, with the dimmer PS signals showing a more prominent flat direction with Poissonian emission, as expected.
 
 %
-\begin{figure*}
+\begin{figure*}[!htbp]
 \centering
 \includegraphics[width=0.95\textwidth]{plots/sig_inj_title.pdf}
 \includegraphics[width=0.95\textwidth]{plots/data_sig_inj_dm.pdf}
@@ -429,7 +429,7 @@ The additional injected signal is seen to be reconstructed correctly within the 
 \label{sec:systematics}
 
 %
-\begin{figure*}
+\begin{figure*}[!htbp]
 \centering
 \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_modelA.pdf}
 \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_modelA.pdf}
@@ -439,7 +439,7 @@ The additional injected signal is seen to be reconstructed correctly within the 
 %
 
 %
-\begin{figure*}
+\begin{figure*}[!htbp]
 \centering
 \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_modelF.pdf}
 \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_modelF.pdf}
@@ -449,7 +449,7 @@ The additional injected signal is seen to be reconstructed correctly within the 
 %
 
 %
-\begin{figure*}
+\begin{figure*}[!htbp]
 \centering
 \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_thick.pdf}
 \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_thick.pdf}
@@ -484,6 +484,19 @@ The posterior distributions for these cases, as well as the prior distribution o
 \section{Susceptibility to model misspecification}
 \label{sec:mismodeling}
 
+%
+\begin{figure*}[!htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_agg.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_modelA_dm.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_mismo.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_thick_disk_mm_dm.pdf}
+    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_asym.pdf}
+    \caption{Effect of mismodeling on a smooth GCE within our analysis framework. Each row shows aggregate posteriors collected over 10 simulated samples; row-wise from top to bottom: \emph{(i)} No mismodeling; simulated data is constructed with the same templates as those used in the forward model. \emph{(ii)} Mock data created with diffuse {Model~A}, showing the effect of diffuse mismodeling. \emph{(iii)} Mock data where the diffuse template, described by {Model~O}, is modulated by draws from a Gaussian process modeling large-scale mismodeling inferred from the real \Fermi data. \emph{(iv)} Mock data where the thick-disk template is used in lieu of the thin-disk template. \emph{(v)} Mock data where the GCE signal in the Northern hemisphere is twice as large as that in the Southern hemisphere. While some PS-like emission is inferred, it is consistent with zero in all cases, and evidence for a smooth GCE is robust.}
+    \label{fig:sim_sbi_mismo}
+    \end{figure*}
+    %
+
 Given the complex astrophysical environment in the Galactic Center, a key challenge in $\gamma$-ray analyses of the GCE is that associated with effects of mismodeled signal and background templates. As explored in detail in Refs.~\cite{Lee:2015fea,Leane:2020pfc,Leane:2020nmi,Buschmann:2020adf,Chang:2019ars} within the NPTF framework, mismodeling can hamper the characterization of an Inner Galaxy PS population and, if sufficiently severe, can result in the attribution of mismodeled residuals to a spurious PS population when the underlying emission is actually smooth in nature. 
 
 In this section we assess the susceptibility of our simulation-based inference pipeline to this scenario. We do so by creating mock data with a smooth GCE signal and a background model that was perturbed compared to the model that was used to train the SBI pipeline, and analyzing it with our baseline neural network \emph{i.e.}, the one trained on the forward model described in Sec.~\ref{sec:datasets} and used in the baseline analysis on data in Sec.~\ref{sec:data}. The ability of our method to correctly characterize the injected signal is then indicative of the level of robustness that can be expected in the real data under corresponding circumstances. Results for the various tests performed are shown in Fig.~\ref{fig:sim_sbi_mismo}, and will be described below. In each case, we show posteriors obtained by combining samples from analyses of 10 different mock datasets (thinned by a factor of 10) in order to characterize the `average' mismodeling associated with a given configuration. The first row of Fig.~\ref{fig:sim_sbi_mismo} shows the aggregate analysis without mismodeling \emph{i.e.}, using mock data created with the same same templates used for training the neural posterior and for inference, as a point of comparison. In all cases tested, while posteriors for certain templates can show systematic biases, preference for a smooth GCE remains robust and the fraction of PS-like emission is compatible with zero, as seen from the right-most column of Fig.~\ref{fig:sim_sbi_mismo}. \\
@@ -506,17 +519,13 @@ In order to test the effect of such mismodeling on recovery of a DM signal we mo
 The results of this test are shown in the third row of Fig.~\ref{fig:sim_sbi_mismo}. It can be seen that while large-scale mismodeling can distort the total flux attributed to individual modeled components, preference for a smooth origin of the signal remains robust. \\
 
 %
-\begin{figure*}
-\centering
-\includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_agg.pdf}
-\includegraphics[width=0.95\textwidth]{plots/sim_sbi_modelA_dm.pdf}
-\includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_mismo.pdf}
-\includegraphics[width=0.95\textwidth]{plots/sim_sbi_thick_disk_mm_dm.pdf}
-\includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_asym.pdf}
-\caption{Effect of mismodeling on a smooth GCE within our analysis framework. Each row shows aggregate posteriors collected over 10 simulated samples; row-wise from top to bottom: \emph{(i)} No mismodeling; simulated data is constructed with the same templates as those used in the forward model. \emph{(ii)} Mock data created with diffuse {Model~A}, showing the effect of diffuse mismodeling. \emph{(iii)} Mock data where the diffuse template, described by {Model~O}, is modulated by draws from a Gaussian process modeling large-scale mismodeling inferred from the real \Fermi data. \emph{(iv)} Mock data where the thick-disk template is used in lieu of the thin-disk template. \emph{(v)} Mock data where the GCE signal in the Northern hemisphere is twice as large as that in the Southern hemisphere. While some PS-like emission is inferred, it is consistent with zero in all cases, and evidence for a smooth GCE is robust.}
-\label{fig:sim_sbi_mismo}
-\end{figure*}
-%
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.95\textwidth]{plots/dd_mismo_map.pdf}
+    \caption{Five random samples from the Gaussian process description of large-scale multiplicative mismodeling associated with the gas-correlated component of diffuse foreground {Model~O} when applied to the real \Fermi data.}
+    \label{fig:dd_mismo_map}
+    \end{figure*}
+    %
 
 \noindent
 \textbf{Effect of mismodeling the disk spatial template:} 
@@ -528,16 +537,6 @@ Besides mismodeling associated with astrophysical background templates, another 
 
 We test the impact of a North-South-asymmetric dark matter signal within our framework by running our baseline pipeline on simulated datasets where the dark matter-like signal in the Northern hemisphere of the ROI is 2 times larger than that in the Southern hemisphere, mimicking the preference in real data found in Refs.~\cite{Leane:2020nmi,Leane:2020pfc}. The result of this test on 10 such simulated realizations is shown in the last row of Fig.~\ref{fig:sim_sbi_mismo}. We see that even with the presence of a substantially asymmetric DM-like signal we retain preference for a predominantly smooth GCE. While some additional PS-like emission is inferred, the effect is small compared to that exhibited within the NPTF framework in analogous tests~\cite{Leane:2020nmi,Leane:2020pfc}. We attribute this to the fact that the \texttt{DeepSphere}-based feature extractor can account for pixel-to-pixel correlations in the $\gamma$-ray counts map, and can thus be sensitive to \emph{local} PS-like structures. In contrast, the 1-point PDF-based NPTF framework, being agnostic to the ordering of the pixels, can notice spurious PS-like structures in the distribution of `residuals' associated with an asymmetric signal when analyzed with a symmetric template.
 As done in Ref.~\cite{Buschmann:2020adf}, we emphasize that the presence of an asymmetry in the GCE signal, if not attributed to diffuse mismodeling, would point towards astrophysical explanations of the GCE since a true dark matter signal would not be expected to be significantly asymmetric.
-
-
-%
-\begin{figure*}[!htbp]
-\centering
-\includegraphics[width=0.95\textwidth]{plots/dd_mismo_map.pdf}
-\caption{Five random samples from the Gaussian process description of large-scale multiplicative mismodeling associated with the gas-correlated component of diffuse foreground {Model~O} when applied to the real \Fermi data.}
-\label{fig:dd_mismo_map}
-\end{figure*}
-%
 
 \section{Discussion and conclusions}
 \label{sec:conclusion}
@@ -592,9 +591,9 @@ Figure~\ref{fig:pp_check} shows the prior distribution induced on the source-cou
 Figure~\ref{fig:fid_data_alt_priors} shows posterior distributions for the analysis using the alternative prior set. These results are summarized in the bottom row of Tab.~\ref{tab:results}. As expected, both the SBI (top row) and NPTF (bottom row) analyses show a larger inferred PS flux compared to the analysis using the baseline prior choice. Reassuringly, the total GCE remains consistent between the analyses with different prior choices.
 
 %
-\begin{figure*}[!h]
+\begin{figure*}[!htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{plots/pp_check.pdf}
+\includegraphics[width=0.6\textwidth]{plots/pp_check.pdf}
 \caption{Prior-predictive distribution on the source-count distribution for the baseline PS model priors (left) and alternative prior specification giving the PS component more overlap with emission close to the single-photon limit (right). The median (lines), middle-68\% containment (darker bands), and middle-95\% containment regions are shown.}
 \label{fig:pp_check}
 \end{figure*}
@@ -619,7 +618,7 @@ The excess dark matter flux (shown as counts per pixel $\langle S \rangle$) in t
 Figure~\ref{fig:sim_sbi_mismo_ps} shows the analog of Fig.~\ref{fig:sim_sbi_mismo} where we instead test the effective of mismodeling on a purely PS-like GCE. As in that case, the data is simulated using a forward model that is different in a specific way from that used do train the neural network model: \emph{(i)} No mismodeling; simulated data is constructed with the same templates as those used in the forward model. \emph{(ii)} Mock data created with diffuse {Model~A}, showing the effect of diffuse mismodeling. \emph{(iii)} Mock data where the thick-disk template is used in lieu of the thin-disk template. Since the GP-modulated (smooth) diffuse template tends to absorb a substantial fraction of the GCE flux when applied to real data, a test using this template was not performed here as it would not yield self-consistent results. In the face of mismodeling, DM-like emission is inferred to be consistent with zero, and a PS-like GCE is recovered in both cases tested.
 
 %
-\begin{figure*}
+\begin{figure*}[!htbp]
 \floatbox[{\capbeside\thisfloatsetup{capbesideposition={right,top},capbesidewidth=0.45\textwidth}}]{figure}[\FBwidth]
 {\vspace{-5mm}\caption{A check of the distribution of PS-like flux below 5 photons in the analyses with baseline and alternative priors. The excess dark matter flux (shown as counts per pixel $\langle S \rangle$) in the baseline prior configuration (leftmost data point) is seen to be consistent with the cumulative excess flux below 5 photons in the alternative prior configuration compared to the baseline one (second data point from the left). When this excess flux is added to the total PS flux in the baseline configuration (middle data point), the combination (second data point from the right) is additionally seen to be consistent with the total PS flux in the alternative prior configuration (rightmost data point).}
 \label{fig:consistency}}
