@@ -48,8 +48,8 @@ urlcolor=linkcolor,
 \author{Siddharth Mishra-Sharma}
 \email{sm8383@nyu.edu}
 \thanks{ORCID: \href{https://orcid.org/0000-0001-9088-7845}{0000-0001-9088-7845}}
-\affiliation{Center for Theoretical Physics, Massachusetts Institute of Technology, Cambridge, MA 02139, USA}
 \affiliation{The NSF AI Institute for Artificial Intelligence and Fundamental Interactions}
+\affiliation{Center for Theoretical Physics, Massachusetts Institute of Technology, Cambridge, MA 02139, USA}
 \affiliation{Department of Physics, Massachusetts Institute of Technology, Cambridge, MA 02139, USA}
 \affiliation{Department of Physics, Harvard University, Cambridge, MA 02138, USA}
 \affiliation{Center for Cosmology and Particle Physics, Department of Physics, New York University, New York, NY 10003, USA}
@@ -63,7 +63,7 @@ urlcolor=linkcolor,
 \date{\today}
 
 \begin{abstract}
-The nature of the \Fermi $\gamma$-ray Galactic Center Excess (GCE) has remained a persistent mystery for over a decade. Although the excess is broadly compatible with emission expected due to dark matter annihilation, an explanation in terms of a population of unresolved astrophysical point sources \emph{e.g.}, millisecond pulsars, remains viable. The effort to uncover the origin of the GCE is hampered in particular by an incomplete understanding of diffuse emission of Galactic origin. This can lead to spurious features that make it difficult to robustly differentiate smooth emission, as expected for a dark matter origin, from more ``clumpy'' emission expected for a population of relatively bright, unresolved point sources. We use recent advancements in the field of simulation-based inference, in particular density estimation techniques using normalizing flows, in order to characterize the contribution of modeled components, including unresolved point sources, to the GCE. Compared to traditional techniques based on the statistical distribution of photon counts, our machine learning-based method is able to utilize more of the information contained in a given model of the Galactic Center emission, and in particular can perform posterior parameter estimation while accounting for pixel-to-pixel spatial correlations in the $\gamma$-ray map. On application to \Fermi data, the method generically attributes a smaller fraction of the GCE flux to unresolved point source-like emission when compared to traditional approaches. We nevertheless infer such a contribution to make up a non-negligible fraction of the GCE across all analysis variations considered, with at least $38^{+9}_{-19}\%$ of the excess being consistent with a point source origin in our baseline analysis.
+The nature of the \Fermi $\gamma$-ray Galactic Center Excess (GCE) has remained a persistent mystery for over a decade. Although the excess is broadly compatible with emission expected due to dark matter annihilation, an explanation in terms of a population of unresolved astrophysical point sources \emph{e.g.}, millisecond pulsars, remains viable. The effort to uncover the origin of the GCE is hampered in particular by an incomplete understanding of diffuse emission of Galactic origin. This can lead to spurious features that make it difficult to robustly differentiate smooth emission, as expected for a dark matter origin, from more ``clumpy'' emission expected for a population of relatively bright, unresolved point sources. We use recent advancements in the field of simulation-based inference, in particular density estimation techniques using normalizing flows, in order to characterize the contribution of modeled components, including unresolved point source populations, to the GCE. Compared to traditional techniques based on the statistical distribution of photon counts, our machine learning-based method is able to utilize more of the information contained in a given model of the Galactic Center emission, and in particular can perform posterior parameter estimation while accounting for pixel-to-pixel spatial correlations in the $\gamma$-ray map. This makes the method demonstrably more resilient to certain forms of model misspecification. On application to \Fermi data, the method generically attributes a smaller fraction of the GCE flux to unresolved point sources when compared to traditional approaches. We nevertheless infer such a contribution to make up a non-negligible fraction of the GCE across all analysis variations considered, with at least $38^{+9}_{-19}\%$ of the excess attributed to unresolved points sources in our baseline analysis.
 \end{abstract}
 
 \maketitle
@@ -89,7 +89,7 @@ This paper is organized as follows. In Sec.~\ref{sec:analysis} we describe our f
 \begin{figure*}
 \centering
 \includegraphics[width=0.99\textwidth]{plots/figure.pdf}
-\caption{A schematic overview of the inference framework used in this work. A normalizing flow is used to model posterior distribution of the parameters of interest characterizing the contribution of point source populations as well as diffuse components to the $\gamma$-ray data. The flow transformation from the base distribution to the posterior is conditioned on learned summaries of the $\gamma$-ray map extracted using a convolutional neural network. The normalizing flow and feature-extractor neural networks are trained simultaneously using maps simulated from the forward model. Once trained, samples from the flow can be generated conditioned on a new dataset of interest in order to obtain an estimate of the corresponding parameter posteriors, which can be used to infer physical quantities of interest such as source-count distributions of modeled PS populations as well as fluxes associated with the diffuse components. See Sec.~\ref{sec:analysis} for a detailed description of the analysis pipeline.}
+\caption{A schematic overview of the inference framework used in this work. A normalizing flow is used to model posterior distribution of the parameters of interest characterizing the contribution of point source populations as well as diffuse (``smooth'') components to the $\gamma$-ray data. The flow transformation from the base distribution to the posterior is conditioned on learned summaries of the $\gamma$-ray map extracted using a convolutional neural network. The normalizing flow and feature-extractor neural networks are trained simultaneously using maps simulated from the forward model. Once trained, samples from the flow can be generated conditioned on a new dataset of interest in order to obtain an estimate of the corresponding parameter posteriors, which can be used to infer physical quantities of interest such as source-count distributions of modeled PS populations as well as fluxes associated with the diffuse components. See Sec.~\ref{sec:analysis} for a detailed description of the analysis pipeline.}
 \label{fig:figure}
 \end{figure*}
 %
@@ -232,7 +232,7 @@ In this paper, we show results on \Fermi data using the NPTF algorithm in order 
 We use the NPTF likelihood implemented in \texttt{NPTFit}~\cite{Mishra-Sharma:2016gis} and obtain representative posterior samples over the parameters of interest described in Sec.~\ref{sec:datasets} using nested sampling~\cite{Feroz:2013hea,skilling2006} implemented in \texttt{dynesty}~\cite{Speagle_2020}. The static variant of the nested sampling algorithm is run in its default configuration with 1000 live points, stopping when the estimated contribution of the remaining posterior volume to the log-evidence falls below $\Delta \log \mathcal Z < 0.1$. Although it's possible to correct for non-uniform exposure within the NPTF framework by considering independent sub-regions with different exposure values, given the fairly uniform \Fermi exposure in the Galactic Center region we use the mean exposure in our NPTF benchmarks for simplicity.
 
 1-point PDF-based techniques, and in particular NPTF, have been widely applied for characterizing $\gamma$-ray PS populations below the \Fermi detection threshold, both in relation to the GCE~\cite{Lee:2015fea,Leane:2020pfc,Leane:2020nmi,Buschmann:2020adf,Calore:2021bty} and more generally \emph{e.g.}, for characterizing the contribution of extragalactic PSs at high latitudes~\cite{Lisanti:2016jub,Zechlin:2016pme,Zechlin:2015wdz} and for searching for a DM annihilation signal from Galactic subhalos~\cite{Somalwar:2020awt}. It has recently been pointed out, however, that signal and foreground mismodeling associated in particular with the emission in the Galactic Center region can hamper the ability to accurately characterize the contribution of PSs to the GCE~\cite{Leane:2019xiy,Leane:2020pfc}. In particular, Refs.~\cite{Lee:2015fea,Leane:2019xiy,Chang:2019ars} pointed out that spurious residuals associated with foreground mismodeling can lead to the mischaracterization of a purely DM signal as a population of PSs. Ref.~\cite{Buschmann:2020adf} recently showed that many of the issues associated with the expression of such effects in \Fermi data could be mitigated through the use of better Galactic foreground models along with affording them more degrees of freedom on large angular scales.
-Refs.~\cite{Leane:2020pfc,Leane:2020nmi} further showed and described analytically how mismodeling, in particular an unmodeled asymmetry in a DM signal, could lead to the spurious inference of PSs in NPTF analyses of the GCE. %, a scenario that is seen to be preferred in real \Fermi data.
+Refs.~\cite{Leane:2020pfc,Leane:2020nmi} further showed and described analytically how mismodeling, in particular an unmodeled asymmetry in a DM signal, could lead to the spurious inference of PSs in NPTF analyses of the GCE.
 
 The fact that NPTF analyses rely on a simplified per-pixel likelihood can make them especially susceptible to the effects of model misspecification (alternatively referred to as mismodeling)---systematic departures of the forward model from the true data-generating process. This can be intuited from the fact that, assuming a corresponding permutation of template pixel labels, the NPTF likelihood is invariant to a permutation of pixels within the analysis ROI. This means that residuals associated with a misspecified background model can mimic the effect of PSs through the distribution of their photon counts, disregarding the specific spatial structure associated with a PS population. The full likelihood sketched out in Eq.~\eqref{eq:data_likelihood} and implicitly defined by the forward model described in Sec.~\ref{sec:datasets} contains significantly more spatial structure than is encoded in the distribution of photon counts, and in particular accounts for the distribution of pixel-to-pixel correlations in the $\gamma$-ray map; see also Ref.~\cite{List:2021aer} for an extended discussion on this point.
 In the rest of this section, we will describe the building blocks of our machine learning-based method that, in contrast to NPTF, aims to estimate the likelihood implicitly associated with the $\gamma$-ray forward model, leveraging pixel-to-pixel spatial correlations with the overall aim of more robustly characterizing the PS contribution to the GCE.
@@ -264,7 +264,7 @@ A number of methods have been proposed for defining the flow transformation \emp
 
 \noindent
 \textbf{Masked autoregressive flows for (conditional) density estimation:}
-In this paper we use Masked Autoregressive Flows (MAFs)~\cite{10.5555/3294771.3294994} to define the flow transformation. Autoregressive models can be used to learn a complex joint probability density $p(\theta)$ as a product of one-dimensional conditional densities where each $\theta_i$ depends only on the previous $\theta_{1:i-1}$ in the parameter sequence: $p(\theta) = \prod_i p(\theta_i\mid \theta_{1:i-1})$. The MAF is built using blocks of affine transformations subject to the autoregressive constraint; for a single block, the affine transformation from $u$ to $\theta$ is expressed as %\SM{Mention that the conditioner is modeled as Gaussian}
+In this paper we use Masked Autoregressive Flows (MAFs)~\cite{10.5555/3294771.3294994} to define the flow transformation. Autoregressive models can be used to learn a complex joint probability density $p(\theta)$ as a product of one-dimensional conditional densities where each $\theta_i$ depends only on the previous $\theta_{1:i-1}$ in the parameter sequence: $p(\theta) = \prod_i p(\theta_i\mid \theta_{1:i-1})$. The MAF is built using blocks of affine transformations subject to the autoregressive constraint; for a single block, the affine transformation from $u$ to $\theta$ is expressed as
 \begin{equation}
 \label{eq:maf_z}
 \theta_{i}=u_{i}\cdot \exp \alpha_{i}+\mu_{i} 
@@ -294,7 +294,7 @@ The curse of dimensionality makes it computationally inefficient to condition th
 \textbf{Graph construction and network architecture:}
 The \texttt{DeepSphere} architecture~\cite{DBLP:conf/iclr/DefferrardMGP20,Perraudin:2018rbt,deepsphere_rlgm}, with a configuration similar to and inspired by that employed in Ref.~\cite{List:2020mzd}, is used to extract representative summaries from $\gamma$-ray maps and is briefly outlined here. \texttt{DeepSphere} is a graph-based spherical convolutional neural network (CNN) architecture tailored to data sampled on a sphere, and in particular is able to leverage the hierarchical structure of data in the \texttt{HEALPix} representation. This makes it well-suited for our purposes.
 
-The \texttt{HEALPix} sphere can be represented as a weighted undirected graph $\mathcal G = (\mathcal V, \mathcal E, A)$ where $\mathcal V$ is the set of $N_\mathrm{pix} = |\mathcal V|$ vertices, $\mathcal E$ is the set of edges connecting pixels, and $A$ is the weighted adjacency matrix. Each pixel $i$ is represented by a vertex $v_i \in \mathcal V$ and is connected to the 8 (or 7, depending on the pixel)
+The \texttt{HEALPix} sphere can be represented in terms of a weighted undirected graph $\mathcal G = (\mathcal V, \mathcal E, A)$ where $\mathcal V$ is the set of $N_\mathrm{pix} = |\mathcal V|$ vertices, $\mathcal E$ is the set of edges connecting pixels, and $A$ is the weighted adjacency matrix. Each pixel $i$ is represented by a vertex $v_i \in \mathcal V$ and is connected to the 8 (or 7, depending on the pixel)
 vertices $v_j$ which represent the neighboring pixels $j$ of pixel $i$, forming edges $(v_i
 , v_j) \in \mathcal E$. The weights of the adjacency matrix over neighboring pixels $(i, j)$ are given by $A_{ij} = \exp \left(-{\left\|r_{i}-r_{j}\right\|_{2}^{2}}/{\rho^{2}}\right)$ where $r_i$ specifies the 3-dimensional coordinates of pixel $i$. The kernel widths $\rho$ at a given \HEALPix resolution are obtained from Ref.~\cite{DBLP:conf/iclr/DefferrardMGP20}, which used empirical measures of rotational equivariance in order to optimize for this hyperparameter.
 
@@ -316,7 +316,7 @@ Using a convolutional neural network-based feature extractor, we implicitly use 
 \noindent
 \textbf{Optimization, training, and evaluation:} The optimization objective in Eq.~\eqref{eq:objective}, $\log \hat{p}_\phi(\theta\mid s_\varphi(x))$, is used to train the graph convolutional and normalizing flow neural networks simultaneously, optimizing their respective parameters $\{\varphi, \phi\}$. $10^{6}$ samples are generated using the prior proposal distribution of parameters given in Tab.~\ref{tab:priors}, and models are optimized with batch size 256 using the \texttt{AdamW}~\cite{DBLP:journals/corr/KingmaB14,DBLP:conf/iclr/LoshchilovH19} optimizer with initial learning rate $10^{-3}$ and weight decay $10^{-5}$, using cosine annealing to decay the learning rate across epochs. Training proceeds for up to 30 epochs with early stopping if the validation loss, evaluated on 15\% of samples held out, has not improved after 8 epochs. 
 
-After training, given a new dataset of either real or simulated \Fermi data in our ROI, the posterior is obtained by drawing 20,000 samples from the flow within the prior distribution using rejection sampling, conditioning each flow transformation on summaries extracted by the convolutional neural network with the new dataset as input. The model is \emph{amortized}, which means that after the upfront cost of training the neural network, the required number of posterior samples corresponding to a new dataset can be obtained on a few-second timescale. This makes it efficient to validate the performance of a trained model using mock data, which we do in the following section before applying the method to \Fermi data.
+After training, given a new dataset of either real or simulated \Fermi data in our ROI, the posterior is obtained by drawing samples from the flow within the prior distribution using rejection sampling, conditioning each flow transformation on summaries extracted by the convolutional neural network with the new dataset as input. The model is \emph{amortized}, which means that after the upfront cost of training the neural network, the required number of posterior samples corresponding to a new dataset can be obtained on a few-second timescale. This makes it efficient to validate the performance of a trained model using mock data, which we do in the following section before applying the method to \Fermi data.
 
 %
 \begin{figure*}[!htbp]
@@ -332,7 +332,7 @@ After training, given a new dataset of either real or simulated \Fermi data in o
 
 We begin by validating our pipeline on simulated \Fermi data. We create simulated datasets with the parameters of interest in the forward model fixed to posterior medians obtained in a fit of the baseline model to real \Fermi data, and test the ability of our model to infer the presence of either DM-like or PS-like signals on top of the modeled astrophysical background.
 
-Figure~\ref{fig:sim_sbi_dm} shows results of the analysis pipeline conditioning the trained baseline model on five simulated realizations of maps where the GCE consists of purely DM-like emission. The left column shows the median (solid lines) as well as middle-68/95\% containment (dark/light shaded regions) of the posteriors on the source-count distributions $F^2 \dd N/\dd F$ of GCE-correlated (red) and disk-correlated (blue) PS emission, evaluated point-wise in flux $F$. The dashed grey vertical lines correspond to the flux associated with a single expected photon count per source (below which Poissonian and PS-like emission is expected to be nearly degenerate) and the approximate 1-$\sigma$ threshold for detecting individual sources (below which the degeneracy is often observed in practice~\cite{Chang:2019ars,Buschmann:2020adf}). The middle column shows the posteriors on various modeled emission components, excluding emission from resolved 3FGL PSs as the posterior in that case is largely unconstrained owing to the fact that resolved PSs are masked out in the analysis. The right column shows the joint posterior on the fraction of DM- and PS-like emission in proportion to the total inferred flux in the ROI. The true underlying parameter values from which the data was generated are represented by dotted lines in the left and middle columns, and by star markers in the right column. We see that, in all cases shown, the pipeline successfully recovers the presence of DM-like emission, with little flux---$\lesssim 10\%$ of the total inferred GCE emission in all cases---attributed to PSs. 
+Figure~\ref{fig:sim_sbi_dm} shows results of the analysis conditioning the trained baseline model on five simulated maps where the GCE consists of purely DM-like emission, drawing 20,000 representative samples in each case. The left column shows the median (solid lines) as well as middle-68/95\% containment (dark/light shaded regions) of the posteriors on the source-count distributions $F^2 \dd N/\dd F$ of GCE-correlated (red) and disk-correlated (blue) PS emission, evaluated point-wise in flux $F$. The dashed grey vertical lines correspond to the flux associated with a single expected photon count per source (below which Poissonian and PS-like emission is expected to be nearly degenerate) and the approximate 1-$\sigma$ threshold for detecting individual sources (below which the degeneracy is often observed in practice~\cite{Chang:2019ars,Buschmann:2020adf}). The middle column shows the posteriors on various modeled emission components, excluding emission from resolved 3FGL PSs as the posterior in that case is largely unconstrained owing to the fact that resolved PSs are masked out in the analysis. The right column shows the joint posterior on the fraction of DM- and PS-like emission in proportion to the total inferred flux in the ROI. The true underlying parameter values from which the data was generated are represented by dotted lines in the left and middle columns, and by star markers in the right column. We see that, in all cases shown, the pipeline successfully recovers the presence of DM-like emission, with little flux---$\lesssim 10\%$ of the total inferred GCE emission in all cases---attributed to PSs. 
 
 Figure~\ref{fig:sim_sbi_ps} shows the corresponding results for simulated data containing PS-like emission correlated with the GCE. We see that PS-like emission is successfully inferred in each case, while at the same time exemplifying some degeneracy with the Poissonian component. Furthermore, as seen in the left column, the method is able to characterize the contribution of the two modeled PS components through the inferred source-count distribution. The inferred posteriors for the contribution of the DM-like component are seen to be compatible with zero. The overall flux of all modeled components, both PS and diffuse, is seen to be consistent with the true values used for the simulations in both sets of tests.
 
@@ -355,35 +355,35 @@ The top panel of Fig.~\ref{fig:fid_data} shows results using the neural simulati
 
 %
 \begin{table*}[!t]
-    \footnotesize
-    \begin{center}
-    \begin{tabular}{C{2.3cm}C{2cm}|C{2cm}C{2cm}C{2.2cm}C{2cm}C{2.2cm}C{2cm}}
-    \toprule
-    \textbf{Configuration}  & \textbf{Method}  & $\dfrac{\textbf{GCE}}{\textbf{Total}}$	 & $\dfrac{\textbf{GCE PS}}{\textbf{GCE}}$  & $F_{\mathrm{b}, 1}^\mathrm{GCE}$	&   $\dfrac{\textbf{Disk PS}}{\textbf{Total}}$ &  $F_{\mathrm{b}, 1}^\mathrm{Disk}$	&  \textbf{Posteriors}\rule{0pt}{4.5ex}	\\[-2.3mm]
-    - & - & \scriptsize{[\%]} & \scriptsize{[\%]} & \scriptsize{[$10^{-10}$\,ph\,cm$^{-2}$\,s$^{-1}$]} & \scriptsize{[\%]} & \scriptsize{[$10^{-10}$\,ph\,cm$^{-2}$\,s$^{-1}$]}	& -\Tstrut\Bstrut \\
-    \Xhline{1\arrayrulewidth}
-    \multirow{2}{*}{Baseline} & SBI & $7.8^{+0.2}_{-0.6}$ & $37.9^{+8.9}_{-19.2}$ & $1.3^{+0.3}_{-0.4}$ & $5.0^{+0.5}_{-1.1}$ & $2.2^{+0.2}_{-0.5}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data}}\Tstrut \\
-    & NPTF & $7.7^{+0.2}_{-0.6}$ & $55.0^{+8.8}_{-22.9}$ & $1.1^{+0.1}_{-0.2}$ & $5.4^{+0.5}_{-1.1}$ & $2.0^{+0.2}_{-0.5}$\Bstrut &\\ 
-    \hline
-    \multirow{2}{*}{Dif. {Model~A}} & SBI & $6.3^{+0.2}_{-0.6}$ & $47.2^{+10.5}_{-24.6}$ & $1.3^{+0.3}_{-0.4}$ & $4.9^{+0.5}_{-1.2}$ & $2.5^{+0.2}_{-0.5}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_modelA}}\Tstrut  \\ 
-    & NPTF & $6.7^{+0.2}_{-0.6}$ & $74.9^{+6.6}_{-22.5}$ & $1.1^{+0.1}_{-0.2}$ & $5.1^{+0.5}_{-1.3}$ & $2.2^{+0.2}_{-0.5}$\Bstrut &\\
-    \hline
-    \multirow{2}{*}{Dif. {Model~F}} & SBI & $4.7^{+0.2}_{-0.6}$ & $62.5^{+10.1}_{-26.9}$ & $1.5^{+0.3}_{-0.5}$ & $5.2^{+0.4}_{-1.1}$ & $2.5^{+0.2}_{-0.5}$
-    & \multirow{2}{*}{Figure~\ref{fig:fid_data_modelF}}\Tstrut \\
-    & NPTF & $5.2^{+0.2}_{-0.5}$ & $67.5^{+8.6}_{-26.7}$ & $1.1^{+0.2}_{-0.3}$ & $6.4^{+0.5}_{-1.1}$ & $2.0^{+0.2}_{-0.4}$\Bstrut &\\
-    \hline
-    \multirow{2}{*}{Thick disk} & SBI & $7.9^{+0.3}_{-0.6}$ & $51.9^{+8.5}_{-22.2}$ & $1.4^{+0.2}_{-0.4}$ & $3.2^{+0.5}_{-1.2}$ & $2.5^{+0.3}_{-0.6}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_thick_disk}}\Tstrut \\
-    & NPTF & $8.2^{+0.3}_{-0.7}$ & $75.0^{+7.1}_{-22.6}$ & $1.1^{+0.1}_{-0.2}$ & $2.3^{+0.7}_{-1.1}$ & $3.1^{+0.6}_{-1.2}$\Bstrut &\\
-    \hline
-    \multirow{2}{*}{Alt. priors} & SBI & $7.7^{+0.2}_{-0.6}$ & $54.2^{+11.9}_{-27.4}$ & $0.9^{+0.2}_{-0.4}$ & $5.9^{+0.5}_{-1.1}$ & $2.4^{+0.2}_{-0.4}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_alt_priors}}\Tstrut \\
-    & NPTF & $7.9^{+0.2}_{-0.6}$ & $77.7^{+6.5}_{-21.4}$ & $0.9^{+0.1}_{-0.3}$ & $5.9^{+0.5}_{-1.1}$ & $2.3^{+0.2}_{-0.4}$\Bstrut &\\
-    \botrule
-    \end{tabular}
-    \end{center}
-    \caption{Inferred values for the inferred GCE flux as a fraction of the total flux, the GCE PS-like flux as a fraction of the total GCE flux, the position of the upper source count flux break $F_{\mathrm{b}, 1}$ for the GCE and disk PS components, and the disk flux as a fraction of the total flux. For the baseline configuration as well as the various systematic variations explored, the median along with the 16th and 84th posterior percentile values are shown for the simulation-based inference (SBI) and NPTF analyses.}
-    \label{tab:results}
-    \end{table*}    
-    %
+\footnotesize
+\begin{center}
+\begin{tabular}{C{2.3cm}C{2cm}|C{2cm}C{2cm}C{2.2cm}C{2cm}C{2.2cm}C{2cm}}
+\toprule
+\textbf{Configuration}  & \textbf{Method}  & $\dfrac{\textbf{GCE}}{\textbf{Total}}$	 & $\dfrac{\textbf{GCE PS}}{\textbf{GCE}}$  & $F_{\mathrm{b}, 1}^\mathrm{GCE}$	&   $\dfrac{\textbf{Disk PS}}{\textbf{Total}}$ &  $F_{\mathrm{b}, 1}^\mathrm{Disk}$	&  \textbf{Posteriors}\rule{0pt}{4.5ex}	\\[-2.3mm]
+- & - & \scriptsize{[\%]} & \scriptsize{[\%]} & \scriptsize{[$10^{-10}$\,ph\,cm$^{-2}$\,s$^{-1}$]} & \scriptsize{[\%]} & \scriptsize{[$10^{-10}$\,ph\,cm$^{-2}$\,s$^{-1}$]}	& -\Tstrut\Bstrut \\
+\Xhline{1\arrayrulewidth}
+\multirow{2}{*}{Baseline} & SBI & $7.8^{+0.2}_{-0.6}$ & $37.9^{+8.9}_{-19.2}$ & $1.3^{+0.3}_{-0.4}$ & $5.0^{+0.5}_{-1.1}$ & $2.2^{+0.2}_{-0.5}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data}}\Tstrut \\
+& NPTF & $7.7^{+0.2}_{-0.6}$ & $55.0^{+8.8}_{-22.9}$ & $1.1^{+0.1}_{-0.2}$ & $5.4^{+0.5}_{-1.1}$ & $2.0^{+0.2}_{-0.5}$\Bstrut &\\ 
+\hline
+\multirow{2}{*}{Dif. {Model~A}} & SBI & $6.3^{+0.2}_{-0.6}$ & $47.2^{+10.5}_{-24.6}$ & $1.3^{+0.3}_{-0.4}$ & $4.9^{+0.5}_{-1.2}$ & $2.5^{+0.2}_{-0.5}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_modelA}}\Tstrut  \\ 
+& NPTF & $6.7^{+0.2}_{-0.6}$ & $74.9^{+6.6}_{-22.5}$ & $1.1^{+0.1}_{-0.2}$ & $5.1^{+0.5}_{-1.3}$ & $2.2^{+0.2}_{-0.5}$\Bstrut &\\
+\hline
+\multirow{2}{*}{Dif. {Model~F}} & SBI & $4.7^{+0.2}_{-0.6}$ & $62.5^{+10.1}_{-26.9}$ & $1.5^{+0.3}_{-0.5}$ & $5.2^{+0.4}_{-1.1}$ & $2.5^{+0.2}_{-0.5}$
+& \multirow{2}{*}{Figure~\ref{fig:fid_data_modelF}}\Tstrut \\
+& NPTF & $5.2^{+0.2}_{-0.5}$ & $67.5^{+8.6}_{-26.7}$ & $1.1^{+0.2}_{-0.3}$ & $6.4^{+0.5}_{-1.1}$ & $2.0^{+0.2}_{-0.4}$\Bstrut &\\
+\hline
+\multirow{2}{*}{Thick disk} & SBI & $7.9^{+0.3}_{-0.6}$ & $51.9^{+8.5}_{-22.2}$ & $1.4^{+0.2}_{-0.4}$ & $3.2^{+0.5}_{-1.2}$ & $2.5^{+0.3}_{-0.6}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_thick_disk}}\Tstrut \\
+& NPTF & $8.2^{+0.3}_{-0.7}$ & $75.0^{+7.1}_{-22.6}$ & $1.1^{+0.1}_{-0.2}$ & $2.3^{+0.7}_{-1.1}$ & $3.1^{+0.6}_{-1.2}$\Bstrut &\\
+\hline
+\multirow{2}{*}{Alt. priors} & SBI & $7.7^{+0.2}_{-0.6}$ & $54.2^{+11.9}_{-27.4}$ & $0.9^{+0.2}_{-0.4}$ & $5.9^{+0.5}_{-1.1}$ & $2.4^{+0.2}_{-0.4}$ & \multirow{2}{*}{Figure~\ref{fig:fid_data_alt_priors}}\Tstrut \\
+& NPTF & $7.9^{+0.2}_{-0.6}$ & $77.7^{+6.5}_{-21.4}$ & $0.9^{+0.1}_{-0.3}$ & $5.9^{+0.5}_{-1.1}$ & $2.3^{+0.2}_{-0.4}$\Bstrut &\\
+\botrule
+\end{tabular}
+\end{center}
+\caption{Inferred values for the inferred GCE flux as a fraction of the total flux, the GCE PS-like flux as a fraction of the total GCE flux, the position of the upper source count flux break $F_{\mathrm{b}, 1}$ for the GCE and disk PS components, and the disk flux as a fraction of the total flux. For the baseline configuration as well as the various systematic variations explored, the median along with the 16th and 84th posterior percentile values are shown for the simulation-based inference (SBI) and NPTF analyses.}
+\label{tab:results}
+\end{table*}    
+%
 
 %
 \begin{figure*}[!htbp]
@@ -402,7 +402,7 @@ A crucial test of self-consistency is the ability of the method to recover an ar
 
 Figure~\ref{fig:sig_inj_data} shows the results of this test, with the different rows corresponding to different signal configurations---purely DM, bright PSs, medium-bright PSs, and dim PSs. Bright, medium-bright, and dim PS configurations are taken have a maximum PS flux (given by the highest break in Eq.~\eqref{eq:scd_bpl}) at 20, 10, and 5 photon counts respectively, with other parameters set to median values inferred on real \Fermi data, except the lower break, which was set to 2 photon counts. The leftmost columns show the baseline analysis on \Fermi data, with subsequent columns showing signals of progressively larger sizes injected onto the data, up to approximately the size of the original GCE signal. The dotted horizontal and vertical lines show the total emissions including the injected signal and the median fluxes for the PS and DM components of the GCE inferred without any additional injected signal, respectively. 
 
-The additional injected signal is seen to be reconstructed correctly within the inferred 95\% confidence interval in all four cases. For the DM signal (top row), the brighter inferred DM signals are seen to be slightly overestimated. The injected PS signals (rows 2--4) are correctly reconstructed in all cases, with the dimmer PS signals showing a more prominent flat direction with Poissonian emission, as expected.
+The additional injected signal is seen to be reconstructed correctly within the inferred 95\% confidence interval in all four cases. For the DM signal (top row), the brighter inferred DM signals tend to be slightly overestimated. The injected PS signals (rows 2--4) are correctly reconstructed in all cases, with the dimmer PS signals showing a more prominent flat direction with Poissonian emission, as expected.
 
 %
 \begin{figure*}[!htbp]
@@ -426,7 +426,7 @@ The additional injected signal is seen to be reconstructed correctly within the 
 \centering
 \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_modelA.pdf}
 \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_modelA.pdf}
-\caption{Same as Fig.~\ref{fig:fid_data}, but for a model where the diffuse foreground emission is modeled using the alternative {Model~A}.}
+\caption{Same as Fig.~\ref{fig:fid_data}, but with the diffuse foreground emission modeled using the alternative {Model~A}.}
 \label{fig:fid_data_modelA}
 \end{figure*}
 %
@@ -436,7 +436,7 @@ The additional injected signal is seen to be reconstructed correctly within the 
 \centering
 \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_modelF.pdf}
 \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_modelF.pdf}
-\caption{Same as Fig.~\ref{fig:fid_data}, but for a model where the diffuse foreground emission is modeled using the alternative {Model~F}.}
+\caption{Same as Fig.~\ref{fig:fid_data}, but with the diffuse foreground emission modeled using the alternative {Model~F}.}
 \label{fig:fid_data_modelF}
 \end{figure*}
 %
@@ -446,7 +446,7 @@ The additional injected signal is seen to be reconstructed correctly within the 
 \centering
 \includegraphics[width=0.95\textwidth]{plots/data_fid_sbi_thick.pdf}
 \includegraphics[width=0.95\textwidth]{plots/data_fid_nptf_thick.pdf}
-\caption{Same as Fig.~\ref{fig:fid_data}, but for a model where the spatial distribution of disk-correlated PSs is modeled using a thick-disk template (scale factor $z_\mathrm{s}=1\,\mathrm{kpc}$ in Eq.~\eqref{eq:disk_spatial}) rather than the default thin-disk template ($z_\mathrm{s}=0.3\,\mathrm{kpc}$).}
+\caption{Same as Fig.~\ref{fig:fid_data}, but with the spatial distribution of disk-correlated PSs modeled using a thick-disk template (scale factor $z_\mathrm{s}=1\,\mathrm{kpc}$ in Eq.~\eqref{eq:disk_spatial}) rather than the default thin-disk template ($z_\mathrm{s}=0.3\,\mathrm{kpc}$).}
 \label{fig:fid_data_thick_disk}
 \end{figure*}
 %
@@ -479,16 +479,16 @@ The posterior distributions for these cases, as well as the prior distribution o
 
 %
 \begin{figure*}[!htbp]
-    \centering
-    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_agg.pdf}
-    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_modelA_dm.pdf}
-    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_mismo.pdf}
-    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_thick_disk_mm_dm.pdf}
-    \includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_asym.pdf}
-    \caption{Effect of mismodeling on a smooth GCE within our analysis framework. Each row shows aggregate posteriors collected over 10 simulated samples; row-wise from top to bottom: \emph{(i)} No mismodeling; simulated data is constructed with the same templates as those used in the forward model for training. \emph{(ii)} Mock data created with diffuse {Model~A}, showing a possible effect of diffuse mismodeling. \emph{(iii)} Mock data where the diffuse template, described by {Model~O}, is modulated by draws from a Gaussian process modeling large-scale mismodeling inferred from the real \Fermi data. \emph{(iv)} Mock data where the thick-disk template is used in lieu of the thin-disk template. \emph{(v)} Mock data where the GCE signal in the Northern hemisphere is twice as large as that in the Southern hemisphere. While some PS-like emission is inferred, it is consistent with zero in all cases, and evidence for a smooth GCE is robust.}
-    \label{fig:sim_sbi_mismo}
-    \end{figure*}
-    %
+\centering
+\includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_agg.pdf}
+\includegraphics[width=0.95\textwidth]{plots/sim_sbi_modelA_dm.pdf}
+\includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_mismo.pdf}
+\includegraphics[width=0.95\textwidth]{plots/sim_sbi_thick_disk_mm_dm.pdf}
+\includegraphics[width=0.95\textwidth]{plots/sim_sbi_dm_asym.pdf}
+\caption{Effect of mismodeling on a smooth GCE within our analysis framework. Each row shows aggregate posteriors collected over 10 simulated samples; row-wise from top to bottom: \emph{(i)} No mismodeling; simulated data is constructed with the same templates as those used in the forward model for training. \emph{(ii)} Mock data created with diffuse {Model~A}, showing a possible effect of diffuse mismodeling. \emph{(iii)} Mock data where the diffuse template, described by {Model~O}, is modulated by draws from a Gaussian process modeling large-scale mismodeling inferred from the real \Fermi data. \emph{(iv)} Mock data where the thick-disk template is used in lieu of the thin-disk template. \emph{(v)} Mock data where the GCE signal in the Northern hemisphere is twice as large as that in the Southern hemisphere. While some PS-like emission is inferred, it is consistent with zero in all cases, and evidence for a smooth GCE is robust.}
+\label{fig:sim_sbi_mismo}
+\end{figure*}
+%
 
 Given the complex astrophysical environment in the Galactic Center, a key challenge in $\gamma$-ray analyses of the GCE is that associated with effects of mismodeled signal and background templates. As explored in detail in Refs.~\cite{Lee:2015fea,Leane:2020pfc,Leane:2020nmi,Buschmann:2020adf,Chang:2019ars} within the NPTF framework, mismodeling can hamper the characterization of an Inner Galaxy PS population and, if sufficiently severe, can result in the attribution of mismodeled residuals to a spurious PS population when the underlying emission is actually smooth in nature. 
 
@@ -514,12 +514,12 @@ The results of this test are shown in the third row of Fig.~\ref{fig:sim_sbi_mis
 
 %
 \begin{figure*}[t]
-    \centering
-    \includegraphics[width=0.95\textwidth]{plots/dd_mismo_map.pdf}
-    \caption{Five random samples from the Gaussian process description of large-scale multiplicative mismodeling associated with the gas-correlated component of diffuse foreground {Model~O} when applied to the real \Fermi data.}
-    \label{fig:dd_mismo_map}
-    \end{figure*}
-    %
+\centering
+\includegraphics[width=0.95\textwidth]{plots/dd_mismo_map.pdf}
+\caption{Five random samples from the Gaussian process description of large-scale multiplicative mismodeling associated with the gas-correlated component of diffuse foreground {Model~O} when applied to the real \Fermi data.}
+\label{fig:dd_mismo_map}
+\end{figure*}
+%
 
 \noindent
 \textbf{Effect of mismodeling the disk spatial template:} 
@@ -596,7 +596,7 @@ Figure~\ref{fig:fid_data_alt_priors} shows posterior distributions for the analy
 \label{fig:pp_check}
 \end{figure*}
 %
-    
+
 Finally, Fig.~\ref{fig:consistency} shows a check of how the partitioning of flux between PS-like and DM-like components varies between the two prior choices. 
 The excess dark matter flux (shown as counts per-pixel $\langle S \rangle$) in the baseline prior configuration (topmost data point) is seen to be consistent with the cumulative excess flux below 5 photons in the alternative prior configuration compared to the baseline one (second data point from the top). When this excess flux is added to the total PS flux in the baseline configuration (middle data point), the combination (second data point from the bottom) is additionally seen to be consistent with the total PS flux in the alternative prior configuration (bottommost data point). We note that this test is merely heuristic---in particular, since the posteriors for baseline and alternative prior analyses are described by independent samples, the component counts were combined or subtracted assuming uncorrelated errors (computed as standard deviations over the respective posteriors), which is certain to not be the case. However, it indicates that the inferred flux below the threshold we set for accounting purposes is redistributed between the PS and DM components, as would be expected if the two analyses were consistent.
 
