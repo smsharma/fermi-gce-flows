@@ -473,3 +473,113 @@ def make_signal_injection_plot(posterior, x_test, x_data_test=None, theta_test=N
     if save_filename is not None:
         plt.tight_layout()
         fig.savefig(save_filename,bbox_inches='tight',pad_inches=0.1)
+
+
+def make_signal_injection_scd_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None, sub1=None, sub2=None):
+
+    # Extract templates and labels
+    n = SimpleNamespace(**temps_dict)
+    fermi_exp, temps_ps, temps_ps_sim, ps_labels, temps_poiss, temps_poiss_sim, poiss_labels = n.fermi_exp, n.temps_ps, n.temps_ps_sim, n.ps_labels, n.temps_poiss, n.temps_poiss_sim, n.poiss_labels
+    
+    pixarea = hp.nside2pixarea(nside, degrees=False)
+    pixarea_deg = hp.nside2pixarea(nside, degrees=True)
+
+    # Set up plot
+
+    n_datasets = x_test.shape[0]
+    nrows = n_datasets
+
+    fig = plt.figure(constrained_layout=True, figsize=figsize)
+    gs = fig.add_gridspec(nrows=1, ncols=n_datasets, width_ratios=n_datasets * [1])
+
+    ax = [None] * n_datasets
+
+    # Go row by row and plot
+
+    for i_r in range(nrows):
+
+        x_o = x_test[i_r]
+        
+        if x_data_test is not None:
+            x_d = x_data_test
+        else:
+            x_d = x_o[:,:-2]
+                
+        if not is_data:
+            theta_truth = theta_test[i_r]
+        
+        if nptf:
+            posterior_samples = posterior[i_r]
+        else:
+            posterior_samples = posterior.sample((n_samples,), x=x_o)
+            posterior_samples = posterior_samples.detach().numpy()
+        
+        # Counts and flux arrays
+        s_f_conv = np.mean(fermi_exp[~roi_counts_normalize])
+        s_ary = np.logspace(-1, 2, 100)
+        f_ary = np.logspace(-1, 2, 100) / s_f_conv
+        
+        mean_counts_roi_post = np.zeros(len(posterior_samples))
+
+        for i_temp_ps, idx_ps in enumerate([6,12]):
+            
+            mean_counts_roi = posterior_samples[:, idx_ps] * np.mean(temps_ps[i_temp_ps][~roi_normalize]) / np.mean(temps_ps[i_temp_ps][~roi_counts_normalize])
+
+            mean_counts_roi_post += mean_counts_roi
+
+        for i_temp_poiss in range(len(temps_poiss)):
+
+            mean_counts_roi = posterior_samples[:, 1 + i_temp_poiss] * np.mean(temps_poiss[i_temp_poiss][~roi_normalize])
+            mean_counts_roi_post += mean_counts_roi
+
+        i_temp_ps = 0
+
+        mean_counts_roi = posterior_samples[:, 0] * np.mean(temps_ps[i_temp_ps][~roi_normalize]) / np.mean(temps_ps[i_temp_ps][~roi_counts_normalize])
+        mean_counts_roi_post += mean_counts_roi
+
+        ## Flux fractions plot
+
+        ax[i_r] = fig.add_subplot(gs[i_r])
+
+        f_peaks = []
+        f_upper_break = []
+
+        for idx_ps, i_param_ps in enumerate([6, 12]):
+            
+            dnds_ary = np.array([dnds_conv(s_ary, theta, temps_ps[idx_ps], roi_counts_normalize, roi_normalize) for theta in posterior_samples[:,i_param_ps:i_param_ps+6]])
+
+            sb2_thresh = 5.  # Threshold below which to compute quantities
+
+            dnds_ary *= s_f_conv / pixarea_deg
+
+            dnds_max_post = f_ary[np.argmax(f_ary * dnds_ary, axis=1)]
+
+            f_peaks.append(get_latex_unc(dnds_max_post / 1e-11, add_perc=False))  # Peak flux position posterior
+            f_upper_break.append(get_latex_unc(posterior_samples[:,i_param_ps + 4] / s_f_conv / 1e-10, add_perc=False))  # Upper break posterior
+            
+            pow_factor = 2
+
+            ax[i_r].plot(f_ary, np.median(f_ary ** pow_factor * dnds_ary, axis=0), color=cols_default[idx_ps], lw=1.5)
+            ax[i_r].fill_between(f_ary, np.percentile(f_ary ** pow_factor * dnds_ary, [16], axis=0)[0], np.percentile(f_ary ** pow_factor * dnds_ary, [84], axis=0)[0], alpha=0.2, color=cols_default[idx_ps], label=ps_labels[idx_ps])
+            ax[i_r].fill_between(f_ary, np.percentile(f_ary ** pow_factor * dnds_ary, [2.5], axis=0)[0], np.percentile(f_ary ** pow_factor * dnds_ary, [97.5], axis=0)[0], alpha=0.1, color=cols_default[idx_ps])
+
+            if not is_data and idx_ps==0:
+                ax[i_r].plot(f_ary, f_ary ** pow_factor * dnds_conv(s_ary, theta_truth[i_param_ps-6:i_param_ps-6+6], temps_ps[idx_ps], roi_counts_normalize, roi_normalize) * (s_f_conv / pixarea_deg), color=cols_default[idx_ps], ls='dotted')  # , label=ps_labels[idx_ps] + " truth")
+
+        ax[i_r].set_xscale("log")
+        ax[i_r].set_yscale("log")
+
+        ax[i_r].set_ylim(5e-13, 2e-10)
+        ax[i_r].set_xlim(3e-12, 1e-9)            
+
+        ax[i_r].set_xlabel(r"$F$\,[ph\,cm$^{-2}$\,s$^{-1}$]")
+
+        if i_r == 0:
+            ax[i_r].legend(fontsize=16, loc='lower right', frameon=True, framealpha=0.8)
+            ax[i_r].set_ylabel(r"$F^2\,\mathrm{d}N/\mathrm{d}F$\,[ph\,cm$^{-2}$\,s$^{-1}$\,deg$^{-2}$]")
+
+    # Optionally save plot
+
+    if save_filename is not None:
+        plt.tight_layout()
+        fig.savefig(save_filename,bbox_inches='tight',pad_inches=0.1)
