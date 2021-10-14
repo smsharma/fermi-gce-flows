@@ -8,6 +8,8 @@
 samples/
 data/samples/*
 data/models/*
+!data/logs/mlruns/12/
+!data/logs/mlruns/12/*
 data/nptfit_samples/*
 
 # Tex

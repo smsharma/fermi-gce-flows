@@ -25,7 +25,7 @@ python setup.py install
 ```
 @article{Mishra-Sharma:2021abc,
       author         = "Mishra-Sharma, Siddharth and Cranmer, Kyle",
-      title          = "{A neural simulation-based inference approach for characterizingthe Galactic Center $\gamma$-ray excess}",
+      title          = "{A neural simulation-based inference approach for characterizing the Galactic Center $\gamma$-ray excess}",
       year           = "2021",
       eprint         = "2110.xxxxx",
       archivePrefix  = "arXiv",
