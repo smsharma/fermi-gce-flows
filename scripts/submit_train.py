@@ -39,6 +39,12 @@ density_estimator_list = ["maf"]
 r_outer_list =  [25]
 normalize_pixel_list = [0]
 
+samples_list = ["ModelO_gamma_fix_thin_disk_rescale_1M",
+                "ModelO_gamma_fix_rescale_1M",
+                "ModelA_gamma_fix_thin_disk_rescale_1M",
+                "ModelF_gamma_fix_thin_disk_rescale_1M",
+                "ModelO_gamma_fix_thin_disk_rescale_new_ps_priors_1M"]
+
 for n_neighbours in n_neighbours_list:
     for maf_num_transforms in maf_num_transforms_list:
         for maf_hidden_features in maf_hidden_features_list:
@@ -55,14 +61,15 @@ for n_neighbours in n_neighbours_list:
                                                     for r_outer in r_outer_list:
                                                         for normalize_pixel in normalize_pixel_list:
                                                             for flow_activation in flow_activations:
-                                                                batchn = batch + "\n"
-                                                                batchn += "python -u train.py --sample train_ModelO_gamma_fix_thin_disk_rescale_new_ps_priors_1M --name gce_ModelO_gamma_fix_thin_disk_rescale_new_ps_priors_1M --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {} --r_outer {} --normalize_pixel {} --flow_activation {} --num_workers 16 --max_num_epochs 30".format(maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator, r_outer, normalize_pixel, flow_activation)
-                                                                fname = "batch/submit.batch"
-                                                                f = open(fname, "w")
-                                                                f.write(batchn)
-                                                                f.close()
-                                                                os.system("chmod +x " + fname)
-                                                                os.system("sbatch " + fname)
+                                                                for sample in samples_list:
+                                                                    batchn = batch + "\n"
+                                                                    batchn += "python -u train.py --sample train_{} --name gce_{} --maf_num_transforms {} --maf_hidden_features {} --fc_dims '{}' --batch_size {} --activation {} --kernel_size {} --laplacian_type {} --conv_type {} --conv_channel_config {} --aux_summary {} --n_aux {} --n_neighbours {} --conv_source {} --density_estimator {} --r_outer {} --normalize_pixel {} --flow_activation {} --num_workers 16 --max_num_epochs 30".format(sample, sample, maf_num_transforms, maf_hidden_features, fc_dims, batch_size, activation, kernel_size, laplacian_type, conv_type, conv_channel_config, aux_summary, n_aux, n_neighbours, conv_source, density_estimator, r_outer, normalize_pixel, flow_activation)
+                                                                    fname = "batch/submit.batch"
+                                                                    f = open(fname, "w")
+                                                                    f.write(batchn)
+                                                                    f.close()
+                                                                    os.system("chmod +x " + fname)
+                                                                    os.system("sbatch " + fname)
 
 # ##################
 # # Just summaries #
