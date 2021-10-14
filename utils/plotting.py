@@ -107,18 +107,12 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
             sb2_thresh = 5.  # Threshold below which to compute quantities
 
             if idx_ps == 0:
-
-                n_ps_post = np.sum(~roi_normalize) * np.trapz((dnds_ary.T)[s_ary < sb2_thresh].T, s_ary[s_ary < sb2_thresh], axis=1)
                 
                 if save_post:
-                    np.savez("../data/post_{}.npz".format(post_name), post_tot=posterior_samples[:,i_param_ps],
+                    np.savez("../data/posterior_samples/post_{}.npz".format(post_name), post_tot=posterior_samples[:,i_param_ps],
                                                post_dm=posterior_samples[:,i_param_ps - 6],
                                                integ_below=np.trapz(s_ary[s_ary < sb2_thresh] * (dnds_ary.T)[s_ary < sb2_thresh].T, s_ary[s_ary < sb2_thresh], axis=1))
                 
-                # print(np.percentile(n_ps_post, [16, 50, 84]))
-                # print(np.percentile(posterior_samples[:,i_param_ps], [16, 50, 84]))
-                # print(np.percentile(np.trapz(s_ary[s_ary < sb2_thresh] * (dnds_ary.T)[s_ary < sb2_thresh].T, s_ary[s_ary < sb2_thresh], axis=1), [16, 50, 84]))
-
             dnds_ary *= s_f_conv / pixarea_deg
 
             dnds_max_post = f_ary[np.argmax(f_ary * dnds_ary, axis=1)]

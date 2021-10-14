@@ -106,7 +106,7 @@ class SphericalGraphCNN(nn.Module):
         # Convolutional layers
         for i_layer, layer in enumerate(self.cnn_layers):
             x_map = layer(x_map)
-            np.save("../data/x_map_" + str(i_layer) + ".npy", x_map.detach().numpy())
+            # np.save("../data/feature_maps/x_map_" + str(i_layer) + ".npy", x_map.detach().numpy())  # Save intermediate feature maps for plotting
 
         # Concatenate auxiliary variable along last dimension
         if (self.n_aux != 0) or (self.n_params != 0):
