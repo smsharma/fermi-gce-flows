@@ -47,7 +47,6 @@ auto
 *.core
 *.swo
 
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -155,15 +154,11 @@ venv.bak/
 *.xdv
 *.zip
 
+# Run artifacts
 *.pt
 *.ckpt*
 mlruns
 .mlruns
-mlruns_bkp
-mlruns_new
-.mlruns_new
-mlruns_*
-.mlruns_bkp
 sbi-logs
 psf_dir
 

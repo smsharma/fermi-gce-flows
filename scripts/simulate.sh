@@ -12,4 +12,4 @@ source ~/.bashrc
 conda activate sbi-fermi
 cd /scratch/sm8383/sbi-fermi/
 
-python -u simulate.py -n 1000 --name train_ModelO_gamma_fix_thin_disk_rescale_new_ps_priors_${SLURM_ARRAY_TASK_ID} --dir /scratch/sm8383/sbi-fermi/ --gamma fix --dif ModelO --disk_type thin --new_ps_priors 1
+python -u simulate.py -n 1000 --name train_ModelO_gamma_fix_thin_disk_rescale_${SLURM_ARRAY_TASK_ID} --dir /scratch/sm8383/sbi-fermi/ --gamma fix --dif ModelO --disk_type thin --new_ps_priors 0
