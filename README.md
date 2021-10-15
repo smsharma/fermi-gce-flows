@@ -13,7 +13,7 @@ The nature of the _Fermi_ gamma-ray Galactic Center Excess (GCE) has remained a 
 
 ## Code
 
-Dependencies are given in [environment.yml](environment.yml)
+Dependencies are given in [environment.yml](environment.yml).
 
 - [simulate.py](simulate.py) produces simulated maps for training. In the [scripts](scripts/) folder, `sbatch --array=0-999 simulate.sh` parallelizes sample generation in a SLURM HPC environment.
 - [combine_samples.py](combine_samples.py) combines the generated samples into single files in order to use them for training. [scripts/combine_samples.sh](scripts/combine_samples.sh) submits this as a SLURM job.
