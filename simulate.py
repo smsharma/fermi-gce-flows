@@ -21,9 +21,8 @@ from utils.utils import ring2nest
 from models.psf import KingPSF
 
 
-def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="default", ps_mask_type="0p8deg", disk_type="thick", new_ps_priors=False):
-    """ High-level simulation script
-    """
+def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="default", ps_mask_type="0p8deg", disk_type="thick", new_ps_priors=False, prior_dm_negative=False):
+    """High-level simulation script"""
 
     # Get mask of central pixel for nside=1
     hp_mask_nside1 = cm.make_mask_total(nside=1, band_mask=True, band_mask_range=0, mask_ring=True, inner=0, outer=r_outer)
@@ -32,7 +31,7 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     mask_sim = hp.ud_grade(hp_mask_nside1, nside)
 
     # ROI to normalize counts over
-    mask_normalize_counts = cm.make_mask_total(nside=nside, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=25.)
+    mask_normalize_counts = cm.make_mask_total(nside=nside, band_mask=True, band_mask_range=2, mask_ring=True, inner=0, outer=25.0)
 
     # Get PS mask
     if ps_mask_type == "0p8deg":
@@ -40,10 +39,10 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     elif ps_mask_type == "95pc":
         ps_mask = np.load("data/fermi_data/fermidata_pscmask.npy") > 0
 
-    mask_roi = cm.make_mask_total(nside=nside, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=r_outer, custom_mask=ps_mask)
+    mask_roi = cm.make_mask_total(nside=nside, band_mask=True, band_mask_range=2, mask_ring=True, inner=0, outer=r_outer, custom_mask=ps_mask)
 
     # ROI over which templates are normalized
-    roi_normalize_temps = cm.make_mask_total(nside=128, band_mask = True, band_mask_range=2, mask_ring=True, inner=0, outer=30)
+    roi_normalize_temps = cm.make_mask_total(nside=128, band_mask=True, band_mask_range=2, mask_ring=True, inner=0, outer=30)
 
     # King PSF hard-coded for now
     if psf == "king":
@@ -71,16 +70,16 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     rescale = fermi_exp / np.mean(fermi_exp)
 
     # Load Model O templates
-    temp_mO_pibrem = np.load('data/fermi_data/ModelO_r25_q1_pibrem.npy')
-    temp_mO_ics = np.load('data/fermi_data/ModelO_r25_q1_ics.npy')
+    temp_mO_pibrem = np.load("data/fermi_data/ModelO_r25_q1_pibrem.npy")
+    temp_mO_ics = np.load("data/fermi_data/ModelO_r25_q1_ics.npy")
 
     # Load Model A templates
-    temp_mA_pibrem = hp.ud_grade(np.load('data/external/template_Api.npy'), nside_out=128, power=-2)
-    temp_mA_ics = hp.ud_grade(np.load('data/external/template_Aic.npy'), nside_out=128, power=-2)
-    
+    temp_mA_pibrem = hp.ud_grade(np.load("data/external/template_Api.npy"), nside_out=128, power=-2)
+    temp_mA_ics = hp.ud_grade(np.load("data/external/template_Aic.npy"), nside_out=128, power=-2)
+
     # Load Model F templates
-    temp_mF_pibrem = hp.ud_grade(np.load('data/external/template_Fpi.npy'), nside_out=128, power=-2)
-    temp_mF_ics = hp.ud_grade(np.load('data/external/template_Fic.npy'), nside_out=128, power=-2)
+    temp_mF_pibrem = hp.ud_grade(np.load("data/external/template_Fpi.npy"), nside_out=128, power=-2)
+    temp_mF_ics = hp.ud_grade(np.load("data/external/template_Fic.npy"), nside_out=128, power=-2)
 
     logger.info("Generating training data with %s maps", n)
 
@@ -88,38 +87,43 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     results = {}
 
     # Priors for DM template, if required
-    
+
     if gamma in ["fix", "default"]:
-        prior_temp = [[],[]]
+        prior_temp = [[], []]
     elif gamma == "float":
-        prior_temp = [[0.5],[1.5]]
+        prior_temp = [[0.5], [1.5]]
     elif gamma == "float_both":
-        prior_temp = [[0.5,0.5],[1.5,1.5]]
+        prior_temp = [[0.5, 0.5], [1.5, 1.5]]
     else:
         raise NotImplementedError
 
     # gce, dsk PS priors
     if new_ps_priors:
-        prior_ps = [[0.001, 10.0, 1.1, -10.0, 1.0, 0.1, 0.001, 10.0, 1.1, -10.0, 1.0, 0.1], 
-                    [2.5, 20.0, 1.99, 1.99, 30.0, 0.99, 2.5, 20.0, 1.99, 1.99, 30.0, 0.99]]
+        prior_ps = [[0.001, 10.0, 1.1, -10.0, 1.0, 0.1, 0.001, 10.0, 1.1, -10.0, 1.0, 0.1], [2.5, 20.0, 1.99, 1.99, 30.0, 0.99, 2.5, 20.0, 1.99, 1.99, 30.0, 0.99]]
     else:
-        prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], 
-                    [2.5, 20.0, 1.99, 1.99, 40.0, 4.99, 2.5, 20.0, 1.99, 1.99, 40.0, 4.99]]
+        prior_ps = [[0.001, 10.0, 1.1, -10.0, 5.0, 0.1, 0.001, 10.0, 1.1, -10.0, 5.0, 0.1], [2.5, 20.0, 1.99, 1.99, 40.0, 4.99, 2.5, 20.0, 1.99, 1.99, 40.0, 4.99]]
 
     # Poiss priors
 
     if dif in ["ModelO", "ModelF", "ModelA"]:
         # iso, bub, psc, dif_pibrem, dif_ics
-        prior_poiss = [[0.001, 0.001, 0.001, 6., 1.], [1.5, 1.5, 1.5, 12., 6.]]
+        prior_poiss = [[0.001, 0.001, 0.001, 6.0, 1.0], [1.5, 1.5, 1.5, 12.0, 6.0]]
     elif dif == "p6v11":
         # iso, bub, psc, dif
-        prior_poiss = [[0.001, 0.001, 0.001, 11.], [1.5, 1.5, 1.5, 16.]]
+        prior_poiss = [[0.001, 0.001, 0.001, 11.0], [1.5, 1.5, 1.5, 16.0]]
     else:
         raise NotImplementedError
 
+    if prior_dm_negative:
+        logger.info("Allowing for negative DM priors")
+        prior_dm_lo = -1.0
+        prior_dm_hi = prior_ps[1][0]
+    else:
+        prior_dm_lo = prior_ps[0][0]
+        prior_dm_hi = prior_ps[1][0]
+
     # Generate simulation parameter points. Priors hard-coded for now.
-    prior = utils.BoxUniform(low=torch.tensor([prior_ps[0][0]] + prior_poiss[0] + prior_ps[0] + prior_temp[0]), 
-                             high=torch.tensor([prior_ps[1][0]] + prior_poiss[1] + prior_ps[1] + prior_temp[1]))
+    prior = utils.BoxUniform(low=torch.tensor([prior_dm_lo] + prior_poiss[0] + prior_ps[0] + prior_temp[0]), high=torch.tensor([prior_dm_hi] + prior_poiss[1] + prior_ps[1] + prior_temp[1]))
 
     thetas = prior.sample((n,))
 
@@ -162,14 +166,14 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
     # Generate maps
 
     logger.info("Generating maps...")
-    
+
     x_and_aux = [simulator(theta.detach().numpy(), [temp_gce_poiss] + temps_poiss, [temp_gce_ps] + temps_ps, mask_sim, mask_normalize_counts, mask_roi, kp.psf_fermi_r, fermi_exp) for (theta, temp_gce_poiss, temp_gce_ps) in tqdm(zip(thetas, temps_gce_poiss, temps_gce_ps))]
 
     # Grab maps and aux variables
     x = torch.Tensor(list(map(itemgetter(0), x_and_aux)))
     x_aux = torch.Tensor(list(map(itemgetter(1), x_and_aux)))
 
-    print(x.shape, x_aux.shape)
+    # print(x.shape, x_aux.shape)
 
     logger.info("Converting from RING to NEST ordering...")
 
@@ -189,8 +193,7 @@ def simulate(n=1000, r_outer=25, nside=128, psf="king", dif="ModelO", gamma="def
 
 
 def save(data_dir, name, data):
-    """ Save simulated data to file
-    """
+    """Save simulated data to file"""
 
     logger.info("Saving results with name %s", name)
 
@@ -204,14 +207,17 @@ def save(data_dir, name, data):
     for key, value in data.items():
         np.save("{}/data/samples/{}_{}.npy".format(data_dir, key, name), value)
 
+
 def parse_args():
-    """ Parse command line arguments
-    """
+    """Parse command line arguments"""
 
     parser = argparse.ArgumentParser(description="Main high-level script that starts the GCE simulations")
 
     parser.add_argument(
-        "-n", type=int, default=10000, help="Number of samples to generate. Default is 10k.",
+        "-n",
+        type=int,
+        default=10000,
+        help="Number of samples to generate. Default is 10k.",
     )
     parser.add_argument("--dif", type=str, default="ModelO", help='Diffuse model to simulate, whether "ModelO" (default) or "p6"')
     parser.add_argument("--ps_mask_type", type=str, default="0p8deg", help='PS mask, either "0p8deg" (default) or "95pc"')
@@ -220,7 +226,8 @@ def parse_args():
     parser.add_argument("--name", type=str, default=None, help='Sample name, like "train" or "test".')
     parser.add_argument("--dir", type=str, default=".", help="Base directory. Results will be saved in the data/samples subfolder.")
     parser.add_argument("--debug", action="store_true", help="Prints debug output.")
-    parser.add_argument("--new_ps_priors", type=int, default=0, help='Whether to use new set of PS priors')
+    parser.add_argument("--new_ps_priors", type=int, default=0, help="Whether to use new set of PS priors")
+    parser.add_argument("--prior_dm_negative", type=int, default=0, help="Whether to allow DM prior go negative")
 
     return parser.parse_args()
 
@@ -230,12 +237,14 @@ if __name__ == "__main__":
     args = parse_args()
 
     logging.basicConfig(
-        format="%(asctime)-5.5s %(name)-20.20s %(levelname)-7.7s %(message)s", datefmt="%H:%M", level=logging.DEBUG if args.debug else logging.INFO,
+        format="%(asctime)-5.5s %(name)-20.20s %(levelname)-7.7s %(message)s",
+        datefmt="%H:%M",
+        level=logging.DEBUG if args.debug else logging.INFO,
     )
     logger.info("Hi!")
 
     name = "train" if args.name is None else args.name
-    results = simulate(n=args.n, dif=args.dif, gamma=args.gamma, ps_mask_type=args.ps_mask_type, disk_type=args.disk_type, new_ps_priors=args.new_ps_priors)
+    results = simulate(n=args.n, dif=args.dif, gamma=args.gamma, ps_mask_type=args.ps_mask_type, disk_type=args.disk_type, new_ps_priors=args.new_ps_priors, prior_dm_negative=args.prior_dm_negative)
     save(args.dir, name, results)
 
     logger.info("All done! Have a nice day!")
