@@ -14,7 +14,7 @@ batch = """#!/bin/bash
 
 source ~/.bashrc
 conda activate sbi-fermi
-cd /scratch/sm8383/sbi-fermi/
+cd /scratch/sm8383/fermi-gce-flows/
 """
 
 ##########################
@@ -36,14 +36,13 @@ conv_source_list = ["deepsphere"]
 aux_summaries = ["None"]
 n_aux_list = [2]
 density_estimator_list = ["maf"]
-r_outer_list =  [25]
+r_outer_list = [25]
 normalize_pixel_list = [0]
 
-samples_list = ["ModelO_gamma_fix_thin_disk_rescale_1M",
-                "ModelO_gamma_fix_rescale_1M",
-                "ModelA_gamma_fix_thin_disk_rescale_1M",
-                "ModelF_gamma_fix_thin_disk_rescale_1M",
-                "ModelO_gamma_fix_thin_disk_rescale_new_ps_priors_1M"]
+# samples_list = ["ModelO_gamma_fix_thin_disk_rescale_1M", "ModelO_gamma_fix_rescale_1M", "ModelA_gamma_fix_thin_disk_rescale_1M", "ModelF_gamma_fix_thin_disk_rescale_1M", "ModelO_gamma_fix_thin_disk_rescale_new_ps_priors_1M", "ModelO_gamma_fix_thin_disk_negative_dm_prio_rescale_1M"]
+
+samples_list = ["ModelO_gamma_fix_thin_disk_negative_dm_prio_rescale_1M"]
+
 
 for n_neighbours in n_neighbours_list:
     for maf_num_transforms in maf_num_transforms_list:
