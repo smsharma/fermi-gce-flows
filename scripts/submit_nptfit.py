@@ -38,7 +38,8 @@ cd /scratch/sm8383/fermi-gce-flows
 # Tests on simulations
 
 # Various configurations
-sample_list = ["ModelO_DM_only_mismo"]
+# sample_list = ["ModelO_DM_only_mismo"]
+sample_list = ["ModelO_DM_only"]
 new_ps_priors_list = [0]
 disk_type_list = ["thin"]
 diffuse_list = ["ModelO"]
@@ -46,7 +47,7 @@ diffuse_list = ["ModelO"]
 for sample_name, new_ps_priors, disk_type, diffuse in zip(sample_list, new_ps_priors_list, disk_type_list, diffuse_list):
     for i_mc in range(5):
         batchn = batch + "\n"
-        batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 25 --n_live 1000 --disk_type {} --i_mc {} --diffuse {} --new_ps_priors {}".format(sample_name,  disk_type, i_mc, diffuse, new_ps_priors)
+        batchn += "python nptfit.py --sample_name {} --n_cpus 24 --r_outer 25 --n_live 1000 --disk_type {} --i_mc {} --diffuse {} --new_ps_priors {}".format(sample_name, disk_type, i_mc, diffuse, new_ps_priors)
         fname = "batch/submit.batch"
         f = open(fname, "w")
         f.write(batchn)
