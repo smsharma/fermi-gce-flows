@@ -163,3 +163,5 @@ sbi-logs
 psf_dir
 
 *.tfevents*
+data/posterior_samples/post_fid.npz
+data/posterior_samples/post_fid.npz
