@@ -1,5 +1,8 @@
 """ Simulation module
 """
+import logging
+
+logger = logging.getLogger(__name__)
 
 import numpy as np
 import healpy as hp
@@ -10,11 +13,11 @@ from utils.pdf_sampler import PDFSampler
 
 class DrawSources:
     def __init__(self, S_ary=None, dNdS_ary=None, n_exp=None):
-        """ Draw sources following an SCD and create a map. Based on NPTFit-Sim 
-            (https://github.com/nickrodd/NPTFit-Sim).
-            :param S_ary: Array of counts, spaced linearly in log-space
-            :param dNdS_ary: Corresponding SCD dN/dS array (full sky)
-            :param n_exp: Number of sources to draw. If not provided, obtained by integrating the SCD. 
+        """Draw sources following an SCD and create a map. Based on NPTFit-Sim
+        (https://github.com/nickrodd/NPTFit-Sim).
+        :param S_ary: Array of counts, spaced linearly in log-space
+        :param dNdS_ary: Corresponding SCD dN/dS array (full sky)
+        :param n_exp: Number of sources to draw. If not provided, obtained by integrating the SCD.
         """
 
         self.S_ary = S_ary
@@ -48,12 +51,12 @@ class DrawSources:
         # self.counts_sample = np.random.poisson(self.counts_expected_sample)
 
     def get_coords(self, temp, n_ps, n_sample=1000):
-        """ Get PS coordinates for a given template using rejection sampling. 
-            Based on NPTFit-Sim (https://github.com/nickrodd/NPTFit-Sim).
-            :param temp: The PS template
-            :param n_ps: Number of PSs to generate
-            :param n_sample: Number of samples to take at a given time. Set to a sensible default.
-            :return: (theta, phi) coordinates of PSs following template
+        """Get PS coordinates for a given template using rejection sampling.
+        Based on NPTFit-Sim (https://github.com/nickrodd/NPTFit-Sim).
+        :param temp: The PS template
+        :param n_ps: Number of PSs to generate
+        :param n_sample: Number of samples to take at a given time. Set to a sensible default.
+        :return: (theta, phi) coordinates of PSs following template
         """
 
         n_accept = 0
@@ -82,10 +85,10 @@ class DrawSources:
         return th_ary_accept[:n_ps], ph_ary_accept[:n_ps]
 
     def create_ps_map(self, temp, psf_r=None, exp_map_norm=None):
-        """ Add PS photon counts to map following a given PSF description and template.
-            Based on NPTFit-Sim (https://github.com/nickrodd/NPTFit-Sim).
-            :param temp: Template for spatial distribution of PSs
-            :param psf_r: Radial PSF
+        """Add PS photon counts to map following a given PSF description and template.
+        Based on NPTFit-Sim (https://github.com/nickrodd/NPTFit-Sim).
+        :param temp: Template for spatial distribution of PSs
+        :param psf_r: Radial PSF
         """
         # Sample the radial PSF to later determine placement of photons.
         f = np.linspace(0.0, np.pi, 1000000)
@@ -118,7 +121,7 @@ class DrawSources:
 
 
 class SimulateMap:
-    def __init__(self, temps, norms, S_arys=None, dNdS_arys=None, ps_temps=None, psf_r=None, exp_map_norm=None, nside=128, n_exp=None):
+    def __init__(self, temps, norms, S_arys=None, dNdS_arys=None, ps_temps=None, psf_r=None, exp_map_norm=None, nside=128, n_exp=None, mask_roi=None):
 
         self.temps = temps
         self.norms = norms
@@ -129,6 +132,7 @@ class SimulateMap:
         self.psf_r = psf_r
         self.n_exp = n_exp
         self.exp_map_norm = exp_map_norm
+        self.mask_roi = mask_roi
 
         if self.n_exp is None:
             self.n_exp = len(self.ps_temps) * [None]
@@ -146,6 +150,9 @@ class SimulateMap:
         for i_temp in range(len(self.temps)):
             mu_map += self.norms[i_temp] * self.temps[i_temp]
 
+        if self.mask_roi is not None:
+            mu_map[self.mask_roi] = 0.0
+
         gamma_map = np.random.poisson(mu_map)
 
         if self.S_arys is not None:
@@ -155,4 +162,3 @@ class SimulateMap:
                 gamma_map += ps_map.astype(np.int64)
 
         return gamma_map.astype(np.int32)
-

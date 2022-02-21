@@ -27,7 +27,7 @@ def dnds_conv(s_ary, theta, ps_temp, roi_counts_normalize, roi_normalize):
     dnds_ary = dnds(s_ary, [A] + list(theta[1:]))
     return dnds_ary
 
-def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None, sub1=None, sub2=None, combined_posterior=False, thin_factor=1, legend_fontsize=16, show_legend=True, save_post=False, post_name="fid", **kwargs):
+def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normalize=None, roi_sim=None, roi_counts_normalize=None, is_data=False, signal_injection=False, figsize=(25, 18), save_filename=None, nptf=False, n_samples=10000, nside=128, coeff_ary=None, temps_dict=None, sub1=None, sub2=None, combined_posterior=False, thin_factor=1, legend_fontsize=16, show_legend=True, save_post=False, post_name="fid", ax_reuse=None, return_ax=False, second_plot=False, negative_dm=False, **kwargs):
     """ Main posterior plots
     """
 
@@ -49,10 +49,14 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         nrows = 1
     
     # Set up plotting
-    fig = plt.figure(constrained_layout=True, figsize=figsize)
-    gs = fig.add_gridspec(nrows=nrows, ncols=4, width_ratios=[1.3,2,1,1.3])
 
-    ax = [[None] * 4] * nrows
+    if ax_reuse is None:
+        fig = plt.figure(constrained_layout=True, figsize=figsize)
+        gs = fig.add_gridspec(nrows=nrows, ncols=4, width_ratios=[1.3,2,1,1.3])
+
+        ax = [[None] * 4] * nrows
+    else:
+        fig, ax = ax_reuse
 
     # Go row by row and plot different posteriors
 
@@ -95,10 +99,17 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         
         ## 1. Source count distributions plot
 
-        ax[i_r][0] = fig.add_subplot(gs[i_r,0])
+        if ax_reuse is None:
+            ax[i_r][0] = fig.add_subplot(gs[i_r,0])
         
         f_peaks = []
         f_upper_break = []
+
+        ls_kwargs = {}
+        fill_kwargs = {}
+        if second_plot:
+            ls_kwargs['ls'] = 'dashed'
+            fill_kwargs['hatch'] = 'X'
 
         for idx_ps, i_param_ps in enumerate([6, 12]):
             
@@ -122,12 +133,13 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
             
             pow_factor = 2
 
-            ax[i_r][0].plot(f_ary, np.median(f_ary ** pow_factor * dnds_ary, axis=0), color=cols_default[idx_ps], lw=1.5)
-            ax[i_r][0].fill_between(f_ary, np.percentile(f_ary ** pow_factor * dnds_ary, [16], axis=0)[0], np.percentile(f_ary ** pow_factor * dnds_ary, [84], axis=0)[0], alpha=0.2, color=cols_default[idx_ps], label=ps_labels[idx_ps])
-            ax[i_r][0].fill_between(f_ary, np.percentile(f_ary ** pow_factor * dnds_ary, [2.5], axis=0)[0], np.percentile(f_ary ** pow_factor * dnds_ary, [97.5], axis=0)[0], alpha=0.1, color=cols_default[idx_ps])
+            ax[i_r][0].plot(f_ary, np.median(f_ary ** pow_factor * dnds_ary, axis=0), color=cols_default[idx_ps], lw=1.5, **ls_kwargs)
+            ax[i_r][0].fill_between(f_ary, np.percentile(f_ary ** pow_factor * dnds_ary, [16], axis=0)[0], np.percentile(f_ary ** pow_factor * dnds_ary, [84], axis=0)[0], alpha=0.2, color=cols_default[idx_ps], label=ps_labels[idx_ps],  **fill_kwargs)
+            if not (return_ax or second_plot):
+                ax[i_r][0].fill_between(f_ary, np.percentile(f_ary ** pow_factor * dnds_ary, [2.5], axis=0)[0], np.percentile(f_ary ** pow_factor * dnds_ary, [97.5], axis=0)[0], alpha=0.1, color=cols_default[idx_ps],  **fill_kwargs)
 
             if not is_data:
-                ax[i_r][0].plot(f_ary, f_ary ** pow_factor * dnds_conv(s_ary, theta_truth[i_param_ps:i_param_ps+6], temps_ps[idx_ps], roi_counts_normalize, roi_normalize) * (s_f_conv / pixarea_deg), color=cols_default[idx_ps], ls='dotted')  # , label=ps_labels[idx_ps] + " truth")
+                ax[i_r][0].plot(f_ary, f_ary ** pow_factor * dnds_conv(s_ary, theta_truth[i_param_ps:i_param_ps+6], temps_ps[idx_ps], roi_counts_normalize, roi_normalize) * (s_f_conv / pixarea_deg), color=cols_default[idx_ps], ls='dotted', **ls_kwargs)  # , label=ps_labels[idx_ps] + " truth")
 
         ax[i_r][0].set_xscale("log")
         ax[i_r][0].set_yscale("log")
@@ -159,11 +171,19 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
 
         ## 2.1. Fluxes plot, all templates except diffuse
 
-        ax[i_r][2] = fig.add_subplot(gs[i_r,1])
+        if ax_reuse is None:
+            ax[i_r][2] = fig.add_subplot(gs[i_r,1])
+
         ax2_max = 5.5
 
-        bins = np.linspace(0., 5, 60)
-        hist_kwargs = {'bins':bins, 'alpha':0.8, 'histtype':'step', 'lw':1.8, 'density':True}
+        if not negative_dm:
+            bins = np.linspace(0., 5, 60)
+        else:
+            bins = np.linspace(-2., 5, 80)
+
+        hist_kwargs = {'bins':bins, 'alpha':0.8, 'histtype':'step', 'lw':2.5, 'density':True}
+        if second_plot:
+            hist_kwargs['ls'] = 'dashed'
         divide_by = 1e-7
 
         mean_counts_roi_post = np.zeros(len(posterior_samples))
@@ -205,12 +225,18 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         if i_r == 0:
             ax[i_r][2].set_title(r"\bf{Component intensities}", x=0.7, fontsize=19, y=1.02)
 
-        ax[i_r][2].set_xlim(0, ax2_max - 0.05)
+        if not negative_dm:
+            ax[i_r][2].set_xlim(0, ax2_max - 0.05)
+        else:
+            ax[i_r][2].set_xlim(-2., ax2_max - 0.05)
+
         ax[i_r][2].set_ylim(0, 2.8)
 
         ## 2.2. Fluxes plot, diffuse templates
 
-        ax[i_r][3] = fig.add_subplot(gs[i_r,2])
+        if ax_reuse is None:
+            ax[i_r][3] = fig.add_subplot(gs[i_r,2])
+
         ax3_min = 1.
         ax3_max = 30.
 
@@ -260,7 +286,8 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
     
         ## 3. DM and PS flux fractions plot
 
-        ax[i_r][1] = fig.add_subplot(gs[i_r,-1])
+        if ax_reuse is None:
+            ax[i_r][1] = fig.add_subplot(gs[i_r,-1])
 
         if nptf:
             x_embedded = np.zeros(hp.nside2npix(128))
@@ -283,8 +310,15 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
 
         g = plots.get_single_plotter()
         samples = MCSamples(samples=np.transpose(np.array([posterior_samples[:, 0] * fraction_multiplier, posterior_samples[:, 6] * fraction_multiplier])),names = ['DM','PS'], labels = ['DM','PS'])
-        g.plot_2d(samples, 'DM', 'PS', filled=True, alphas=[0.5], ax=ax[i_r][1], colors=[cols_default[0]])
-        g.plot_2d(samples, 'DM', 'PS', filled=False, ax=ax[i_r][1], colors=['k'], lws=[1.2])
+
+        ls = ['-']
+        if second_plot:
+            ls = ['--']
+
+        g.plot_2d(samples, 'DM', 'PS', filled=False, ax=ax[i_r][1], colors=['k'], lws=[1.2], ls=ls)
+        if not return_ax and not second_plot:
+            g.plot_2d(samples, 'DM', 'PS', filled=True, alphas=[0.5], ax=ax[i_r][1], colors=[cols_default[0]])
+            
 
         # TODO: Take span depending on mean roi counts rather than posterior
         
@@ -299,8 +333,13 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
         if not is_data:
             ax[i_r][1].plot([theta_truth[0] * np.median(fraction_multiplier)], [theta_truth[6] * np.median(fraction_multiplier)], marker='*', markerfacecolor=cols_default[0], markeredgecolor='k', ms=15., clip_on=False)
 
-        ax[i_r][1].set_xlim(0., 15.)
-        ax[i_r][1].set_ylim(0., 15.)
+        if not negative_dm:
+            ax[i_r][1].set_xlim(0., 15.)
+            ax[i_r][1].set_ylim(0., 15.)
+        else:
+            ax[i_r][1].set_xlim(-5, 15.)
+            ax[i_r][1].set_ylim(-5., 15.)
+
 
         ax[i_r][1].set_ylabel(r"PS-like\,[\%]", fontsize=17.5)
         if i_r == nrows - 1:
@@ -315,10 +354,21 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
 
         if i_r == 0:
             if sub1 is not None:
-                ax[i_r][1].text(14.3, 13, sub1, fontsize=18, horizontalalignment='right')
-                
+                if negative_dm:
+                    ax[i_r][1].text(14.3, 12.8, sub1, fontsize=18, horizontalalignment='right')
+                else:
+                    ax[i_r][1].text(14.3, 13, sub1, fontsize=18, horizontalalignment='right')
+
             if sub2 is not None:
-                ax[i_r][1].text(14.3, 11.4, sub2, fontsize=18, horizontalalignment='right')
+                if negative_dm:
+                    ax[i_r][1].text(14.3, 11.1, sub2, fontsize=18, horizontalalignment='right')
+                else:
+                    ax[i_r][1].text(14.3, 11.4, sub2, fontsize=18, horizontalalignment='right')
+
+            if second_plot:
+                ax[i_r][1].plot([],[], color='k', ls='-', label="SBI")
+                ax[i_r][1].plot([],[], color='k', ls='--', label="NPTF")
+                ax[i_r][1].legend(loc='center right')
 
         ## Get some numbers
 
@@ -338,6 +388,9 @@ def make_plot(posterior, x_test, x_data_test=None, theta_test=None, roi_normaliz
     if save_filename is not None:
         plt.tight_layout()
         fig.savefig(save_filename,bbox_inches='tight',pad_inches=0.1)
+    
+    if return_ax:
+        return fig, ax
 
 def get_latex_unc(samples, add_perc=True):
     percentiles = np.percentile(samples, [18, 50, 64])
